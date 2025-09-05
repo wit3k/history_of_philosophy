@@ -7,7 +7,7 @@
 }
 .scale {
   background-color: rgba(89, 89, 89, 0.5);
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(2px);
   /* padding: 10px; */
   overflow: hidden;
   height: 60px;

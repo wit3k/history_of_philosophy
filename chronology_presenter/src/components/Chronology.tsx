@@ -9,55 +9,48 @@ class Coords {
   ) {}
 }
 
-class YearSelection {
-  constructor(
-    public from: number,
-    public to: number,
-    public stepSize: number,
-  ) {}
-}
-
 class ChronologyProperies {
   constructor(
-    public gapBetweenYears: number,
     public windowSize: Coords,
-    public yearSelection: YearSelection,
+    public yearLabelWidth: number,
   ) {}
 }
 
 const Chronology = () => {
   const dimenstions = useWindowDimensions();
 
-  const [zoom, setZoom] = React.useState(1);
-  const [isDragged, setDrag] = React.useState(false);
-  const [viewPosition, setPosition] = React.useState({
-    x: -1200,
-    y: 0,
+  const [zoom, setZoom] = React.useState(5);
+  const [drag, setDrag] = React.useState({
+    isDragged: false,
+    startViewPosition: { x: 0, y: 0 },
+    startDragPosition: { x: 0, y: 0 },
   });
+  const [viewPosition, setPosition] = React.useState({ x: 1200, y: 0 });
+  const [yearSelection, setYearSelection] = React.useState({
+    from: -1200,
+    to: 2025,
+    stepSize: 100,
+  });
+
   const prop: ChronologyProperies = {
-    gapBetweenYears: 200,
     windowSize: {
       x: dimenstions.width,
       y: dimenstions.height,
     },
-    yearSelection: {
-      from: -1200,
-      to: 2025,
-      stepSize: 100,
-    },
+    yearLabelWidth: 100,
   };
-
-  const originalWidth = prop.windowSize.x;
-  const originalHeight = prop.windowSize.y;
 
   const yearsOnScale = [
     ...Array(
       Math.ceil(
-        (prop.yearSelection.to - prop.yearSelection.from) /
-          prop.yearSelection.stepSize,
+        (yearSelection.to - yearSelection.from) / yearSelection.stepSize,
       ),
     ),
-  ].map((_, i) => prop.yearSelection.from + i * prop.yearSelection.stepSize);
+  ].map((_, i) => yearSelection.from + i * yearSelection.stepSize);
+
+  let positionByYear = (year: number) => (year - viewPosition.x) * zoom;
+  let isVisible = (year: number) =>
+    positionByYear(year) > 0 && positionByYear(year) < prop.windowSize.x;
 
   return (
     <div
@@ -67,66 +60,94 @@ const Chronology = () => {
         height: prop.windowSize.y,
         overflow: 'hidden',
       }}
-      //   draggable="true"
-      //   onDrag={(e) => console.log(e)}
-      onMouseDown={(e) => setDrag(true)}
-      onMouseUp={(e) => setDrag(false)}
-      onMouseMove={(e) => {
-        if (isDragged) {
-          setPosition({ x: viewPosition.x - 1, y: viewPosition.y });
+      onMouseDown={(e) => {
+        if (e.button == 0) {
+          setDrag({
+            isDragged: true,
+            startViewPosition: viewPosition,
+            startDragPosition: { x: e.pageX, y: e.pageY },
+          });
         }
       }}
-      onWheel={(e) => setZoom(zoom + e.deltaY / 5000)}
+      onMouseUp={(e) => setDrag((state) => ({ ...state, isDragged: false }))}
+      onMouseMove={(e) => {
+        if (drag.isDragged) {
+          setPosition({
+            x: Math.min(
+              Math.max(
+                drag.startViewPosition.x -
+                  (e.pageX - drag.startDragPosition.x) / zoom,
+                yearSelection.from - prop.yearLabelWidth,
+              ),
+              yearSelection.to + prop.yearLabelWidth,
+            ),
+            y:
+              drag.startViewPosition.y -
+              (e.pageY - drag.startDragPosition.y) / zoom,
+          });
+        }
+      }}
+      onWheel={(e) => {
+        if (zoom <= 10) {
+          setZoom(Math.max(1, zoom - e.deltaY / 200));
+          setYearSelection((ys) => ({ ...ys, stepSize: 100 }));
+        } else if (zoom <= 20) {
+          setZoom(zoom - e.deltaY / 400);
+          setYearSelection((ys) => ({ ...ys, stepSize: 10 }));
+        } else {
+          setZoom(zoom - e.deltaY / 600);
+          setYearSelection((ys) => ({ ...ys, stepSize: 5 }));
+        }
+      }}
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        viewBox={`0 0 ${originalWidth} ${originalHeight}`}
+        viewBox={`0 0 ${prop.windowSize.x} ${prop.windowSize.y}`}
         preserveAspectRatio="xMidYMid meet"
         style={{ width: prop.windowSize.x, height: prop.windowSize.y }}
       >
-        <rect x="0" y="0" rx="10" ry="10" width="30" height="30" />
-        <rect
-          x={prop.windowSize.x - 30}
-          y={prop.windowSize.y - 30}
-          rx="10"
-          ry="10"
-          width="30"
-          height="30"
-        />
+        {yearsOnScale.filter(isVisible).map((year, index): any => {
+          return (
+            <g key={`yearLine` + year}>
+              <line
+                x1={positionByYear(year)}
+                y1="0"
+                x2={positionByYear(year)}
+                y2={prop.windowSize.y}
+                stroke="#d9d9d9"
+                strokeWidth={year % 100 ? '1' : '3'}
+                strokeDasharray={year % 100 ? '4' : ''}
+              />
+            </g>
+          );
+        })}
       </svg>
       <div className={'scaleContainer'}>
         <div className={'scale'}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            viewBox={`0 0 ${originalWidth} 60`}
+            viewBox={`0 0 ${prop.windowSize.x} 60`}
             preserveAspectRatio="xMidYMid meet"
             style={{ width: prop.windowSize.x, height: 60 }}
           >
-            {yearsOnScale.map((year, index): any => {
+            {yearsOnScale.filter(isVisible).map((year, index): any => {
               return (
-                <g>
+                <g key={`yearLabel` + year}>
                   <rect
-                    x={
-                      index * zoom * prop.gapBetweenYears +
-                      viewPosition.x -
-                      prop.yearSelection.from
-                    }
+                    x={positionByYear(year) - prop.yearLabelWidth / 2}
                     y="30"
                     rx="5"
                     ry="5"
-                    width="100"
+                    width={prop.yearLabelWidth}
                     height="40"
-                    fill="#eeeeee"
+                    fill={year % 100 ? '#cecece' : '#eeeeee'}
                   ></rect>
                   <text
-                    x={
-                      index * zoom * prop.gapBetweenYears +
-                      viewPosition.x -
-                      prop.yearSelection.from +
-                      20
-                    }
+                    x={positionByYear(year)}
                     y="55"
-                    width="100"
+                    width={prop.yearLabelWidth}
+                    dominantBaseline="middle"
+                    textAnchor="middle"
                     height="40"
                     fontFamily="Verdana"
                     fontSize="15"
