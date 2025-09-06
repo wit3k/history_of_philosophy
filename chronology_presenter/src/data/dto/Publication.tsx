@@ -3,7 +3,7 @@ class Publication {
     public id: string,
     public title: string,
     public publicationDate: number,
-    public authorId: string[],
+    public authorId: string,
   ) {}
 }
 

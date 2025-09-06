@@ -71,9 +71,9 @@ const Chronology = () => {
 
   let positionByYear = (year: number) => (year - viewPosition.x) * zoom;
   let isVisible = (year: number) =>
-    positionByYear(year) > 0 && positionByYear(year) < prop.windowSize.x;
+    positionByYear(year) + prop.rowHeight > 0 && positionByYear(year) - prop.rowHeight < prop.windowSize.x;
   let isVisibleRange = (from: number, to: number) =>
-    positionByYear(to) > 0 && positionByYear(from) < prop.windowSize.x;
+    positionByYear(to) + prop.rowHeight > 0 && positionByYear(from) - prop.rowHeight < prop.windowSize.x;
   let rowPosition = (rowNumber: number) =>
     prop.rowHeight * rowNumber + viewPosition.y;
 
@@ -134,14 +134,14 @@ const Chronology = () => {
             year={year}
             height={prop.windowSize.y}
             position={positionByYear(year)}
-            key={`yearLine` + year}
+            key={`yearLine` + year + i}
           />
         ))}
         {PeopleList.filter((person) =>
           isVisibleRange(person.born, person.died),
         ).map((person, i) => (
           <PersonNode
-            key={'person' + person.id}
+            key={'person' + person.id + i}
             person={person}
             positionStart={positionByYear(person.born)}
             positionEnd={positionByYear(person.died)}
@@ -154,20 +154,22 @@ const Chronology = () => {
         )
           .map((publication, i) => ({
             publication,
-            authors: getPublicationAuthor(publication),
+            author: getPublicationAuthor(publication),
           }))
-          .flatMap(({ publication, authors }, i) =>
-            authors.map((author) => (
-              <PublicationNode
-                key={'publication' + publication.id}
-                publication={publication}
-                author={author}
-                position={positionByYear(publication.publicationDate)}
-                settings={publicationNodeSettings}
-                rowPosition={rowPosition(author.rowNumber)}
-              />
-            )),
-          )}
+          .map(({ publication, author }, i) => {
+            if (author) {
+              return (
+                <PublicationNode
+                  key={'publication' + publication.id + i}
+                  publication={publication}
+                  author={author}
+                  position={positionByYear(publication.publicationDate)}
+                  settings={publicationNodeSettings}
+                  rowPosition={rowPosition(author.rowNumber)}
+                />
+              );
+            }
+          })}
       </svg>
       <div className={'scaleContainer'}>
         <div className={'scale'}>
@@ -179,7 +181,7 @@ const Chronology = () => {
           >
             {yearsOnScale.filter(isVisible).map((year, i) => (
               <TimeScaleLabel
-                key={`yearLabel` + year}
+                key={`yearLabel` + year + i}
                 year={year}
                 position={positionByYear(year)}
                 yearLabelWidth={prop.yearLabelWidth}
