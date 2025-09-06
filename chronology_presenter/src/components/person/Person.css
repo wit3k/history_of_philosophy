@@ -1,0 +1,12 @@
+@import "tailwindcss";
+/* .tooltipHover {
+    cursor: pointer
+} */
+
+.tooltip {
+  display: none;
+}
+
+g:has(.tooltipHover:hover) .tooltip {
+  display: inline;
+}

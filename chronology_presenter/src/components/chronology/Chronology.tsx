@@ -173,13 +173,13 @@ const Chronology = () => {
       }}
       onWheel={(e) => {
         if (zoom <= 10) {
-          setZoom(Math.max(1, zoom - e.deltaY / 200));
+          setZoom(Math.max(1, zoom - e.deltaY / 100));
           setYearSelection((ys) => ({ ...ys, stepSize: 100 }));
         } else if (zoom <= 20) {
-          setZoom(zoom - e.deltaY / 400);
+          setZoom(zoom - e.deltaY / 200);
           setYearSelection((ys) => ({ ...ys, stepSize: 10 }));
         } else {
-          setZoom(zoom - e.deltaY / 600);
+          setZoom(zoom - e.deltaY / 300);
           setYearSelection((ys) => ({ ...ys, stepSize: 5 }));
         }
       }}

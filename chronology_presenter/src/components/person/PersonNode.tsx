@@ -48,6 +48,7 @@ export const PersonNode = (props: PersonNodeProps) => {
           fillOpacity: '0.1',
           strokeOpacity: '1',
         }}
+        className="cursor-pointer"
       />
       <rect
         x={props.positionStart}
@@ -63,6 +64,7 @@ export const PersonNode = (props: PersonNodeProps) => {
           fillOpacity: '1',
           strokeOpacity: '0',
         }}
+        className="cursor-pointer"
       />
       <text
         x={props.positionStart + 5}
@@ -74,6 +76,7 @@ export const PersonNode = (props: PersonNodeProps) => {
         fontFamily="Verdana"
         fontSize="15"
         fill="white"
+        className="cursor-pointer"
       >
         {props.person.name}
       </text>
@@ -98,7 +101,7 @@ export const PersonNode = (props: PersonNodeProps) => {
         x2={props.positionEnd - 0 + props.settings.boxSize}
         y2={props.rowPosition + props.settings.boxSize / 2}
         stroke="#ffffff"
-        strokeWidth={'3'}
+        strokeWidth="5"
       />
     </g>
   );
