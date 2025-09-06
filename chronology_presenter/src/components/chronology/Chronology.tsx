@@ -6,22 +6,21 @@ import TimeScaleLabel from '../timescale/TimeScaleLabel';
 import PeopleList from '../../data/db/PeopleList';
 import { PersonNode, PersonNodeSettings } from '../person/PersonNode';
 import PublicationsList, {
-  getPublicationAuthor,
+  PublicationsListService,
 } from '../../data/db/PublicationsList';
 import PublicationNode, {
   PublicationNodeSettings,
 } from '../person/PublicationNode';
-
-class Coords {
-  constructor(
-    public x: number,
-    public y: number,
-  ) {}
-}
+import PublicationReferenceList from '../../data/db/PublicationReferenceList';
+import {
+  PublicationReferenceNode,
+  PublicationReferenceSettings,
+} from '../person/PublicationReferenceNode';
+import type Coordinates from '../../geometry/Coordinates';
 
 class ChronologyProperies {
   constructor(
-    public windowSize: Coords,
+    public windowSize: Coordinates,
     public yearLabelWidth: number,
     public rowHeight: number,
   ) {}
@@ -30,7 +29,7 @@ class ChronologyProperies {
 const Chronology = () => {
   const dimenstions = useWindowDimensions();
 
-  const [zoom, setZoom] = React.useState(15);
+  const [zoom, setZoom] = React.useState(22);
   const [pinchDelta, setPinchDelta] = React.useState(0);
   let calculateDelta = (x1: number, y1: number, x2: number, y2: number) =>
     Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
@@ -39,7 +38,7 @@ const Chronology = () => {
     startViewPosition: { x: 0, y: 0 },
     startDragPosition: { x: 0, y: 0 },
   });
-  const [viewPosition, setPosition] = React.useState({ x: 1785, y: 0 });
+  const [viewPosition, setPosition] = React.useState({ x: 1809, y: 0 });
   const [yearSelection, setYearSelection] = React.useState({
     from: -1200,
     to: 2025,
@@ -51,6 +50,11 @@ const Chronology = () => {
   };
 
   const publicationNodeSettings: PublicationNodeSettings = {
+    dotSize: 15,
+    boxSize: 50,
+  };
+
+  const publicationReferenceSettings: PublicationReferenceSettings = {
     dotSize: 15,
     boxSize: 50,
   };
@@ -135,13 +139,7 @@ const Chronology = () => {
         }
       }}
       onMouseUp={(e) => stopPageDrag()}
-      onTouchEnd={(e) => {
-        switch (e.touches.length) {
-          case 0:
-            stopPageDrag();
-            break;
-        }
-      }}
+      onTouchEnd={(e) => stopPageDrag()}
       onMouseMove={(e) => executePageDrag(e.pageX, e.pageY)}
       onTouchMove={(e) => {
         switch (e.touches.length) {
@@ -149,7 +147,7 @@ const Chronology = () => {
             executePageDrag(e.touches[0].pageX, e.touches[0].pageY);
             break;
           case 2:
-            executePageDrag(e.touches[0].pageX, e.touches[0].pageY);
+            // executePageDrag(e.touches[0].pageX, e.touches[0].pageY);
 
             let pinchSize: number = calculateDelta(
               e.touches[0].pageX,
@@ -157,7 +155,7 @@ const Chronology = () => {
               e.touches[1].pageX,
               e.touches[1].pageY,
             );
-            setZoom(zoom + (pinchDelta - pinchSize));
+            setZoom(zoom - (pinchDelta - pinchSize) / 200);
             setPinchDelta(pinchSize);
 
             if (zoom <= 10) {
@@ -168,19 +166,21 @@ const Chronology = () => {
               setYearSelection((ys) => ({ ...ys, stepSize: 5 }));
             }
 
+            stopPageDrag();
+
             break;
         }
       }}
       onWheel={(e) => {
-        if (zoom <= 10) {
-          setZoom(Math.max(1, zoom - e.deltaY / 100));
+        if (Math.max(1, zoom - e.deltaY / 100) <= 11.0) {
           setYearSelection((ys) => ({ ...ys, stepSize: 100 }));
-        } else if (zoom <= 20) {
-          setZoom(zoom - e.deltaY / 200);
+          setZoom(Math.max(1, zoom - e.deltaY / 100));
+        } else if (zoom - e.deltaY / 200 <= 22.0) {
           setYearSelection((ys) => ({ ...ys, stepSize: 10 }));
+          setZoom(zoom - e.deltaY / 200);
         } else {
-          setZoom(zoom - e.deltaY / 300);
           setYearSelection((ys) => ({ ...ys, stepSize: 5 }));
+          setZoom(zoom - e.deltaY / 300);
         }
       }}
     >
@@ -198,6 +198,46 @@ const Chronology = () => {
             key={`yearLine` + year + i}
           />
         ))}
+
+        {PublicationReferenceList.map((reference, i) => {
+          if (
+            reference.from &&
+            reference.to &&
+            isVisibleRange(
+              Math.min(
+                reference.from?.publicationDate,
+                reference.to?.publicationDate,
+              ),
+              Math.max(
+                reference.from?.publicationDate,
+                reference.to?.publicationDate,
+              ),
+            )
+          ) {
+            const authorFrom = PublicationsListService.getPublicationAuthor(
+              reference.from,
+            );
+            const authorTo = PublicationsListService.getPublicationAuthor(
+              reference.to,
+            );
+            if (authorFrom && authorTo) {
+              return (
+                <PublicationReferenceNode
+                  key={'pubref' + reference.id + i}
+                  publicationReference={reference}
+                  settings={publicationReferenceSettings}
+                  authorFrom={authorFrom}
+                  authorTo={authorTo}
+                  positionStart={positionByYear(reference.from.publicationDate)}
+                  positionEnd={positionByYear(reference.to.publicationDate)}
+                  rowPositionFrom={rowPosition(authorFrom.rowNumber)}
+                  rowPositionTo={rowPosition(authorTo.rowNumber)}
+                />
+              );
+            }
+          }
+        })}
+
         {PeopleList.filter((person) =>
           isVisibleRange(person.born, person.died),
         ).map((person, i) => (
@@ -213,9 +253,9 @@ const Chronology = () => {
         {PublicationsList.filter((publication) =>
           isVisible(publication.publicationDate),
         )
-          .map((publication, i) => ({
+          .map((publication, _) => ({
             publication,
-            author: getPublicationAuthor(publication),
+            author: PublicationsListService.getPublicationAuthor(publication),
           }))
           .map(({ publication, author }, i) => {
             if (author) {

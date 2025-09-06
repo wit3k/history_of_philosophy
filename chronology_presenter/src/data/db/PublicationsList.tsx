@@ -7,10 +7,10 @@ const PublicationsList = [
   new Publication('2', 'Drugi', 1842, '1'),
   new Publication('3', 'Książka jakaś', 1849, '1'),
   new Publication('4', 'Książka jakaś', 1849, '2'),
-  new Publication('5', 'Traktat', 1844, '2'),
-  new Publication('6', 'Esej', 1844, '3'),
+  new Publication('5', 'Traktat', 1874, '2'),
+  new Publication('6', 'Esej', 1821, '3'),
   new Publication('7', 'Rozprawka', 1855, '4'),
-];
+]; //.sort((p1, p2) => p1.publicationDate - p2.publicationDate);
 
 const bookAuthorsMap: Map<string, Person | undefined> = new Map();
 
@@ -21,9 +21,10 @@ PublicationsList.forEach((publication) => {
   );
 });
 
-export const getPublicationAuthor = (publication: Publication) =>
-  bookAuthorsMap.get(publication.id);
+export const PublicationsListService = {
+  getById: (id: string) => PublicationsList.find((p) => p.id == id),
+  getPublicationAuthor: (publication: Publication) =>
+    bookAuthorsMap.get(publication.id),
+};
 
-export default PublicationsList.sort(
-  (p1, p2) => p1.publicationDate - p2.publicationDate,
-);
+export default PublicationsList;

@@ -23,14 +23,10 @@ export class PublicationNodeSettings {
 export const PublicationNode = (props: PublicationNodeProps) => {
   const dominantColor = getAccentColor(props.author.name);
   return (
-    <g onClick={(e) => console.log(e)}>
-      <g>
+    <g onClick={(e) => console.log(props)}>
+      <g className="tooltip">
         <rect
-          x={
-            props.position +
-            props.settings.boxSize -
-            props.publication.title.length * 5
-          }
+          x={props.position - props.publication.title.length * 5}
           y={props.rowPosition + props.settings.boxSize / 2}
           rx="5"
           ry="5"
@@ -43,12 +39,10 @@ export const PublicationNode = (props: PublicationNodeProps) => {
             fillOpacity: '1',
             strokeOpacity: '1',
           }}
-          className="tooltip"
         />
         <text
           x={
-            props.position +
-            props.settings.boxSize -
+            props.position -
             props.publication.title.length * 5 +
             (props.publication.title.length * 10) / 2
           }
@@ -60,14 +54,13 @@ export const PublicationNode = (props: PublicationNodeProps) => {
           fontFamily="Verdana"
           fontSize="15"
           fill="white"
-          className="tooltip"
         >
           {props.publication.title}
         </text>
       </g>
 
       <circle
-        cx={props.position + props.settings.boxSize}
+        cx={props.position}
         cy={props.rowPosition + props.settings.boxSize / 2}
         r={props.settings.dotSize}
         style={{

@@ -1,4 +1,4 @@
-# Rsbuild project
+# History of philosophy visualised
 
 ## Setup
 

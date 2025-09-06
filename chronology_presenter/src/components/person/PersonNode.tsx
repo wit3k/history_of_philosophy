@@ -18,7 +18,7 @@ export class PersonNodeSettings {
 export const PersonNode = (props: PersonNodeProps) => {
   const dominantColor = getAccentColor(props.person.name);
   return (
-    <g onClick={(e) => console.log(e)}>
+    <g>
       <rect
         x={props.positionStart + 5}
         y={props.rowPosition}
@@ -96,9 +96,9 @@ export const PersonNode = (props: PersonNodeProps) => {
         }}
       />
       <line
-        x1={props.positionStart + 20 + props.settings.boxSize}
+        x1={props.positionStart + 11 + props.settings.boxSize}
         y1={props.rowPosition + props.settings.boxSize / 2}
-        x2={props.positionEnd - 0 + props.settings.boxSize}
+        x2={props.positionEnd + 9 + props.settings.boxSize}
         y2={props.rowPosition + props.settings.boxSize / 2}
         stroke="#ffffff"
         strokeWidth="5"
