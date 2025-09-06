@@ -134,13 +134,19 @@ const Chronology = () => {
           case 2:
             startPageDrag(0, e.touches[1].clientX, e.touches[1].clientY);
 
-            let delta =
-              e.touches[1].clientX -
-              drag.startDragPosition.x +
-              (e.touches[1].clientY - drag.startDragPosition.y);
-
+            let delta = Math.sqrt(
+              Math.pow(e.touches[1].clientX - drag.startDragPosition.x, 2) +
+                Math.pow(e.touches[1].clientY - drag.startDragPosition.y, 2),
+            );
             setZoom(zoom - delta / 600);
-            setYearSelection((ys) => ({ ...ys, stepSize: 5 }));
+
+            if (zoom <= 10) {
+              setYearSelection((ys) => ({ ...ys, stepSize: 100 }));
+            } else if (zoom <= 20) {
+              setYearSelection((ys) => ({ ...ys, stepSize: 10 }));
+            } else {
+              setYearSelection((ys) => ({ ...ys, stepSize: 5 }));
+            }
 
             break;
         }
