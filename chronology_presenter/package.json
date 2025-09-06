@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "rsbuild build",
-    "github": "rsbuild build --config rsbuild.github.config.js",
+    "github": "rsbuild build --config rsbuild.github.config.ts",
     "check": "biome check --write",
     "dev": "rsbuild dev --open",
     "format": "biome format --write",
