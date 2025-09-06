@@ -68,13 +68,13 @@ const PublicationReferenceList = [
     '10',
     '***',
     PublicationsListService.getById('7'),
-    PublicationsListService.getById('6'),
+    PublicationsListService.getById('8'),
   ),
   new PublicationReference(
     '11',
     '***',
     PublicationsListService.getById('5'),
-    PublicationsListService.getById('6'),
+    PublicationsListService.getById('8'),
   ),
   new PublicationReference(
     '12',

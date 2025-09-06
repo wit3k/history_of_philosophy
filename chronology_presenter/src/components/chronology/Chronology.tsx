@@ -199,45 +199,6 @@ const Chronology = () => {
           />
         ))}
 
-        {PublicationReferenceList.map((reference, i) => {
-          if (
-            reference.from &&
-            reference.to &&
-            isVisibleRange(
-              Math.min(
-                reference.from?.publicationDate,
-                reference.to?.publicationDate,
-              ),
-              Math.max(
-                reference.from?.publicationDate,
-                reference.to?.publicationDate,
-              ),
-            )
-          ) {
-            const authorFrom = PublicationsListService.getPublicationAuthor(
-              reference.from,
-            );
-            const authorTo = PublicationsListService.getPublicationAuthor(
-              reference.to,
-            );
-            if (authorFrom && authorTo) {
-              return (
-                <PublicationReferenceNode
-                  key={'pubref' + reference.id + i}
-                  publicationReference={reference}
-                  settings={publicationReferenceSettings}
-                  authorFrom={authorFrom}
-                  authorTo={authorTo}
-                  positionStart={positionByYear(reference.from.publicationDate)}
-                  positionEnd={positionByYear(reference.to.publicationDate)}
-                  rowPositionFrom={rowPosition(authorFrom.rowNumber)}
-                  rowPositionTo={rowPosition(authorTo.rowNumber)}
-                />
-              );
-            }
-          }
-        })}
-
         {PeopleList.filter((person) =>
           isVisibleRange(person.born, person.died),
         ).map((person, i) => (
@@ -260,14 +221,60 @@ const Chronology = () => {
           .map(({ publication, author }, i) => {
             if (author) {
               return (
-                <PublicationNode
-                  key={'publication' + publication.id + i}
-                  publication={publication}
-                  author={author}
-                  position={positionByYear(publication.publicationDate)}
-                  settings={publicationNodeSettings}
-                  rowPosition={rowPosition(author.rowNumber)}
-                />
+                <g key={'publication' + publication.id + i}>
+                  {PublicationReferenceList.map((reference, i) => {
+                    if (
+                      reference.from &&
+                      reference.from.id == publication.id &&
+                      reference.to &&
+                      isVisibleRange(
+                        Math.min(
+                          reference.from?.publicationDate,
+                          reference.to?.publicationDate,
+                        ),
+                        Math.max(
+                          reference.from?.publicationDate,
+                          reference.to?.publicationDate,
+                        ),
+                      )
+                    ) {
+                      const authorFrom =
+                        PublicationsListService.getPublicationAuthor(
+                          reference.from,
+                        );
+                      const authorTo =
+                        PublicationsListService.getPublicationAuthor(
+                          reference.to,
+                        );
+                      if (authorFrom && authorTo) {
+                        return (
+                          <PublicationReferenceNode
+                            key={'pubref' + reference.id + i}
+                            publicationReference={reference}
+                            settings={publicationReferenceSettings}
+                            authorFrom={authorFrom}
+                            authorTo={authorTo}
+                            positionStart={positionByYear(
+                              reference.from.publicationDate,
+                            )}
+                            positionEnd={positionByYear(
+                              reference.to.publicationDate,
+                            )}
+                            rowPositionFrom={rowPosition(authorFrom.rowNumber)}
+                            rowPositionTo={rowPosition(authorTo.rowNumber)}
+                          />
+                        );
+                      }
+                    }
+                  })}
+                  <PublicationNode
+                    publication={publication}
+                    author={author}
+                    position={positionByYear(publication.publicationDate)}
+                    settings={publicationNodeSettings}
+                    rowPosition={rowPosition(author.rowNumber)}
+                  />
+                </g>
               );
             }
           })}

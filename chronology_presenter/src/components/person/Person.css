@@ -10,15 +10,18 @@
 g:has(.tooltipHover:hover) .tooltip {
   display: inline;
 }
-/* 
+
 .animated-dash {
-  stroke-dasharray: 20 5;
   stroke-dashoffset: 200;
-  animation: dash-flow 15s linear infinite;
+}
+g:has(.tooltipHover:hover) .animated-dash {
+  stroke-dasharray: 20 3;
+
+  animation: dash-flow 5s linear infinite;
 }
 
 @keyframes dash-flow {
   to {
     stroke-dashoffset: 0;
   }
-} */
+}
