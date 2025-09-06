@@ -104,18 +104,7 @@ const Chronology = () => {
       });
     }
   };
-  let executePageZoom = (distanceDelta: number) => {
-    if (zoom <= 10) {
-      setZoom(Math.max(1, zoom - distanceDelta / 200));
-      setYearSelection((ys) => ({ ...ys, stepSize: 100 }));
-    } else if (zoom <= 20) {
-      setZoom(zoom - distanceDelta / 400);
-      setYearSelection((ys) => ({ ...ys, stepSize: 10 }));
-    } else {
-      setZoom(zoom - distanceDelta / 600);
-      setYearSelection((ys) => ({ ...ys, stepSize: 5 }));
-    }
-  };
+
   return (
     <div
       style={{
@@ -143,15 +132,31 @@ const Chronology = () => {
             executePageDrag(e.touches[0].pageX, e.touches[0].pageY);
             break;
           case 2:
-            executePageZoom(
+            startPageDrag(0, e.touches[1].clientX, e.touches[1].clientY);
+
+            let delta =
               e.touches[1].clientX -
-                drag.startDragPosition.x +
-                (e.touches[1].clientY - drag.startDragPosition.y),
-            );
+              drag.startDragPosition.x +
+              (e.touches[1].clientY - drag.startDragPosition.y);
+
+            setZoom(zoom - delta / 600);
+            setYearSelection((ys) => ({ ...ys, stepSize: 5 }));
+
             break;
         }
       }}
-      onWheel={(e) => executePageZoom(e.deltaY)}
+      onWheel={(e) => {
+        if (zoom <= 10) {
+          setZoom(Math.max(1, zoom - e.deltaY / 200));
+          setYearSelection((ys) => ({ ...ys, stepSize: 100 }));
+        } else if (zoom <= 20) {
+          setZoom(zoom - e.deltaY / 400);
+          setYearSelection((ys) => ({ ...ys, stepSize: 10 }));
+        } else {
+          setZoom(zoom - e.deltaY / 600);
+          setYearSelection((ys) => ({ ...ys, stepSize: 5 }));
+        }
+      }}
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
