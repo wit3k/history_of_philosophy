@@ -125,9 +125,15 @@ const Chronology = () => {
         overflow: 'hidden',
       }}
       onMouseDown={(e) => startPageDrag(e.button, e.pageX, e.pageY)}
-      onTouchStart={(e) =>
-        startPageDrag(0, e.touches[0].pageX, e.touches[0].pageY)
-      }
+      onTouchStart={(e) => {
+        switch (e.touches.length) {
+          case 1:
+            startPageDrag(0, e.touches[0].pageX, e.touches[0].pageY);
+            break;
+          case 2:
+            startPageDrag(0, e.touches[1].pageX, e.touches[1].pageY);
+        }
+      }}
       onMouseUp={(e) => stopPageDrag()}
       onTouchEnd={(e) => stopPageDrag()}
       onMouseMove={(e) => executePageDrag(e.pageX, e.pageY)}
