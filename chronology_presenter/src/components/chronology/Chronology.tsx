@@ -31,6 +31,9 @@ const Chronology = () => {
   const dimenstions = useWindowDimensions();
 
   const [zoom, setZoom] = React.useState(15);
+  const [pinchDelta, setPinchDelta] = React.useState(0);
+  let calculateDelta = (x1: number, y1: number, x2: number, y2: number) =>
+    Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
   const [drag, setDrag] = React.useState({
     isDragged: false,
     startViewPosition: { x: 0, y: 0 },
@@ -120,11 +123,25 @@ const Chronology = () => {
             startPageDrag(0, e.touches[0].pageX, e.touches[0].pageY);
             break;
           case 2:
-            startPageDrag(0, e.touches[1].pageX, e.touches[1].pageY);
+            startPageDrag(0, e.touches[0].pageX, e.touches[0].pageY);
+            setPinchDelta(
+              calculateDelta(
+                e.touches[0].pageX,
+                e.touches[0].pageY,
+                e.touches[1].pageX,
+                e.touches[1].pageY,
+              ),
+            );
         }
       }}
       onMouseUp={(e) => stopPageDrag()}
-      onTouchEnd={(e) => stopPageDrag()}
+      onTouchEnd={(e) => {
+        switch (e.touches.length) {
+          case 0:
+            stopPageDrag();
+            break;
+        }
+      }}
       onMouseMove={(e) => executePageDrag(e.pageX, e.pageY)}
       onTouchMove={(e) => {
         switch (e.touches.length) {
@@ -132,13 +149,16 @@ const Chronology = () => {
             executePageDrag(e.touches[0].pageX, e.touches[0].pageY);
             break;
           case 2:
-            startPageDrag(0, e.touches[1].clientX, e.touches[1].clientY);
+            executePageDrag(e.touches[0].pageX, e.touches[0].pageY);
 
-            let delta = Math.sqrt(
-              Math.pow(e.touches[1].clientX - drag.startDragPosition.x, 2) +
-                Math.pow(e.touches[1].clientY - drag.startDragPosition.y, 2),
+            let pinchSize: number = calculateDelta(
+              e.touches[0].pageX,
+              e.touches[0].pageY,
+              e.touches[1].pageX,
+              e.touches[1].pageY,
             );
-            setZoom(zoom - delta / 600);
+            setZoom(zoom + (pinchDelta - pinchSize));
+            setPinchDelta(pinchSize);
 
             if (zoom <= 10) {
               setYearSelection((ys) => ({ ...ys, stepSize: 100 }));
