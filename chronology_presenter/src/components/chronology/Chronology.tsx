@@ -71,12 +71,51 @@ const Chronology = () => {
 
   let positionByYear = (year: number) => (year - viewPosition.x) * zoom;
   let isVisible = (year: number) =>
-    positionByYear(year) + prop.rowHeight > 0 && positionByYear(year) - prop.rowHeight < prop.windowSize.x;
+    positionByYear(year) + prop.rowHeight > 0 &&
+    positionByYear(year) - prop.rowHeight < prop.windowSize.x;
   let isVisibleRange = (from: number, to: number) =>
-    positionByYear(to) + prop.rowHeight > 0 && positionByYear(from) - prop.rowHeight < prop.windowSize.x;
+    positionByYear(to) + prop.rowHeight > 0 &&
+    positionByYear(from) - prop.rowHeight < prop.windowSize.x;
   let rowPosition = (rowNumber: number) =>
     prop.rowHeight * rowNumber + viewPosition.y;
 
+  let startPageDrag = (button: number, pageX: number, pageY: number) => {
+    if (button == 0) {
+      setDrag({
+        isDragged: true,
+        startViewPosition: viewPosition,
+        startDragPosition: { x: pageX, y: pageY },
+      });
+    }
+  };
+  let stopPageDrag = () => setDrag((state) => ({ ...state, isDragged: false }));
+  let executePageDrag = (pageX: number, pageY: number) => {
+    if (drag.isDragged) {
+      setPosition({
+        x: Math.min(
+          Math.max(
+            drag.startViewPosition.x -
+              (pageX - drag.startDragPosition.x) / zoom,
+            yearSelection.from - prop.yearLabelWidth,
+          ),
+          yearSelection.to + prop.yearLabelWidth,
+        ),
+        y: drag.startViewPosition.y + (pageY - drag.startDragPosition.y),
+      });
+    }
+  };
+  let executePageZoom = (distanceDelta: number) => {
+    if (zoom <= 10) {
+      setZoom(Math.max(1, zoom - distanceDelta / 200));
+      setYearSelection((ys) => ({ ...ys, stepSize: 100 }));
+    } else if (zoom <= 20) {
+      setZoom(zoom - distanceDelta / 400);
+      setYearSelection((ys) => ({ ...ys, stepSize: 10 }));
+    } else {
+      setZoom(zoom - distanceDelta / 600);
+      setYearSelection((ys) => ({ ...ys, stepSize: 5 }));
+    }
+  };
   return (
     <div
       style={{
@@ -85,43 +124,28 @@ const Chronology = () => {
         height: prop.windowSize.y,
         overflow: 'hidden',
       }}
-      onMouseDown={(e) => {
-        if (e.button == 0) {
-          setDrag({
-            isDragged: true,
-            startViewPosition: viewPosition,
-            startDragPosition: { x: e.pageX, y: e.pageY },
-          });
+      onMouseDown={(e) => startPageDrag(e.button, e.pageX, e.pageY)}
+      onTouchStart={(e) =>
+        startPageDrag(0, e.touches[0].pageX, e.touches[0].pageY)
+      }
+      onMouseUp={(e) => stopPageDrag()}
+      onTouchEnd={(e) => stopPageDrag()}
+      onMouseMove={(e) => executePageDrag(e.pageX, e.pageY)}
+      onTouchMove={(e) => {
+        switch (e.touches.length) {
+          case 1:
+            executePageDrag(e.touches[0].pageX, e.touches[0].pageY);
+            break;
+          case 2:
+            executePageZoom(
+              e.touches[1].clientX -
+                drag.startDragPosition.x +
+                (e.touches[1].clientY - drag.startDragPosition.y),
+            );
+            break;
         }
       }}
-      onMouseUp={(e) => setDrag((state) => ({ ...state, isDragged: false }))}
-      onMouseMove={(e) => {
-        if (drag.isDragged) {
-          setPosition({
-            x: Math.min(
-              Math.max(
-                drag.startViewPosition.x -
-                  (e.pageX - drag.startDragPosition.x) / zoom,
-                yearSelection.from - prop.yearLabelWidth,
-              ),
-              yearSelection.to + prop.yearLabelWidth,
-            ),
-            y: drag.startViewPosition.y + (e.pageY - drag.startDragPosition.y),
-          });
-        }
-      }}
-      onWheel={(e) => {
-        if (zoom <= 10) {
-          setZoom(Math.max(1, zoom - e.deltaY / 200));
-          setYearSelection((ys) => ({ ...ys, stepSize: 100 }));
-        } else if (zoom <= 20) {
-          setZoom(zoom - e.deltaY / 400);
-          setYearSelection((ys) => ({ ...ys, stepSize: 10 }));
-        } else {
-          setZoom(zoom - e.deltaY / 600);
-          setYearSelection((ys) => ({ ...ys, stepSize: 5 }));
-        }
-      }}
+      onWheel={(e) => executePageZoom(e.deltaY)}
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"

@@ -4,6 +4,8 @@
   user-select: none;
 }
 
+html,
 body {
+  overscroll-behavior-y: contain;
   background-color: #f3f3f3;
 }
