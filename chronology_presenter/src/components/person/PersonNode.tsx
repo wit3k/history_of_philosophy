@@ -20,11 +20,11 @@ export const PersonNode = (props: PersonNodeProps) => {
   return (
     <g>
       <rect
-        x={props.positionStart + 5}
+        x={props.positionStart}
         y={props.rowPosition}
         rx="5"
         ry="5"
-        width={props.settings.boxSize}
+        width={props.positionEnd - props.positionStart}
         height={props.settings.boxSize}
         style={{
           fill: dominantColor,
@@ -34,29 +34,37 @@ export const PersonNode = (props: PersonNodeProps) => {
           strokeOpacity: '1',
         }}
       />
+      <line
+        x1={props.positionStart + props.settings.boxSize}
+        y1={props.rowPosition + props.settings.boxSize / 2}
+        x2={props.positionEnd}
+        y2={props.rowPosition + props.settings.boxSize / 2}
+        stroke={dominantColor}
+        strokeWidth="4"
+      />
       <rect
         x={props.positionStart}
-        y={props.rowPosition - 5}
+        y={props.rowPosition}
         rx="10"
         ry="10"
-        width={props.settings.boxSize + 10}
-        height={props.settings.boxSize + 10}
+        width={props.settings.boxSize}
+        height={props.settings.boxSize}
         style={{
           fill: dominantColor,
           stroke: dominantColor,
-          strokeWidth: '1',
+          strokeWidth: '2',
           fillOpacity: '0.1',
           strokeOpacity: '1',
         }}
         className="cursor-pointer"
       />
       <rect
-        x={props.positionStart}
-        y={props.rowPosition + props.settings.boxSize}
+        x={props.positionStart - 1}
+        y={props.rowPosition + props.settings.boxSize - 15}
         rx="5"
         ry="5"
         width={props.person.name.length * 10}
-        height={30}
+        height={22}
         style={{
           fill: dominantColor,
           stroke: dominantColor,
@@ -68,11 +76,11 @@ export const PersonNode = (props: PersonNodeProps) => {
       />
       <text
         x={props.positionStart + 5}
-        y={props.rowPosition + props.settings.boxSize + 6}
+        y={props.rowPosition + props.settings.boxSize - 12}
         width={props.person.name.length * 10}
         dominantBaseline="hanging"
         textAnchor="start"
-        height="40"
+        height="30"
         fontFamily="Verdana"
         fontSize="15"
         fill="white"
@@ -80,29 +88,6 @@ export const PersonNode = (props: PersonNodeProps) => {
       >
         {props.person.name}
       </text>
-      <rect
-        x={props.positionStart + 10 + props.settings.boxSize}
-        y={props.rowPosition}
-        rx="5"
-        ry="5"
-        width={props.positionEnd - props.positionStart}
-        height={props.settings.boxSize}
-        style={{
-          fill: dominantColor,
-          stroke: dominantColor,
-          strokeWidth: '1',
-          fillOpacity: '0.1',
-          strokeOpacity: '1',
-        }}
-      />
-      <line
-        x1={props.positionStart + 11 + props.settings.boxSize}
-        y1={props.rowPosition + props.settings.boxSize / 2}
-        x2={props.positionEnd + 9 + props.settings.boxSize}
-        y2={props.rowPosition + props.settings.boxSize / 2}
-        stroke="#ffffff"
-        strokeWidth="5"
-      />
     </g>
   );
 };

@@ -26,26 +26,22 @@ export const PublicationNode = (props: PublicationNodeProps) => {
     <g onClick={(e) => console.log(props)}>
       <g className="tooltip">
         <rect
-          x={props.position - props.publication.title.length * 5}
+          x={props.position - props.publication.title.length * 7.5}
           y={props.rowPosition + props.settings.boxSize / 2}
-          rx="5"
-          ry="5"
-          width={props.publication.title.length * 10 + 10}
+          rx="3"
+          ry="3"
+          width={props.publication.title.length * 15}
           height={50}
           style={{
-            fill: dominantColor,
-            stroke: 'white',
-            strokeWidth: '4px',
+            fill: 'white',
+            stroke: dominantColor,
+            strokeWidth: '2px',
             fillOpacity: '1',
             strokeOpacity: '1',
           }}
         />
         <text
-          x={
-            props.position -
-            props.publication.title.length * 5 +
-            (props.publication.title.length * 10) / 2
-          }
+          x={props.position}
           y={props.rowPosition + props.settings.boxSize / 2 + 20}
           width={props.publication.title.length * 10 + 10}
           dominantBaseline="hanging"
@@ -53,7 +49,7 @@ export const PublicationNode = (props: PublicationNodeProps) => {
           height="40"
           fontFamily="Verdana"
           fontSize="15"
-          fill="white"
+          fill={dominantColor}
         >
           {props.publication.title}
         </text>
@@ -64,8 +60,8 @@ export const PublicationNode = (props: PublicationNodeProps) => {
         cy={props.rowPosition + props.settings.boxSize / 2}
         r={props.settings.dotSize}
         style={{
-          fill: dominantColor,
-          stroke: 'white',
+          fill: 'white',
+          stroke: dominantColor,
           strokeWidth: '4',
           fillOpacity: '1',
           strokeOpacity: '1',

@@ -37,20 +37,21 @@ export const PublicationReferenceNode = (
       props.positionEnd,
       props.rowPositionTo + props.settings.boxSize / 2,
     );
-    let vdir: VDirection = start.y > end.y ? -1 : start.y == end.y ? 0 : 1;
-    let hdir: HDirection = start.x > end.x ? -1 : start.x == end.x ? 0 : 1;
+    let vdir: VDirection = start.y > end.y ? -1 : 1;
+    let isEqual: VDirection = start.y == end.y ? -1 : 1;
+    let hdir: HDirection = start.x > end.x ? -1 : 1;
     let cos05 = 0.877;
     let distanceFromFactor =
       0.7 +
       (0.7 *
         ((props.publicationReference.to.publicationDate +
           props.publicationReference.from.publicationDate) %
-          5)) /
-        5;
+          15)) /
+        15;
     let distanceToFactor =
       1.4 +
       (0.7 *
-        ((props.publicationReference.from.publicationDate +
+        ((props.publicationReference.to.publicationDate +
           props.publicationReference.from.publicationDate) %
           5)) /
         5;
@@ -62,13 +63,15 @@ export const PublicationReferenceNode = (
       points.push(
         new Coordinates(
           start.x + props.settings.dotSize * cos05 * hdir,
-          start.y + props.settings.dotSize * cos05 * vdir,
+          start.y + props.settings.dotSize * cos05 * vdir * isEqual,
         ),
       );
+
       points.push(
         new Coordinates(
           start.x + props.settings.boxSize * cos05 * hdir,
-          start.y + props.settings.boxSize * distanceFromFactor * vdir,
+          start.y +
+            props.settings.boxSize * distanceFromFactor * vdir * isEqual,
         ),
       );
       if (
@@ -76,14 +79,15 @@ export const PublicationReferenceNode = (
           (start.x +
             props.settings.boxSize +
             props.settings.boxSize * distanceFromFactor * hdir) >
-        props.settings.boxSize * distanceFromFactor * hdir
+        props.settings.boxSize * distanceFromFactor * vdir
       ) {
         points.push(
           new Coordinates(
             start.x +
               props.settings.boxSize +
               props.settings.boxSize * distanceFromFactor * hdir,
-            start.y + props.settings.boxSize * distanceFromFactor * vdir,
+            start.y +
+              props.settings.boxSize * distanceFromFactor * vdir * isEqual,
           ),
         );
         points.push(
@@ -115,10 +119,7 @@ export const PublicationReferenceNode = (
         );
       }
       points.push(
-        new Coordinates(
-          end.x,
-          end.y - props.settings.dotSize * distanceToFactor * vdir,
-        ),
+        new Coordinates(end.x, end.y - props.settings.dotSize * vdir),
       );
     }
 
