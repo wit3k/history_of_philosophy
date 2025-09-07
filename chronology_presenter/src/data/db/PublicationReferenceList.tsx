@@ -18,7 +18,7 @@ const PublicationReferenceList = [
     '2',
     '***',
     PublicationsListService.getById('1'),
-    PublicationsListService.getById('4'),
+    PublicationsListService.getById('8'),
   ),
 
   new PublicationReference(

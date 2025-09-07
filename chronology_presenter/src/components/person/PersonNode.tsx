@@ -8,6 +8,7 @@ class PersonNodeProps {
     public positionEnd: number,
     public settings: PersonNodeSettings,
     public rowPosition: number,
+    public updateHighlightedAuthor: any,
   ) {}
 }
 
@@ -57,6 +58,8 @@ export const PersonNode = (props: PersonNodeProps) => {
           strokeOpacity: '1',
         }}
         className="cursor-pointer"
+        onMouseMove={() => props.updateHighlightedAuthor(props.person.id)}
+        onClick={() => props.updateHighlightedAuthor(props.person.id)}
       />
       <rect
         x={props.positionStart - 1}

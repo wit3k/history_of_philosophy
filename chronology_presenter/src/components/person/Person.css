@@ -13,8 +13,6 @@ g:has(.tooltipHover:hover) .tooltip {
 
 .animated-dash {
   stroke-dashoffset: 200;
-}
-g:has(.tooltipHover:hover) .animated-dash {
   stroke-dasharray: 20 3;
 
   animation: dash-flow 5s linear infinite;

@@ -38,6 +38,9 @@ const Chronology = () => {
     startViewPosition: { x: 0, y: 0 },
     startDragPosition: { x: 0, y: 0 },
   });
+  const [highlightedAuthor, updateHighlightedAuthor] = React.useState('0');
+  const [highlightedPublication, updateHighlightedPublication] =
+    React.useState('0');
   const [viewPosition, setPosition] = React.useState({ x: 1809, y: 0 });
   const [yearSelection, setYearSelection] = React.useState({
     from: -1200,
@@ -166,6 +169,11 @@ const Chronology = () => {
               setYearSelection((ys) => ({ ...ys, stepSize: 5 }));
             }
 
+            setPosition({
+              x: viewPosition.x - pinchSize / 100,
+              y: viewPosition.y,
+            });
+
             stopPageDrag();
 
             break;
@@ -182,6 +190,10 @@ const Chronology = () => {
           setYearSelection((ys) => ({ ...ys, stepSize: 5 }));
           setZoom(zoom - e.deltaY / 300);
         }
+        setPosition({
+          x: viewPosition.x - e.deltaY / 100,
+          y: viewPosition.y,
+        });
       }}
     >
       <svg
@@ -190,6 +202,27 @@ const Chronology = () => {
         preserveAspectRatio="xMidYMid meet"
         style={{ width: prop.windowSize.x, height: prop.windowSize.y }}
       >
+        <rect
+          x="0%"
+          y="0%"
+          width={prop.windowSize.x}
+          height={prop.windowSize.y}
+          onClick={() => {
+            updateHighlightedPublication('0');
+            updateHighlightedAuthor('0');
+          }}
+          onMouseMove={() => {
+            updateHighlightedPublication('0');
+            updateHighlightedAuthor('0');
+          }}
+          style={{
+            fill: 'white',
+            stroke: 'none',
+            strokeWidth: '0',
+            fillOpacity: '0',
+            strokeOpacity: '0',
+          }}
+        />
         {yearsOnScale.filter(isVisible).map((year, i) => (
           <TimeScaleLine
             year={year}
@@ -209,8 +242,51 @@ const Chronology = () => {
             positionEnd={positionByYear(person.died)}
             settings={personNodesSettings}
             rowPosition={rowPosition(person.rowNumber)}
+            updateHighlightedAuthor={updateHighlightedAuthor}
           />
         ))}
+        {PublicationReferenceList.map((reference, i) => {
+          if (
+            reference.from &&
+            reference.to &&
+            isVisibleRange(
+              Math.min(
+                reference.from?.publicationDate,
+                reference.to?.publicationDate,
+              ),
+              Math.max(
+                reference.from?.publicationDate,
+                reference.to?.publicationDate,
+              ),
+            )
+          ) {
+            const authorFrom = PublicationsListService.getPublicationAuthor(
+              reference.from,
+            );
+            const authorTo = PublicationsListService.getPublicationAuthor(
+              reference.to,
+            );
+            if (authorFrom && authorTo) {
+              return (
+                <PublicationReferenceNode
+                  key={'pubref' + reference.id + i}
+                  publicationReference={reference}
+                  settings={publicationReferenceSettings}
+                  authorFrom={authorFrom}
+                  authorTo={authorTo}
+                  positionStart={positionByYear(reference.from.publicationDate)}
+                  positionEnd={positionByYear(reference.to.publicationDate)}
+                  rowPositionFrom={rowPosition(authorFrom.rowNumber)}
+                  rowPositionTo={rowPosition(authorTo.rowNumber)}
+                  isHighlighted={
+                    highlightedAuthor == authorFrom.id ||
+                    highlightedPublication == reference.from.id
+                  }
+                />
+              );
+            }
+          }
+        })}
         {PublicationsList.filter((publication) =>
           isVisible(publication.publicationDate),
         )
@@ -221,60 +297,15 @@ const Chronology = () => {
           .map(({ publication, author }, i) => {
             if (author) {
               return (
-                <g key={'publication' + publication.id + i}>
-                  {PublicationReferenceList.map((reference, i) => {
-                    if (
-                      reference.from &&
-                      reference.from.id == publication.id &&
-                      reference.to &&
-                      isVisibleRange(
-                        Math.min(
-                          reference.from?.publicationDate,
-                          reference.to?.publicationDate,
-                        ),
-                        Math.max(
-                          reference.from?.publicationDate,
-                          reference.to?.publicationDate,
-                        ),
-                      )
-                    ) {
-                      const authorFrom =
-                        PublicationsListService.getPublicationAuthor(
-                          reference.from,
-                        );
-                      const authorTo =
-                        PublicationsListService.getPublicationAuthor(
-                          reference.to,
-                        );
-                      if (authorFrom && authorTo) {
-                        return (
-                          <PublicationReferenceNode
-                            key={'pubref' + reference.id + i}
-                            publicationReference={reference}
-                            settings={publicationReferenceSettings}
-                            authorFrom={authorFrom}
-                            authorTo={authorTo}
-                            positionStart={positionByYear(
-                              reference.from.publicationDate,
-                            )}
-                            positionEnd={positionByYear(
-                              reference.to.publicationDate,
-                            )}
-                            rowPositionFrom={rowPosition(authorFrom.rowNumber)}
-                            rowPositionTo={rowPosition(authorTo.rowNumber)}
-                          />
-                        );
-                      }
-                    }
-                  })}
-                  <PublicationNode
-                    publication={publication}
-                    author={author}
-                    position={positionByYear(publication.publicationDate)}
-                    settings={publicationNodeSettings}
-                    rowPosition={rowPosition(author.rowNumber)}
-                  />
-                </g>
+                <PublicationNode
+                  key={'publication' + publication.id + i}
+                  publication={publication}
+                  author={author}
+                  position={positionByYear(publication.publicationDate)}
+                  settings={publicationNodeSettings}
+                  rowPosition={rowPosition(author.rowNumber)}
+                  updateHighlightedPublication={updateHighlightedPublication}
+                />
               );
             }
           })}

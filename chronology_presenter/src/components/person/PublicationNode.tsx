@@ -10,6 +10,7 @@ class PublicationNodeProps {
     public position: number,
     public settings: PublicationNodeSettings,
     public rowPosition: number,
+    public updateHighlightedPublication: any,
   ) {}
 }
 
@@ -23,7 +24,7 @@ export class PublicationNodeSettings {
 export const PublicationNode = (props: PublicationNodeProps) => {
   const dominantColor = getAccentColor(props.author.name);
   return (
-    <g onClick={(e) => console.log(props)}>
+    <g>
       <g className="tooltip">
         <rect
           x={props.position - props.publication.title.length * 7.5}
@@ -59,6 +60,10 @@ export const PublicationNode = (props: PublicationNodeProps) => {
         cx={props.position}
         cy={props.rowPosition + props.settings.boxSize / 2}
         r={props.settings.dotSize}
+        onMouseMove={() =>
+          props.updateHighlightedPublication(props.publication.id)
+        }
+        onClick={() => props.updateHighlightedPublication(props.publication.id)}
         style={{
           fill: 'white',
           stroke: dominantColor,

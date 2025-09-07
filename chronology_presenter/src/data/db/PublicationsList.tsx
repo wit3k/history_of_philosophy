@@ -10,7 +10,12 @@ const PublicationsList = [
   new Publication('5', 'Traktat', 1874, '2'),
   new Publication('6', 'Esej', 1821, '3'),
   new Publication('7', 'Rozprawka', 1855, '4'),
-  new Publication('8', 'Rozprawka', 1883, '5'),
+  new Publication(
+    '8',
+    'Publikacja o bardzo długim, zawiłym i wielomodułowym tytule. Pierwsza kreww.',
+    1883,
+    '5',
+  ),
 ]; //.sort((p1, p2) => p1.publicationDate - p2.publicationDate);
 
 const bookAuthorsMap: Map<string, Person | undefined> = new Map();

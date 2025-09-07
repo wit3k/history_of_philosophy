@@ -14,6 +14,7 @@ class PublicationReferenceNodeProps {
     public positionEnd: number,
     public rowPositionFrom: number,
     public rowPositionTo: number,
+    public isHighlighted: boolean,
     public settings: PublicationReferenceSettings,
   ) {}
 }
@@ -29,6 +30,13 @@ export const PublicationReferenceNode = (
   props: PublicationReferenceNodeProps,
 ) => {
   if (props.publicationReference.from && props.publicationReference.to) {
+    let extraSpacing = props.settings.boxSize * 2;
+    let mostLeft = Math.min(props.positionStart, props.positionEnd);
+    let mostRight = Math.max(props.positionStart, props.positionEnd);
+    let shrinkFactor =
+      mostRight - mostLeft < extraSpacing
+        ? ((mostRight - mostLeft) % extraSpacing) / extraSpacing
+        : 1.0;
     let start: Coordinates = new Coordinates(
       props.positionStart,
       props.rowPositionFrom + props.settings.boxSize / 2,
@@ -62,62 +70,64 @@ export const PublicationReferenceNode = (
     } else {
       points.push(
         new Coordinates(
-          start.x + props.settings.dotSize * cos05 * hdir,
+          start.x + props.settings.dotSize * cos05 * hdir * shrinkFactor,
           start.y + props.settings.dotSize * cos05 * vdir * isEqual,
         ),
       );
 
       points.push(
         new Coordinates(
-          start.x + props.settings.boxSize * cos05 * hdir,
+          start.x + props.settings.boxSize * cos05 * hdir * shrinkFactor,
           start.y +
             props.settings.boxSize * distanceFromFactor * vdir * isEqual,
         ),
       );
-      if (
-        end.x -
-          (start.x +
-            props.settings.boxSize +
-            props.settings.boxSize * distanceFromFactor * hdir) >
-        props.settings.boxSize * distanceFromFactor * vdir
-      ) {
-        points.push(
-          new Coordinates(
-            start.x +
-              props.settings.boxSize +
-              props.settings.boxSize * distanceFromFactor * hdir,
-            start.y +
-              props.settings.boxSize * distanceFromFactor * vdir * isEqual,
-          ),
-        );
-        points.push(
-          new Coordinates(
-            start.x +
-              props.settings.boxSize +
-              props.settings.boxSize * distanceFromFactor * hdir,
-            end.y - props.settings.boxSize * distanceToFactor * vdir,
-          ),
-        );
-        points.push(
-          new Coordinates(
-            end.x - props.settings.boxSize,
-            end.y - props.settings.boxSize * distanceToFactor * vdir,
-          ),
-        );
-        points.push(
-          new Coordinates(
-            end.x,
-            end.y - props.settings.boxSize * distanceToFactor * vdir,
-          ),
-        );
-      } else {
-        points.push(
-          new Coordinates(
-            end.x,
-            start.y + props.settings.boxSize * distanceFromFactor * vdir,
-          ),
-        );
-      }
+      // if (
+      //   end.x -
+      //     (start.x +
+      //       props.settings.boxSize +
+      //       props.settings.boxSize * distanceFromFactor * hdir) >
+      //   props.settings.boxSize * distanceFromFactor * vdir
+      // ) {
+      points.push(
+        new Coordinates(
+          start.x +
+            (props.settings.boxSize +
+              props.settings.boxSize * distanceFromFactor * hdir) *
+              shrinkFactor,
+          start.y +
+            props.settings.boxSize * distanceFromFactor * vdir * isEqual,
+        ),
+      );
+      points.push(
+        new Coordinates(
+          start.x +
+            (props.settings.boxSize +
+              props.settings.boxSize * distanceFromFactor * hdir) *
+              shrinkFactor,
+          end.y - props.settings.boxSize * distanceToFactor * vdir,
+        ),
+      );
+      // points.push(
+      //   new Coordinates(
+      //     end.x - props.settings.boxSize * shrinkFactor,
+      //     end.y - props.settings.boxSize * distanceToFactor * vdir,
+      //   ),
+      // );
+      points.push(
+        new Coordinates(
+          end.x,
+          end.y - props.settings.boxSize * distanceToFactor * vdir,
+        ),
+      );
+      // } else {
+      //   points.push(
+      //     new Coordinates(
+      //       end.x,
+      //       start.y + props.settings.boxSize * distanceFromFactor * vdir,
+      //     ),
+      //   );
+      // }
       points.push(
         new Coordinates(end.x, end.y - props.settings.dotSize * vdir),
       );
@@ -131,23 +141,26 @@ export const PublicationReferenceNode = (
       .join(' ');
 
     let colorFrom = getAccentColor(props.authorFrom.name);
-    let colorTo = getAccentColor(props.authorTo.name);
+    // let colorTo = getAccentColor(props.authorTo.name);
     return (
       <g onClick={(e) => console.log(props)}>
-        <defs>
-          <linearGradient id={'linear-grad' + start.x + '-' + start.y}>
-            <stop offset="0" stopColor={colorTo} />
-            <stop offset="1" stopColor={colorFrom} />
+        {/* <defs>
+          <linearGradient id={'linear-grad' + start.x + '-' + start.y} gradientUnits="userSpaceOnUse" 
+   x1="0%" y1="0%" x2="100%" y2="100%" gradientTransform="rotate(90)">
+            <stop offset="0" stopColor={colorFrom} />
+            <stop offset="1" stopColor={colorTo} />
           </linearGradient>
-        </defs>
+        </defs> */}
         <path
           // d={pathPoints}
           d={roundPathCorners(pathPoints, 5, false)}
-          stroke={'url(#' + 'linear-grad' + start.x + '-' + start.y + ')'}
-          // stroke="red"
+          // stroke={'url(#' + 'linear-grad' + start.x + '-' + start.y + ')'}
+          stroke={colorFrom}
           strokeWidth="2"
           fill="none"
-          className="opacity-70 animated-dash"
+          className={
+            'opacity-70 ' + (props.isHighlighted ? 'animated-dash' : '')
+          }
         />
       </g>
     );
