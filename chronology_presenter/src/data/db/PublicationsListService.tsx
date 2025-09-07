@@ -16,7 +16,7 @@ const PublicationsListDB = [
     1883,
     '5',
   ),
-]; //.sort((p1, p2) => p1.publicationDate - p2.publicationDate);
+].sort((p1, p2) => p1.publicationDate - p2.publicationDate);
 
 const bookAuthorsMap: Map<string, Person | undefined> = new Map();
 

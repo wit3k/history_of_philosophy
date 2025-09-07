@@ -6,7 +6,6 @@ const PeopleListService = [
   new Person('3', 'Czeci Pan', 1810, 1848, 3),
   new Person('5', 'Pan Równoległy :)', 1850, 1888, 3),
   new Person('4', 'Czarta Pani', 1820, 1901, 4),
-];
-//.sort((p1, p2) => p1.born - p2.born);
+].sort((p1, p2) => p1.born - p2.born);
 
 export default PeopleListService;
