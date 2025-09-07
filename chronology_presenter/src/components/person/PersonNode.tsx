@@ -8,7 +8,9 @@ class PersonNodeProps {
     public positionEnd: number,
     public settings: PersonNodeSettings,
     public rowPosition: number,
-    public updateHighlightedAuthor: any,
+    public updateHighlightedAuthor: React.Dispatch<
+      React.SetStateAction<string>
+    >,
   ) {}
 }
 

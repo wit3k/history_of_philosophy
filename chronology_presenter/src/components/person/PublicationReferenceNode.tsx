@@ -82,13 +82,7 @@ export const PublicationReferenceNode = (
             props.settings.boxSize * distanceFromFactor * vdir * isEqual,
         ),
       );
-      // if (
-      //   end.x -
-      //     (start.x +
-      //       props.settings.boxSize +
-      //       props.settings.boxSize * distanceFromFactor * hdir) >
-      //   props.settings.boxSize * distanceFromFactor * vdir
-      // ) {
+
       points.push(
         new Coordinates(
           start.x +
@@ -99,6 +93,7 @@ export const PublicationReferenceNode = (
             props.settings.boxSize * distanceFromFactor * vdir * isEqual,
         ),
       );
+
       points.push(
         new Coordinates(
           start.x +
@@ -108,26 +103,14 @@ export const PublicationReferenceNode = (
           end.y - props.settings.boxSize * distanceToFactor * vdir,
         ),
       );
-      // points.push(
-      //   new Coordinates(
-      //     end.x - props.settings.boxSize * shrinkFactor,
-      //     end.y - props.settings.boxSize * distanceToFactor * vdir,
-      //   ),
-      // );
+
       points.push(
         new Coordinates(
           end.x,
           end.y - props.settings.boxSize * distanceToFactor * vdir,
         ),
       );
-      // } else {
-      //   points.push(
-      //     new Coordinates(
-      //       end.x,
-      //       start.y + props.settings.boxSize * distanceFromFactor * vdir,
-      //     ),
-      //   );
-      // }
+
       points.push(
         new Coordinates(end.x, end.y - props.settings.dotSize * vdir),
       );
@@ -141,28 +124,14 @@ export const PublicationReferenceNode = (
       .join(' ');
 
     let colorFrom = getAccentColor(props.authorFrom.name);
-    // let colorTo = getAccentColor(props.authorTo.name);
     return (
-      <g onClick={(e) => console.log(props)}>
-        {/* <defs>
-          <linearGradient id={'linear-grad' + start.x + '-' + start.y} gradientUnits="userSpaceOnUse" 
-   x1="0%" y1="0%" x2="100%" y2="100%" gradientTransform="rotate(90)">
-            <stop offset="0" stopColor={colorFrom} />
-            <stop offset="1" stopColor={colorTo} />
-          </linearGradient>
-        </defs> */}
-        <path
-          // d={pathPoints}
-          d={roundPathCorners(pathPoints, 5, false)}
-          // stroke={'url(#' + 'linear-grad' + start.x + '-' + start.y + ')'}
-          stroke={colorFrom}
-          strokeWidth="2"
-          fill="none"
-          className={
-            'opacity-70 ' + (props.isHighlighted ? 'animated-dash' : '')
-          }
-        />
-      </g>
+      <path
+        d={roundPathCorners(pathPoints, 5, false)}
+        stroke={colorFrom}
+        strokeWidth="2"
+        fill="none"
+        className={'opacity-70 ' + (props.isHighlighted ? 'animated-dash' : '')}
+      />
     );
   }
 };

@@ -55,6 +55,8 @@ const Chronology = () => {
   const publicationNodeSettings: PublicationNodeSettings = {
     dotSize: 15,
     boxSize: 50,
+    maxLettersColumns: 25,
+    maxLettersRows: 3,
   };
 
   const publicationReferenceSettings: PublicationReferenceSettings = {
