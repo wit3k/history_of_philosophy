@@ -1,6 +1,6 @@
 import Person from '../dto/Person';
 
-const PeopleList = [
+const PeopleListService = [
   new Person('1', 'Pan Testowy z baaaadzo długim nazwiskiem', 1820, 1901, 1),
   new Person('2', 'Drugi Pan..', 1831, 1888, 2),
   new Person('3', 'Czeci Pan', 1810, 1848, 3),
@@ -9,4 +9,4 @@ const PeopleList = [
 ];
 //.sort((p1, p2) => p1.born - p2.born);
 
-export default PeopleList;
+export default PeopleListService;

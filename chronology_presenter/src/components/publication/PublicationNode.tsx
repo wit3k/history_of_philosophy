@@ -1,4 +1,4 @@
-import './Person.css';
+import './PublicationNode.css';
 import Publication from '../../data/dto/Publication';
 import Person from '../../data/dto/Person';
 import getAccentColor from '../../services/Colors';
@@ -25,7 +25,7 @@ export class PublicationNodeSettings {
   ) {}
 }
 
-export const PublicationNode = (props: PublicationNodeProps) => {
+const PublicationNode = (props: PublicationNodeProps) => {
   const dominantColor = getAccentColor(props.author.name);
   const titleSections = props.publication.title
     .split(' ')

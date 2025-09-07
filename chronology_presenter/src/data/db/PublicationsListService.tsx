@@ -1,8 +1,8 @@
 import type Person from '../dto/Person';
 import Publication from '../dto/Publication';
-import PeopleList from './PeopleList';
+import PeopleList from './PeopleListService';
 
-const PublicationsList = [
+const PublicationsListDB = [
   new Publication('1', 'Pierwszy tytuł', 1840, '1'),
   new Publication('2', 'Drugi', 1842, '1'),
   new Publication('3', 'Książka jakaś', 1849, '1'),
@@ -20,7 +20,7 @@ const PublicationsList = [
 
 const bookAuthorsMap: Map<string, Person | undefined> = new Map();
 
-PublicationsList.forEach((publication) => {
+PublicationsListDB.forEach((publication) => {
   bookAuthorsMap.set(
     publication.id,
     PeopleList.find((person) => publication.authorId == person.id),
@@ -28,9 +28,10 @@ PublicationsList.forEach((publication) => {
 });
 
 export const PublicationsListService = {
-  getById: (id: string) => PublicationsList.find((p) => p.id == id),
+  getAll: () => PublicationsListDB,
+  getById: (id: string) => PublicationsListDB.find((p) => p.id == id),
   getPublicationAuthor: (publication: Publication) =>
     bookAuthorsMap.get(publication.id),
 };
 
-export default PublicationsList;
+export default PublicationsListService;

@@ -6,7 +6,7 @@ class TimeScaleLabelProps {
   ) {}
 }
 
-const TimeScaleLabel = (props: TimeScaleLabelProps) => {
+const ChronologyScaleLabel = (props: TimeScaleLabelProps) => {
   return (
     <g>
       <rect
@@ -16,7 +16,7 @@ const TimeScaleLabel = (props: TimeScaleLabelProps) => {
         ry="5"
         width={props.yearLabelWidth}
         height="40"
-        fill={props.year % 100 ? '#cecece' : '#eeeeee'}
+        fill={props.year % 100 ? '#f3f3f3' : '#fff'}
       />
       <text
         x={props.position}
@@ -35,4 +35,4 @@ const TimeScaleLabel = (props: TimeScaleLabelProps) => {
   );
 };
 
-export default TimeScaleLabel;
+export default ChronologyScaleLabel;

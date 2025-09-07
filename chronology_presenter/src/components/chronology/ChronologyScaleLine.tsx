@@ -6,7 +6,7 @@ class TimeScaleLineProps {
   ) {}
 }
 
-const TimeScaleLine = (props: TimeScaleLineProps) => {
+const ChronologyScaleLine = (props: TimeScaleLineProps) => {
   return (
     <line
       x1={props.position}
@@ -20,4 +20,4 @@ const TimeScaleLine = (props: TimeScaleLineProps) => {
   );
 };
 
-export default TimeScaleLine;
+export default ChronologyScaleLine;

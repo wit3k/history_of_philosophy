@@ -1,3 +1,4 @@
+import './PublicationReferenceNode.css';
 import type Person from '../../data/dto/Person';
 import type PublicationReference from '../../data/dto/PublicationReference';
 import Coordinates from '../../geometry/Coordinates';
@@ -26,9 +27,7 @@ export class PublicationReferenceSettings {
   ) {}
 }
 
-export const PublicationReferenceNode = (
-  props: PublicationReferenceNodeProps,
-) => {
+const PublicationReferenceNode = (props: PublicationReferenceNodeProps) => {
   if (props.publicationReference.from && props.publicationReference.to) {
     let extraSpacing = props.settings.boxSize * 2;
     let mostLeft = Math.min(props.positionStart, props.positionEnd);
@@ -135,3 +134,5 @@ export const PublicationReferenceNode = (
     );
   }
 };
+
+export default PublicationReferenceNode;

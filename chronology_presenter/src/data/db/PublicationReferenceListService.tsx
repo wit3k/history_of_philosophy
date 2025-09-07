@@ -1,7 +1,7 @@
 import PublicationReference from '../dto/PublicationReference';
-import { PublicationsListService } from './PublicationsList';
+import { PublicationsListService } from './PublicationsListService';
 
-const PublicationReferenceList = [
+const PublicationReferenceListService = [
   new PublicationReference(
     '0',
     '***',
@@ -87,4 +87,4 @@ const PublicationReferenceList = [
 //   p1.from && p2.from ? p1.from.publicationDate - p2.from.publicationDate : 0,
 // );
 
-export default PublicationReferenceList;
+export default PublicationReferenceListService;

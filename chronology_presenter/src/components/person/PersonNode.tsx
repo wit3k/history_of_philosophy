@@ -18,7 +18,7 @@ export class PersonNodeSettings {
   constructor(public boxSize: number) {}
 }
 
-export const PersonNode = (props: PersonNodeProps) => {
+const PersonNode = (props: PersonNodeProps) => {
   const dominantColor = getAccentColor(props.person.name);
   return (
     <g>
@@ -96,3 +96,5 @@ export const PersonNode = (props: PersonNodeProps) => {
     </g>
   );
 };
+
+export default PersonNode;
