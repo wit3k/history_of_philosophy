@@ -215,7 +215,7 @@ const Chronology = () => {
         />
 
         <PeopleList
-          isVisibleRange={isVisible}
+          isVisibleRange={isVisibleRange}
           personNodesSettings={personNodesSettings}
           positionByYear={positionByYear}
           rowPosition={rowPosition}
