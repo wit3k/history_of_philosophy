@@ -1,5 +1,4 @@
 import './Chronology.css';
-import useWindowDimensions from '../../geometry/useWindowDimensions';
 import React from 'react';
 import ChronologyPad from './ChronologyPad';
 import ChronologyScale from './ChronologyScale';
@@ -10,6 +9,7 @@ import { PublicationReferenceSettings } from '../publicationReference/Publicatio
 import Coordinates from '../../geometry/Coordinates';
 import PeopleList from '../person/PeopleList';
 import PublicationReferencesList from '../publicationReference/publicationReferencesList';
+import UIToggle from '../ui/Toggle';
 
 class ChronologyProperies {
   constructor(
@@ -20,15 +20,39 @@ class ChronologyProperies {
 }
 
 const Chronology = () => {
-  const dimenstions = useWindowDimensions();
+  const hasWindow = typeof window !== 'undefined';
+
+  const getWindowDimensions = () => ({
+    x: hasWindow ? window.innerWidth : 0,
+    y: hasWindow ? window.innerHeight : 0,
+  });
+
+  const [dimenstions, setWindowDimensions] = React.useState(
+    getWindowDimensions(),
+  );
+
+  React.useEffect(() => {
+    if (hasWindow) {
+      function handleResize() {
+        setWindowDimensions(getWindowDimensions());
+      }
+
+      window.addEventListener('resize', handleResize);
+      window.addEventListener('orientationchange', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
+  }, [hasWindow]);
+
   const prop: ChronologyProperies = {
-    windowSize: {
-      x: dimenstions.width,
-      y: dimenstions.height,
-    },
+    windowSize: dimenstions,
     yearLabelWidth: 100,
     rowHeight: 165,
   };
+
+  const [displayAuthors, setDisplayAuthors] = React.useState(true);
+  const [displayPublications, setDisplayPublications] = React.useState(true);
+  const [displayPublicationRelations, setDisplayPublicationRelations] =
+    React.useState(true);
 
   const [zoom, setZoom] = React.useState(22);
   const [pinchDelta, setPinchDelta] = React.useState(0);
@@ -207,30 +231,36 @@ const Chronology = () => {
           yearsOnScale={yearsOnScale}
         />
 
-        <PeopleList
-          isVisibleRange={isVisibleRange}
-          personNodesSettings={personNodesSettings}
-          positionByYear={positionByYear}
-          rowPosition={rowPosition}
-          updateHighlightedAuthor={updateHighlightedAuthor}
-        />
+        {displayAuthors && (
+          <PeopleList
+            isVisibleRange={isVisibleRange}
+            personNodesSettings={personNodesSettings}
+            positionByYear={positionByYear}
+            rowPosition={rowPosition}
+            updateHighlightedAuthor={updateHighlightedAuthor}
+          />
+        )}
 
-        <PublicationReferencesList
-          highlightedAuthor={highlightedAuthor}
-          highlightedPublication={highlightedPublication}
-          isVisibleRange={isVisibleRange}
-          positionByYear={positionByYear}
-          publicationReferenceSettings={publicationReferenceSettings}
-          rowPosition={rowPosition}
-        />
+        {displayPublicationRelations && displayPublications && (
+          <PublicationReferencesList
+            highlightedAuthor={highlightedAuthor}
+            highlightedPublication={highlightedPublication}
+            isVisibleRange={isVisibleRange}
+            positionByYear={positionByYear}
+            publicationReferenceSettings={publicationReferenceSettings}
+            rowPosition={rowPosition}
+          />
+        )}
 
-        <PublicationsList
-          isVisible={isVisible}
-          positionByYear={positionByYear}
-          publicationNodeSettings={publicationNodeSettings}
-          rowPosition={rowPosition}
-          updateHighlightedPublication={updateHighlightedPublication}
-        />
+        {displayPublications && (
+          <PublicationsList
+            isVisible={isVisible}
+            positionByYear={positionByYear}
+            publicationNodeSettings={publicationNodeSettings}
+            rowPosition={rowPosition}
+            updateHighlightedPublication={updateHighlightedPublication}
+          />
+        )}
       </svg>
 
       <ChronologyScale
@@ -240,6 +270,27 @@ const Chronology = () => {
         yearLabelWidth={prop.yearLabelWidth}
         yearsOnScale={yearsOnScale}
       />
+      <div className="fixed top-0 right-0 w-3xs rounded-lg p-4 grid grid-cols-1 grid-rows-4 gap-4">
+        <UIToggle
+          label="Autorzy"
+          state={displayAuthors}
+          useState={setDisplayAuthors}
+          offMsg=""
+        />
+        <UIToggle
+          label="Publikacje"
+          state={displayPublications}
+          useState={setDisplayPublications}
+          offMsg=""
+        />
+        <UIToggle
+          label="Odniesienia"
+          state={displayPublicationRelations}
+          useState={setDisplayPublicationRelations}
+          offMsg=""
+          disabled={!displayPublications}
+        />
+      </div>
     </div>
   );
 };
