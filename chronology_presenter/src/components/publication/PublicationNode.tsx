@@ -51,7 +51,7 @@ const PublicationNode = (props: PublicationNodeProps) => {
             fill: 'white',
             stroke: dominantColor,
             strokeWidth: '2px',
-            fillOpacity: '0.5',
+            fillOpacity: '0.7',
             strokeOpacity: '1',
           }}
         />
@@ -62,13 +62,17 @@ const PublicationNode = (props: PublicationNodeProps) => {
           dominantBaseline="hanging"
           textAnchor="start"
           height={60 + 10 * (slices.length - 1)}
-          fontFamily="Verdana"
-          fontSize="15"
+          fontSize="14"
+          className=" font-sans font-bold "
           fill={dominantColor}
           dy="10"
         >
           {slices.map((s, i) => (
-            <tspan x={props.position - 90} dy="0.8em">
+            <tspan
+              key={'pubTitle' + props.publication.id + i}
+              x={props.position - 90}
+              dy="0.8em"
+            >
               {s}{' '}
               {i == slices.length - 1 && slices.length != titleSections.length
                 ? '...'
@@ -93,7 +97,7 @@ const PublicationNode = (props: PublicationNodeProps) => {
           fillOpacity: '1',
           strokeOpacity: '1',
         }}
-        className="tooltipHover cursor-pointer"
+        className="tooltipHover cursor-pointer flex h-10 w-10 items-center justify-center rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors duration-300"
       />
     </g>
   );

@@ -53,7 +53,9 @@ const PublicationReferencesList = (props: PublicationReferencesListProps) =>
             rowPositionTo={props.rowPosition(authorTo.rowNumber)}
             isHighlighted={
               props.highlightedAuthor == authorFrom.id ||
-              props.highlightedPublication == reference.from.id
+              props.highlightedAuthor == authorTo.id ||
+              props.highlightedPublication == reference.from.id ||
+              props.highlightedPublication == reference.to.id
             }
           />
         );

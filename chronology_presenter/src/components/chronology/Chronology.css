@@ -6,10 +6,11 @@
   margin: 0;
 }
 .scale {
-  background-color: rgba(150, 150, 150, 0.1);
-  /* backdrop-filter: blur(2px); */
+  /* background: linear-gradient(0deg,rgba(243, 243, 243, 1) 0%, rgba(243, 243, 243, 0.68) 50%, rgba(243, 243, 243, 0) 100%); */
+  backdrop-filter: blur(2px);
+  border-top: 1px white solid;
   overflow: hidden;
-  height: 60px;
+  height: 30px;
   margin: 0px;
   border-radius: 5px 5px 0 0;
 }

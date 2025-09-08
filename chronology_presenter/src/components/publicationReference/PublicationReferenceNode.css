@@ -1,8 +1,8 @@
 .animated-dash {
-  stroke-dashoffset: 200;
+  stroke-dashoffset: 2000;
   stroke-dasharray: 20 3;
 
-  animation: dash-flow 5s linear infinite;
+  animation: dash-flow 50s linear infinite;
 }
 
 @keyframes dash-flow {

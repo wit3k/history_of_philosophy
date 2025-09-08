@@ -11,23 +11,24 @@ const ChronologyScaleLabel = (props: TimeScaleLabelProps) => {
     <g>
       <rect
         x={props.position - props.yearLabelWidth / 2}
-        y="30"
+        y="0"
         rx="5"
         ry="5"
         width={props.yearLabelWidth}
         height="40"
-        fill={props.year % 100 ? '#f3f3f3' : '#fff'}
+        fill={props.year % 100 ? '#cacacaff' : '#a4a4a4ff'}
       />
       <text
         x={props.position}
-        y="55"
+        y="8"
         width={props.yearLabelWidth}
-        dominantBaseline="middle"
+        dominantBaseline="hanging"
         textAnchor="middle"
         height="40"
-        fontFamily="Verdana"
+        // fontFamily="Verdana"
         fontSize="15"
-        fill="dark-grey"
+        fill={props.year % 100 ? '#6b6b6bff' : 'white'}
+        className="font-mono"
       >
         {props.year}
       </text>

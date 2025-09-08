@@ -1,5 +1,5 @@
 import './Chronology.css';
-import useWindowDimensions from '../../useWindowDimensions';
+import useWindowDimensions from '../../geometry/useWindowDimensions';
 import React from 'react';
 import ChronologyPad from './ChronologyPad';
 import ChronologyScale from './ChronologyScale';
@@ -134,15 +134,13 @@ const Chronology = () => {
         executePageDrag(touches[0].pageX, touches[0].pageY);
         break;
       case 2:
-        // executePageDrag(e.touches[0].pageX, e.touches[0].pageY);
-
         let pinchSize: number = calculateDelta(
           touches[0].pageX,
           touches[0].pageY,
           touches[1].pageX,
           touches[1].pageY,
         );
-        setZoom(zoom - (pinchDelta - pinchSize) / 200);
+        setZoom(zoom - (pinchDelta - pinchSize) / 100);
         setPinchDelta(pinchSize);
 
         if (zoom <= 10) {
@@ -152,11 +150,6 @@ const Chronology = () => {
         } else {
           setYearSelection((ys) => ({ ...ys, stepSize: 5 }));
         }
-
-        setPosition({
-          x: viewPosition.x - pinchSize / 100,
-          y: viewPosition.y,
-        });
 
         stopPageDrag();
 
@@ -191,8 +184,8 @@ const Chronology = () => {
       }}
       onMouseDown={(e) => startPageDrag(e.button, e.pageX, e.pageY)}
       onTouchStart={(e) => multitouchStart(e.touches)}
-      onMouseUp={(e) => stopPageDrag()}
-      onTouchEnd={(e) => stopPageDrag()}
+      onMouseUp={(_) => stopPageDrag()}
+      onTouchEnd={(_) => stopPageDrag()}
       onMouseMove={(e) => executePageDrag(e.pageX, e.pageY)}
       onTouchMove={(e) => multitouchMove(e.touches)}
       onWheel={(e) => mouseWheel(e.deltaY)}

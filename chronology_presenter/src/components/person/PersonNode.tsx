@@ -81,15 +81,15 @@ const PersonNode = (props: PersonNodeProps) => {
       />
       <text
         x={props.positionStart + 5}
-        y={props.rowPosition + props.settings.boxSize - 12}
+        y={props.rowPosition + props.settings.boxSize - 10}
         width={props.person.name.length * 10}
         dominantBaseline="hanging"
         textAnchor="start"
         height="30"
-        fontFamily="Verdana"
-        fontSize="15"
+        // fontFamily="Verdana"
+        fontSize="14"
         fill="white"
-        className="cursor-pointer"
+        className="cursor-pointer font-mono"
       >
         {props.person.name}
       </text>
