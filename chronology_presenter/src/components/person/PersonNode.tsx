@@ -1,5 +1,6 @@
 import Person from '../../data/dto/Person';
 import getAccentColor from '../../services/Colors';
+import nietzsche from '../../static/nietzsche.png';
 
 class PersonNodeProps {
   constructor(
@@ -52,6 +53,17 @@ const PersonNode = (props: PersonNodeProps) => {
         </g>
       )}
       )
+      <defs>
+        <pattern
+          id="imagefiller"
+          patternUnits="userSpaceOnUse"
+          width="100"
+          height="100"
+        >
+          <rect width="100" height="100" />
+          <image href={nietzsche} x="0" y="0" width="100" height="100" />
+        </pattern>
+      </defs>
       <rect
         x={props.positionStart}
         y={props.rowPosition}
@@ -60,16 +72,23 @@ const PersonNode = (props: PersonNodeProps) => {
         width={props.settings.boxSize}
         height={props.settings.boxSize}
         style={{
-          fill: dominantColor,
+          // fill: dominantColor,
           stroke: dominantColor,
           strokeWidth: '2',
-          fillOpacity: '0.1',
+          fillOpacity: '1',
           strokeOpacity: '1',
+          fill: 'url(#imagefiller)',
         }}
         className="cursor-pointer"
         onMouseMove={() => props.updateHighlightedAuthor(props.person.id)}
         onClick={() => props.updateHighlightedAuthor(props.person.id)}
       />
+      {/* <image href={nietzsche} x={props.positionStart}
+        y={props.rowPosition}
+        rx="10"
+        ry="10"
+        width={props.settings.boxSize}
+        height={props.settings.boxSize} /> */}
       <rect
         x={props.positionStart - 1}
         y={props.rowPosition + props.settings.boxSize - 15}
