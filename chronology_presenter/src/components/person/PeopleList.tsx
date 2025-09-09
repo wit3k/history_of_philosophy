@@ -11,22 +11,24 @@ class PeopleListProps {
       React.SetStateAction<string>
     >,
     public personNodesSettings: PersonNodeSettings,
+    public displayAuthorsTimeline: boolean,
   ) {}
 }
 
 const PeopleList = (props: PeopleListProps) =>
-  PeopleListService.filter((person) =>
-    props.isVisibleRange(person.born, person.died),
-  ).map((person, i) => (
-    <PersonNode
-      key={'person' + person.id + i}
-      person={person}
-      positionStart={props.positionByYear(person.born)}
-      positionEnd={props.positionByYear(person.died)}
-      settings={props.personNodesSettings}
-      rowPosition={props.rowPosition(person.rowNumber)}
-      updateHighlightedAuthor={props.updateHighlightedAuthor}
-    />
-  ));
+  PeopleListService.getAll()
+    .filter((person) => props.isVisibleRange(person.born, person.died))
+    .map((person, i) => (
+      <PersonNode
+        key={'person' + person.id + i}
+        person={person}
+        positionStart={props.positionByYear(person.born)}
+        positionEnd={props.positionByYear(person.died)}
+        settings={props.personNodesSettings}
+        rowPosition={props.rowPosition(person.rowNumber)}
+        updateHighlightedAuthor={props.updateHighlightedAuthor}
+        displayAuthorsTimeline={props.displayAuthorsTimeline}
+      />
+    ));
 
 export default PeopleList;

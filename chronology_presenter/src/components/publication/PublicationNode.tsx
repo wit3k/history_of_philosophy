@@ -51,7 +51,7 @@ const PublicationNode = (props: PublicationNodeProps) => {
             fill: 'white',
             stroke: dominantColor,
             strokeWidth: '2px',
-            fillOpacity: '0.7',
+            fillOpacity: '1',
             strokeOpacity: '1',
           }}
         />
@@ -63,7 +63,7 @@ const PublicationNode = (props: PublicationNodeProps) => {
           textAnchor="start"
           height={60 + 10 * (slices.length - 1)}
           fontSize="14"
-          className=" font-sans font-bold "
+          className=" font-mono font-bold "
           fill={dominantColor}
           dy="10"
         >

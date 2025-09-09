@@ -11,6 +11,7 @@ class PersonNodeProps {
     public updateHighlightedAuthor: React.Dispatch<
       React.SetStateAction<string>
     >,
+    public displayAuthorsTimeline: boolean,
   ) {}
 }
 
@@ -22,29 +23,35 @@ const PersonNode = (props: PersonNodeProps) => {
   const dominantColor = getAccentColor(props.person.name);
   return (
     <g>
-      <rect
-        x={props.positionStart}
-        y={props.rowPosition}
-        rx="5"
-        ry="5"
-        width={props.positionEnd - props.positionStart}
-        height={props.settings.boxSize}
-        style={{
-          fill: dominantColor,
-          stroke: dominantColor,
-          strokeWidth: '0',
-          fillOpacity: '0.1',
-          strokeOpacity: '1',
-        }}
-      />
-      <line
-        x1={props.positionStart + props.settings.boxSize}
-        y1={props.rowPosition + props.settings.boxSize / 2}
-        x2={props.positionEnd}
-        y2={props.rowPosition + props.settings.boxSize / 2}
-        stroke={dominantColor}
-        strokeWidth="4"
-      />
+      (
+      {props.displayAuthorsTimeline && (
+        <g>
+          <rect
+            x={props.positionStart}
+            y={props.rowPosition}
+            rx="5"
+            ry="5"
+            width={props.positionEnd - props.positionStart}
+            height={props.settings.boxSize}
+            style={{
+              fill: dominantColor,
+              stroke: dominantColor,
+              strokeWidth: '0',
+              fillOpacity: '0.1',
+              strokeOpacity: '1',
+            }}
+          />
+          <line
+            x1={props.positionStart + props.settings.boxSize}
+            y1={props.rowPosition + props.settings.boxSize / 2}
+            x2={props.positionEnd}
+            y2={props.rowPosition + props.settings.boxSize / 2}
+            stroke={dominantColor}
+            strokeWidth="4"
+          />
+        </g>
+      )}
+      )
       <rect
         x={props.positionStart}
         y={props.rowPosition}

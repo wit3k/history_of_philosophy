@@ -1,6 +1,6 @@
 import type Person from '../dto/Person';
 import Publication from '../dto/Publication';
-import PeopleList from './PeopleListService';
+import PeopleListService from './PeopleListService';
 
 const PublicationsListDB = [
   new Publication('1', 'Pierwszy tytuł', 1840, '1'),
@@ -23,7 +23,7 @@ const bookAuthorsMap: Map<string, Person | undefined> = new Map();
 PublicationsListDB.forEach((publication) => {
   bookAuthorsMap.set(
     publication.id,
-    PeopleList.find((person) => publication.authorId == person.id),
+    PeopleListService.getById(publication.authorId),
   );
 });
 

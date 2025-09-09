@@ -1,0 +1,15 @@
+.bigdash {
+  stroke-dasharray: 1 1;
+}
+.animated-bigdash {
+  stroke-dashoffset: 2000;
+  stroke-dasharray: 1 5;
+
+  animation: dash-flow 50s linear infinite;
+}
+
+@keyframes dash-flow {
+  to {
+    stroke-dashoffset: 0;
+  }
+}

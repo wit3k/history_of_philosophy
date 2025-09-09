@@ -1,19 +1,19 @@
 import type Person from './Person';
 
-enum Attitude {
+export enum Attitude {
   Positive,
   Neutral,
   Negative,
 }
 
-class PersonanReference {
+class PersonReference {
   constructor(
     public id: string,
     public name: string,
-    public from: Person,
-    public to: Person,
     public attitude: Attitude,
+    public from?: Person,
+    public to?: Person,
   ) {}
 }
 
-export default PersonanReference;
+export default PersonReference;

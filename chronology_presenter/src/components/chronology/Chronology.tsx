@@ -8,8 +8,10 @@ import PublicationsList from '../publication/PublicationsList';
 import { PublicationReferenceSettings } from '../publicationReference/PublicationReferenceNode';
 import Coordinates from '../../geometry/Coordinates';
 import PeopleList from '../person/PeopleList';
-import PublicationReferencesList from '../publicationReference/publicationReferencesList';
+import PublicationReferencesList from '../publicationReference/PublicationReferencesList';
 import UIToggle from '../ui/Toggle';
+import PersonReferencesList from '../personReference/PersonReferencesList';
+import type { PersonReferenceSettings } from '../personReference/PersonReferenceNode';
 
 class ChronologyProperies {
   constructor(
@@ -50,6 +52,10 @@ const Chronology = () => {
   };
 
   const [displayAuthors, setDisplayAuthors] = React.useState(true);
+  const [displayAuthorsTimeline, setDisplayAuthorsTimeline] =
+    React.useState(true);
+  const [displayAuthorRelations, setDisplayAuthorRelations] =
+    React.useState(true);
   const [displayPublications, setDisplayPublications] = React.useState(true);
   const [displayPublicationRelations, setDisplayPublicationRelations] =
     React.useState(true);
@@ -72,6 +78,10 @@ const Chronology = () => {
   });
 
   const personNodesSettings: PersonNodeSettings = {
+    boxSize: 50,
+  };
+
+  const personReferenceSettings: PersonReferenceSettings = {
     boxSize: 50,
   };
 
@@ -231,6 +241,16 @@ const Chronology = () => {
           yearsOnScale={yearsOnScale}
         />
 
+        {displayAuthorRelations && displayAuthors && (
+          <PersonReferencesList
+            highlightedAuthor={highlightedAuthor}
+            isVisibleRange={isVisibleRange}
+            positionByYear={positionByYear}
+            personReferenceSettings={personReferenceSettings}
+            rowPosition={rowPosition}
+          />
+        )}
+
         {displayAuthors && (
           <PeopleList
             isVisibleRange={isVisibleRange}
@@ -238,6 +258,7 @@ const Chronology = () => {
             positionByYear={positionByYear}
             rowPosition={rowPosition}
             updateHighlightedAuthor={updateHighlightedAuthor}
+            displayAuthorsTimeline={displayAuthorsTimeline}
           />
         )}
 
@@ -276,6 +297,20 @@ const Chronology = () => {
           state={displayAuthors}
           useState={setDisplayAuthors}
           offMsg=""
+        />
+        <UIToggle
+          label="Życiorysy"
+          state={displayAuthorsTimeline}
+          useState={setDisplayAuthorsTimeline}
+          offMsg=""
+          disabled={!displayAuthors}
+        />
+        <UIToggle
+          label="Sympatie"
+          state={displayAuthorRelations}
+          useState={setDisplayAuthorRelations}
+          offMsg=""
+          disabled={!displayAuthors}
         />
         <UIToggle
           label="Publikacje"
