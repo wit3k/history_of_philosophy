@@ -1,6 +1,6 @@
 import Person from '../../data/dto/Person';
 import getAccentColor from '../../services/Colors';
-import nietzsche from '../../static/nietzsche.png';
+// import nietzsche from '../../static/nietzsche.png';
 
 class PersonNodeProps {
   constructor(
@@ -53,45 +53,41 @@ const PersonNode = (props: PersonNodeProps) => {
         </g>
       )}
       )
-      <defs>
-        <pattern
-          id="imagefiller"
-          patternUnits="userSpaceOnUse"
-          width="100"
-          height="100"
-        >
-          <rect width="100" height="100" />
-          <image href={nietzsche} x="0" y="0" width="100" height="100" />
-        </pattern>
-      </defs>
+      {props.person.thumbnail && (
+        <image
+          href={'/assets/person/' + props.person.thumbnail}
+          x={props.positionStart}
+          y={props.rowPosition}
+          rx="10"
+          ry="10"
+          width={props.settings.boxSize}
+          height={props.settings.boxSize}
+          className="cursor-pointer"
+          onMouseMove={() => props.updateHighlightedAuthor(props.person.id)}
+          onClick={() => props.updateHighlightedAuthor(props.person.id)}
+        />
+      )}
       <rect
         x={props.positionStart}
         y={props.rowPosition}
         rx="10"
         ry="10"
-        width={props.settings.boxSize}
-        height={props.settings.boxSize}
+        width={props.settings.boxSize + 1}
+        height={props.settings.boxSize + 1}
         style={{
-          // fill: dominantColor,
+          fill: dominantColor,
           stroke: dominantColor,
-          strokeWidth: '2',
-          fillOpacity: '1',
+          strokeWidth: '3',
+          fillOpacity: '0.3',
           strokeOpacity: '1',
-          fill: 'url(#imagefiller)',
         }}
         className="cursor-pointer"
         onMouseMove={() => props.updateHighlightedAuthor(props.person.id)}
         onClick={() => props.updateHighlightedAuthor(props.person.id)}
       />
-      {/* <image href={nietzsche} x={props.positionStart}
-        y={props.rowPosition}
-        rx="10"
-        ry="10"
-        width={props.settings.boxSize}
-        height={props.settings.boxSize} /> */}
       <rect
         x={props.positionStart - 1}
-        y={props.rowPosition + props.settings.boxSize - 15}
+        y={props.rowPosition + props.settings.boxSize - 2}
         rx="5"
         ry="5"
         width={props.person.name.length * 10}
@@ -107,12 +103,11 @@ const PersonNode = (props: PersonNodeProps) => {
       />
       <text
         x={props.positionStart + 5}
-        y={props.rowPosition + props.settings.boxSize - 10}
+        y={props.rowPosition + props.settings.boxSize + 5}
         width={props.person.name.length * 10}
         dominantBaseline="hanging"
         textAnchor="start"
         height="30"
-        // fontFamily="Verdana"
         fontSize="14"
         fill="white"
         className="cursor-pointer font-mono"
