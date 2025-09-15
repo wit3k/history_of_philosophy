@@ -85,12 +85,7 @@ const PersonReferenceNode = (props: PersonReferenceNodeProps) => {
         ),
       );
     } else {
-      points.push(
-        new Coordinates(
-          start.x + props.settings.boxSize * hdir * shrinkFactor,
-          start.y,
-        ),
-      );
+      points.push(new Coordinates(start.x + props.settings.boxSize, start.y));
 
       points.push(
         new Coordinates(
@@ -103,22 +98,27 @@ const PersonReferenceNode = (props: PersonReferenceNodeProps) => {
         ),
       );
 
+      let xA =
+        start.x +
+        (props.settings.boxSize +
+          props.settings.boxSize * distanceFromFactor * hdir) *
+          shrinkFactor;
       points.push(
         new Coordinates(
-          start.x +
-            (props.settings.boxSize +
-              props.settings.boxSize * distanceFromFactor * hdir) *
-              shrinkFactor,
+          xA,
           end.y - props.settings.boxSize * distanceToFactor * vdir,
         ),
       );
 
-      points.push(
-        new Coordinates(
-          end.x,
-          end.y - props.settings.boxSize * distanceToFactor * vdir,
-        ),
-      );
+      let xB = end.x - props.settings.boxSize * hdir;
+      if (xA < xB - props.settings.boxSize) {
+        points.push(
+          new Coordinates(
+            xB,
+            end.y - props.settings.boxSize * distanceToFactor * vdir,
+          ),
+        );
+      }
 
       points.push(
         new Coordinates(end.x + boxSize2 / 2, end.y - (boxSize2 / 2) * vdir),

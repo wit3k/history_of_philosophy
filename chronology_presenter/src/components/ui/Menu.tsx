@@ -23,7 +23,7 @@ const Menu = (props: MenuProps) => {
     <div>
       <div
         className={
-          'sidebar fixed top-0 bottom-0 lg:left-0 right-[-300px] duration-1000 p-2 w-[300px] overflow-y-auto h-screen ' +
+          'sidebar fixed top-0 bottom-0 lg:left-0  p-2  ' +
           (isVisible ? 'hidden' : '')
         }
       >
@@ -57,7 +57,7 @@ const Menu = (props: MenuProps) => {
 
       <div
         className={
-          'sidebar fixed top-0 bottom-0 lg:left-0 right-[-300px] duration-1000 p-2 w-[300px] overflow-y-auto shadow h-screen bg-gray-900/50 backdrop-blur-md ' +
+          'sidebar fixed top-0 bottom-0 lg:left-0 duration-1000 p-2 w-full md:w-[300px] shadow h-screen bg-gray-900/50 backdrop-blur-md ' +
           (isVisible ? '' : 'hidden')
         }
       >

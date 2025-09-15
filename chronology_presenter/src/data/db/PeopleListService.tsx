@@ -1,19 +1,9 @@
 import Person from '../dto/Person';
+import { PeopleListRaw } from '../imported/PeopleListRaw';
 
-const PeopleList = [
-  new Person(
-    '1',
-    'Pan Testowy z baaaadzo długim nazwiskiem',
-    1820,
-    1901,
-    1,
-    'nietzsche.png',
-  ),
-  new Person('2', 'Drugi Pan..', 1831, 1888, 2),
-  new Person('3', 'Czeci Pan', 1810, 1848, 3),
-  new Person('5', 'Pan Równoległy :)', 1850, 1888, 3, 'nietzsche.png'),
-  new Person('4', 'Czarta Pani', 1820, 1901, 4),
-].sort((p1, p2) => p1.born - p2.born);
+const PeopleList = PeopleListRaw.map(
+  (p) => new Person(p.id, p.name, p.born, p.died, p.rowNumber, p.thumbnail),
+);
 
 const PeopleListService = {
   getAll: () => PeopleList,
