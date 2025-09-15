@@ -9,9 +9,9 @@ import { PublicationReferenceSettings } from '../publicationReference/Publicatio
 import Coordinates from '../../geometry/Coordinates';
 import PeopleList from '../person/PeopleList';
 import PublicationReferencesList from '../publicationReference/PublicationReferencesList';
-import UIToggle from '../ui/Toggle';
 import PersonReferencesList from '../personReference/PersonReferencesList';
 import type { PersonReferenceSettings } from '../personReference/PersonReferenceNode';
+import Menu from '../ui/Menu';
 
 class ChronologyProperies {
   constructor(
@@ -291,41 +291,19 @@ const Chronology = () => {
         yearLabelWidth={prop.yearLabelWidth}
         yearsOnScale={yearsOnScale}
       />
-      <div className="fixed top-0 right-0 w-3xs rounded-lg p-4 grid grid-cols-1 grid-rows-4 gap-4">
-        <UIToggle
-          label="Autorzy"
-          state={displayAuthors}
-          useState={setDisplayAuthors}
-          offMsg=""
-        />
-        <UIToggle
-          label="Życiorysy"
-          state={displayAuthorsTimeline}
-          useState={setDisplayAuthorsTimeline}
-          offMsg=""
-          disabled={!displayAuthors}
-        />
-        <UIToggle
-          label="Sympatie"
-          state={displayAuthorRelations}
-          useState={setDisplayAuthorRelations}
-          offMsg=""
-          disabled={!displayAuthors}
-        />
-        <UIToggle
-          label="Publikacje"
-          state={displayPublications}
-          useState={setDisplayPublications}
-          offMsg=""
-        />
-        <UIToggle
-          label="Odniesienia"
-          state={displayPublicationRelations}
-          useState={setDisplayPublicationRelations}
-          offMsg=""
-          disabled={!displayPublications}
-        />
-      </div>
+
+      <Menu
+        displayAuthors={displayAuthors}
+        setDisplayAuthors={setDisplayAuthors}
+        displayAuthorsTimeline={displayAuthorsTimeline}
+        setDisplayAuthorsTimeline={setDisplayAuthorsTimeline}
+        displayAuthorRelations={displayAuthorRelations}
+        setDisplayAuthorRelations={setDisplayAuthorRelations}
+        displayPublications={displayPublications}
+        setDisplayPublications={setDisplayPublications}
+        displayPublicationRelations={displayPublicationRelations}
+        setDisplayPublicationRelations={setDisplayPublicationRelations}
+      />
     </div>
   );
 };

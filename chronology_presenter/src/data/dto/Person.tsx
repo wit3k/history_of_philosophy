@@ -6,6 +6,8 @@ class Person {
     public died: number,
 
     public rowNumber: number,
+
+    public thumbnail?: string,
   ) {}
 }
 

@@ -16,9 +16,8 @@ const UIToggle = (props: UIToggleProps<boolean>) => {
   return (
     <div
       className={
-        !props.disabled
-          ? 'neumorphism-toggle'
-          : 'neumorphism-toggle switchDisabled'
+        ' neumorphism-toggle cursor-pointer ' +
+        (!props.disabled ? '' : ' switchDisabled')
       }
     >
       <input
