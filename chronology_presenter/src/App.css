@@ -1,10 +1,8 @@
 @import "tailwindcss";
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-@plugin "daisyui" {
-  themes:
-    light --default,
-    dark --prefersdark,
-    synthwave;
+
+html {
+  overscroll-behavior-y: contain;
+  touch-action: none;
+  font-family: sans-serif;
+  color: white;
 }
