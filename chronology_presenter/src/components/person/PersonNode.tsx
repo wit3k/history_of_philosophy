@@ -21,6 +21,8 @@ export class PersonNodeSettings {
 }
 
 const PersonNode = (props: PersonNodeProps) => {
+  const appBasePath = '/history_of_philosophy';
+
   const dominantColor = getAccentColor(props.person.name);
   return (
     <g>
@@ -55,7 +57,7 @@ const PersonNode = (props: PersonNodeProps) => {
       )
       {props.person.thumbnail && (
         <image
-          href={'/assets/person/' + props.person.thumbnail}
+          href={appBasePath + '/assets/person/' + props.person.thumbnail}
           x={props.positionStart}
           y={props.rowPosition}
           rx="10"

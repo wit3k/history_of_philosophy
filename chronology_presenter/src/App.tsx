@@ -1,4 +1,4 @@
-import './App.sass';
+import './App.css';
 import Chronology from './components/chronology/Chronology';
 
 const App = () => <Chronology />;

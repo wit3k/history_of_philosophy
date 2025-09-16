@@ -8,7 +8,8 @@ export default defineConfig({
     title: 'History of philosophy',
   },
   output: {
-    assetPrefix: '/history_of_philosophy/',
+    target: 'web',
+    assetPrefix: '/history_of_philosophy',
     cleanDistPath: true,
     distPath: {
       root: '../docs',
