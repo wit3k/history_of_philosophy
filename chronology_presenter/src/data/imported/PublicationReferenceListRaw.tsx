@@ -1,0 +1,3 @@
+export const PublicationReferenceListRaw = [
+  { id: 4, name: 'aaa', from: 8, to: 7 },
+];

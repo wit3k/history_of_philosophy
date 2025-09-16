@@ -2,11 +2,13 @@ import axios from 'axios';
 import sharp from 'sharp';
 import * as fs from 'fs';
 import { Attitude } from '../data/dto/PersonReference';
+import Coordinates from '../geometry/Coordinates';
 
 let tabMap: any = {
   people: { tableId: 'mx6pwcyvc2oab8l', viewId: 'vw5tn6tu17x018ii' },
   peopleReference: { tableId: 'mixl3m1i8i3e2nt', viewId: 'vw08gj6s4gss1rnk' },
   publications: { tableId: 'me77551rlyondy9', viewId: 'vwrik2hmo15eufg6' },
+  quotes: { tableId: 'mljf7f47zgv9mgv', viewId: 'vwpdfjd6bln6nmu9' },
 };
 
 let getTable = async (tableName: string) =>
@@ -63,6 +65,7 @@ let getLinkedRecords = async (
 let downloadAndProcessImage = async (
   imageUrl: string,
   outputPath: string,
+  size: Coordinates,
 ): Promise<void> => {
   try {
     const response = await axios.get(imageUrl, {
@@ -70,13 +73,19 @@ let downloadAndProcessImage = async (
     });
     const imageBuffer = Buffer.from(response.data);
     const roundedCornerMask = Buffer.from(
-      `<svg width="50" height="50">
-        <rect x="0" y="0" width="50" height="50" rx="10" ry="10" fill="white"/>
-      </svg>`,
+      '<svg width="' +
+        size.x +
+        '" height="' +
+        size.y +
+        '"><rect x="0" y="0" width="' +
+        size.x +
+        '" height="' +
+        size.y +
+        '" rx="10" ry="10" fill="white"/></svg>',
     );
 
     await sharp(imageBuffer)
-      .resize(50, 50, {
+      .resize(size.x, size.y, {
         fit: 'cover',
         background: { r: 0, g: 0, b: 0, alpha: 0 },
       })
@@ -103,6 +112,7 @@ let people = (await getTable('people')).list
       downloadAndProcessImage(
         process.env.NOCO_URL + '/' + person['Zdjęcie'][0].path,
         './public/assets/person/' + person['Zdjęcie'][0].id + '.png',
+        new Coordinates(50, 50),
       );
     }
 
@@ -169,14 +179,20 @@ let publications = (
       await getTable('publications')
     ).list
       .filter((pr: any) => pr['Autorzy'] && pr['Tytuł'])
-      .map(
-        async (book: any, i: number) =>
-          await getLinkedRecords(
-            'publications',
-            'c5yt6jo8jpe04bk',
-            book.Id,
-          ).then((authors) => ({ book, authors })),
-      ),
+      .map(async (book: any, i: number) => {
+        if (book['Okładka'] != null && book['Okładka'][0] != null) {
+          downloadAndProcessImage(
+            process.env.NOCO_URL + '/' + book['Okładka'][0].path,
+            './public/assets/publication/' + book['Okładka'][0].id + '.png',
+            new Coordinates(500, 700),
+          );
+        }
+        return await getLinkedRecords(
+          'publications',
+          'c5yt6jo8jpe04bk',
+          book.Id,
+        ).then((authors) => ({ book, authors }));
+      }),
   )
 ).flatMap(({ book, authors }) =>
   authors.list.map((author: any) => ({
@@ -184,6 +200,10 @@ let publications = (
     title: book['Tytuł'],
     publicationDate: book['Rok wydania'].slice(0, 4) * 1,
     authorId: author.Id + '',
+    isbn: book['ISBN'],
+    description: book['Opis'],
+    thumbnail:
+      book['Okładka'] != undefined ? book['Okładka'][0].id + '.png' : '',
   })),
 );
 
@@ -193,4 +213,17 @@ fs.writeFileSync(
   'utf8',
 );
 
-console.log(publications);
+let quotes = (await getTable('quotes')).list
+  .filter((quote: any) => quote['Nagłówek'])
+  .map((quote: any, i: number) => ({
+    id: quote.Id,
+    name: quote['Nagłówek'],
+    from: quote['Publikacja'].Id,
+    to: quote['Nawiązanie do publikacji'].Id,
+  }));
+
+fs.writeFileSync(
+  './src/data/imported/PublicationReferenceListRaw.tsx',
+  'export const PublicationReferenceListRaw = ' + JSON.stringify(quotes),
+  'utf8',
+);

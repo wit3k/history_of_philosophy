@@ -12,7 +12,9 @@ import PublicationReferencesList from '../publicationReference/PublicationRefere
 import PersonReferencesList from '../personReference/PersonReferencesList';
 import type { PersonReferenceSettings } from '../personReference/PersonReferenceNode';
 import Menu from '../ui/Menu';
-
+import PublicationDetails from '../publication/PublicationDetails';
+import Publication from '../../data/dto/Publication';
+import Person from '../../data/dto/Person';
 class ChronologyProperies {
   constructor(
     public windowSize: Coordinates,
@@ -51,6 +53,8 @@ const Chronology = () => {
     rowHeight: 165,
   };
 
+  const [displayModal, setDisplayModal] = React.useState<boolean>(false);
+
   const [displayAuthors, setDisplayAuthors] = React.useState(true);
   const [displayAuthorsTimeline, setDisplayAuthorsTimeline] =
     React.useState(true);
@@ -68,6 +72,12 @@ const Chronology = () => {
     startDragPosition: { x: 0, y: 0 },
   });
   const [highlightedAuthor, updateHighlightedAuthor] = React.useState('0');
+  const [currentPublication, setCurrentPublication] = React.useState(
+    new Publication('', '', 0, ''),
+  );
+  const [currentAuthor, setCurrentAuthor] = React.useState(
+    new Person('', '', 0, 0, 1, ''),
+  );
   const [highlightedPublication, updateHighlightedPublication] =
     React.useState('0');
   const [viewPosition, setPosition] = React.useState({ x: 1945, y: 0 });
@@ -208,17 +218,25 @@ const Chronology = () => {
     });
   };
 
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      setDisplayModal(false);
+    }
+  };
+  React.useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   return (
     <div
       style={{
-        // background: 'linear-gradient(0deg,rgba(5, 17, 36, 1) 0%, rgba(16, 2, 15, 1) 50%,  rgba(5, 8, 23, 1) 100%)',
-        // background: 'linear-gradient(90deg,rgba(6, 3, 13, 1) 0%, rgba(11, 13, 17, 1) 50%,  rgba(26, 11, 26, 1) 100%)',
-        // background: 'linear-gradient(90deg,rgba(3, 3, 17, 1) 0%, rgba(9, 18, 18, 1) 20%, rgba(5, 15, 15, 1) 50%,rgba(15, 9, 18, 1) 80%,  rgba(0, 0, 0, 1) 100%)',
         background: 'rgba(8, 8, 11, 1)',
         width: prop.windowSize.x,
         height: prop.windowSize.y,
         overflow: 'hidden',
-        cursor: drag.isDragged ? 'grabbing' : 'grab',
       }}
       onMouseDown={(e) => startPageDrag(e.button, e.pageX, e.pageY)}
       onTouchStart={(e) => multitouchStart(e.touches)}
@@ -232,7 +250,11 @@ const Chronology = () => {
         xmlns="http://www.w3.org/2000/svg"
         viewBox={`0 0 ${prop.windowSize.x} ${prop.windowSize.y}`}
         preserveAspectRatio="xMidYMid meet"
-        style={{ width: prop.windowSize.x, height: prop.windowSize.y }}
+        style={{
+          width: prop.windowSize.x,
+          height: prop.windowSize.y,
+          cursor: drag.isDragged ? 'grabbing' : 'grab',
+        }}
       >
         <ChronologyPad
           padSize={new Coordinates(prop.windowSize.x, prop.windowSize.y)}
@@ -283,7 +305,10 @@ const Chronology = () => {
             positionByYear={positionByYear}
             publicationNodeSettings={publicationNodeSettings}
             rowPosition={rowPosition}
+            setCurrentAuthor={setCurrentAuthor}
+            setCurrentPublication={setCurrentPublication}
             updateHighlightedPublication={updateHighlightedPublication}
+            modalHandle={setDisplayModal}
           />
         )}
       </svg>
@@ -307,6 +332,13 @@ const Chronology = () => {
         setDisplayPublications={setDisplayPublications}
         displayPublicationRelations={displayPublicationRelations}
         setDisplayPublicationRelations={setDisplayPublicationRelations}
+      />
+
+      <PublicationDetails
+        currentPublication={currentPublication}
+        currentAuthor={currentAuthor}
+        displayModal={displayModal}
+        setDisplayModal={setDisplayModal}
       />
     </div>
   );

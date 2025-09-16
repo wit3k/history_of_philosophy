@@ -13,6 +13,11 @@ class PublicationNodeProps {
     public updateHighlightedPublication: React.Dispatch<
       React.SetStateAction<string>
     >,
+    public modalHandle: React.Dispatch<React.SetStateAction<boolean>>,
+    public setCurrentAuthor: React.Dispatch<React.SetStateAction<Person>>,
+    public setCurrentPublication: React.Dispatch<
+      React.SetStateAction<Publication>
+    >,
   ) {}
 }
 
@@ -89,7 +94,14 @@ const PublicationNode = (props: PublicationNodeProps) => {
         onMouseMove={() =>
           props.updateHighlightedPublication(props.publication.id)
         }
-        onClick={() => props.updateHighlightedPublication(props.publication.id)}
+        onTouchStart={() =>
+          props.updateHighlightedPublication(props.publication.id)
+        }
+        onClick={() => {
+          props.setCurrentAuthor(props.author);
+          props.setCurrentPublication(props.publication);
+          props.modalHandle(true);
+        }}
         style={{
           fill: 'white',
           stroke: dominantColor,

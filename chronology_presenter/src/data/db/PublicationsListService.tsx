@@ -5,7 +5,15 @@ import { PublicationsListRaw } from '../imported/PublicationsListRaw';
 
 const PublicationsListDB = PublicationsListRaw.map(
   (pub) =>
-    new Publication(pub.id, pub.title, pub.publicationDate, pub.authorId),
+    new Publication(
+      pub.id,
+      pub.title,
+      pub.publicationDate,
+      pub.authorId,
+      pub.isbn!,
+      pub.description!,
+      pub.thumbnail!,
+    ),
 ).sort((p1, p2) => p1.publicationDate - p2.publicationDate);
 
 const bookAuthorsMap: Map<string, Person | undefined> = new Map();
