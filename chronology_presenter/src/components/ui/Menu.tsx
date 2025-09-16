@@ -57,7 +57,7 @@ const Menu = (props: MenuProps) => {
 
       <div
         className={
-          'sidebar fixed top-0 bottom-0 lg:left-0 duration-1000 p-2 w-full md:w-[300px] shadow h-screen bg-gray-900/50 backdrop-blur-md ' +
+          'sidebar fixed top-0 bottom-0 lg:left-0 duration-1000 p-2 w-full md:w-[300px] shadow h-screen bg-gray-900/50 backdrop-blur-xs backdrop-brightness-200 border-r-20 border-pink-700 ' +
           (isVisible ? '' : 'hidden')
         }
       >

@@ -60,7 +60,7 @@ const Chronology = () => {
   const [displayPublicationRelations, setDisplayPublicationRelations] =
     React.useState(true);
 
-  const [zoom, setZoom] = React.useState(22);
+  const [zoom, setZoom] = React.useState(12);
   const [pinchDelta, setPinchDelta] = React.useState(0);
   const [drag, setDrag] = React.useState({
     isDragged: false,
@@ -70,10 +70,10 @@ const Chronology = () => {
   const [highlightedAuthor, updateHighlightedAuthor] = React.useState('0');
   const [highlightedPublication, updateHighlightedPublication] =
     React.useState('0');
-  const [viewPosition, setPosition] = React.useState({ x: 1809, y: 0 });
+  const [viewPosition, setPosition] = React.useState({ x: 1945, y: 0 });
   const [yearSelection, setYearSelection] = React.useState({
     from: -1200,
-    to: 2025,
+    to: 2101,
     stepSize: 10,
   });
 
@@ -211,10 +211,14 @@ const Chronology = () => {
   return (
     <div
       style={{
-        backgroundColor: '#f3f3f3',
+        // background: 'linear-gradient(0deg,rgba(5, 17, 36, 1) 0%, rgba(16, 2, 15, 1) 50%,  rgba(5, 8, 23, 1) 100%)',
+        // background: 'linear-gradient(90deg,rgba(6, 3, 13, 1) 0%, rgba(11, 13, 17, 1) 50%,  rgba(26, 11, 26, 1) 100%)',
+        // background: 'linear-gradient(90deg,rgba(3, 3, 17, 1) 0%, rgba(9, 18, 18, 1) 20%, rgba(5, 15, 15, 1) 50%,rgba(15, 9, 18, 1) 80%,  rgba(0, 0, 0, 1) 100%)',
+        background: 'rgba(8, 8, 11, 1)',
         width: prop.windowSize.x,
         height: prop.windowSize.y,
         overflow: 'hidden',
+        cursor: drag.isDragged ? 'grabbing' : 'grab',
       }}
       onMouseDown={(e) => startPageDrag(e.button, e.pageX, e.pageY)}
       onTouchStart={(e) => multitouchStart(e.touches)}

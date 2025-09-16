@@ -1,15 +1,15 @@
 const palette = [
   '#2CAA58',
-  '#381A47',
-  '#321E94',
+  '#b159ddff',
+  '#3d1fd5ff',
   '#8C3226',
   '#678A51',
   '#47D7A1',
   '#E78140',
-  '#321706',
-  '#1B5383',
-  '#2F0427',
-  '#55BAD8',
+  '#b15a24ff',
+  '#0379dfff',
+  '#962281ff',
+  '#3f9db9ff',
 ];
 export const getAccentColor = (name: string) => {
   const random = name

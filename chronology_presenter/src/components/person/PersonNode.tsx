@@ -30,8 +30,8 @@ const PersonNode = (props: PersonNodeProps) => {
           <rect
             x={props.positionStart}
             y={props.rowPosition}
-            rx="5"
-            ry="5"
+            rx="10"
+            ry="10"
             width={props.positionEnd - props.positionStart}
             height={props.settings.boxSize}
             style={{
@@ -77,8 +77,8 @@ const PersonNode = (props: PersonNodeProps) => {
         style={{
           fill: dominantColor,
           stroke: dominantColor,
-          strokeWidth: '3',
-          fillOpacity: '0.3',
+          strokeWidth: '4',
+          fillOpacity: '0',
           strokeOpacity: '1',
         }}
         className="cursor-pointer"
@@ -87,7 +87,7 @@ const PersonNode = (props: PersonNodeProps) => {
       />
       <rect
         x={props.positionStart - 1}
-        y={props.rowPosition + props.settings.boxSize - 2}
+        y={props.rowPosition + props.settings.boxSize + 3}
         rx="5"
         ry="5"
         width={props.person.name.length * 10}
@@ -96,14 +96,14 @@ const PersonNode = (props: PersonNodeProps) => {
           fill: dominantColor,
           stroke: dominantColor,
           strokeWidth: '0',
-          fillOpacity: '1',
+          fillOpacity: '0.3',
           strokeOpacity: '0',
         }}
         className="cursor-pointer"
       />
       <text
         x={props.positionStart + 5}
-        y={props.rowPosition + props.settings.boxSize + 5}
+        y={props.rowPosition + props.settings.boxSize + 8}
         width={props.person.name.length * 10}
         dominantBaseline="hanging"
         textAnchor="start"

@@ -13,9 +13,10 @@ const ChronologyScaleLine = (props: TimeScaleLineProps) => {
       y1="0"
       x2={props.position}
       y2={props.height}
-      stroke="#d9d9d9"
-      strokeWidth={props.year % 100 ? '1' : '3'}
-      strokeDasharray={props.year % 100 ? '4' : ''}
+      stroke={props.year % 100 ? 'rgba(61, 224, 224, 0.2)' : '#c58eb0ff'}
+      strokeWidth={props.year % 100 ? '1' : '1'}
+      // strokeDasharray={props.year % 100 ? '4 10 1 10' : ''}
+      strokeDasharray={props.year % 100 ? '4 1 1 6 1 1' : ''}
     />
   );
 };

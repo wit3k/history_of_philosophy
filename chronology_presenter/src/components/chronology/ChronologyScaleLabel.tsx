@@ -16,7 +16,7 @@ const ChronologyScaleLabel = (props: TimeScaleLabelProps) => {
         ry="5"
         width={props.yearLabelWidth}
         height="40"
-        fill={props.year % 100 ? '#cacacaff' : '#a4a4a4ff'}
+        fill={props.year % 100 ? 'rgba(11, 49, 49, 1)' : '#c58eb0ff'}
       />
       <text
         x={props.position}
@@ -27,7 +27,7 @@ const ChronologyScaleLabel = (props: TimeScaleLabelProps) => {
         height="40"
         // fontFamily="Verdana"
         fontSize="15"
-        fill={props.year % 100 ? '#6b6b6bff' : 'white'}
+        fill={props.year % 100 ? '#ffffffff' : '#000000ff'}
         className="font-mono"
       >
         {props.year}

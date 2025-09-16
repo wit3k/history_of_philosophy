@@ -71,7 +71,7 @@ let downloadAndProcessImage = async (
     const imageBuffer = Buffer.from(response.data);
     const roundedCornerMask = Buffer.from(
       `<svg width="50" height="50">
-        <rect x="0" y="0" width="50" height="50" rx="5" ry="5" fill="white"/>
+        <rect x="0" y="0" width="50" height="50" rx="10" ry="10" fill="white"/>
       </svg>`,
     );
 

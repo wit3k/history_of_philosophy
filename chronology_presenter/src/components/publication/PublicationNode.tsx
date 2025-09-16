@@ -64,7 +64,7 @@ const PublicationNode = (props: PublicationNodeProps) => {
           height={60 + 10 * (slices.length - 1)}
           fontSize="14"
           className=" font-mono font-bold "
-          fill={dominantColor}
+          fill="#152a38ff"
           dy="10"
         >
           {slices.map((s, i) => (
@@ -93,7 +93,7 @@ const PublicationNode = (props: PublicationNodeProps) => {
         style={{
           fill: 'white',
           stroke: dominantColor,
-          strokeWidth: '4',
+          strokeWidth: '10',
           fillOpacity: '1',
           strokeOpacity: '1',
         }}
