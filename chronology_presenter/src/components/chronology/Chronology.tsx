@@ -50,7 +50,7 @@ const Chronology = () => {
   const prop: ChronologyProperies = {
     windowSize: dimenstions,
     yearLabelWidth: 100,
-    rowHeight: 165,
+    rowHeight: 85,
   };
 
   const [displayModal, setDisplayModal] = React.useState<boolean>(false);
@@ -80,7 +80,7 @@ const Chronology = () => {
   );
   const [highlightedPublication, updateHighlightedPublication] =
     React.useState('0');
-  const [viewPosition, setPosition] = React.useState({ x: 1945, y: 0 });
+  const [viewPosition, setPosition] = React.useState({ x: 1590, y: -350 });
   const [yearSelection, setYearSelection] = React.useState({
     from: -1200,
     to: 2101,
