@@ -15,6 +15,7 @@ class PersonReferenceNodeProps {
     public positionEnd: number,
     public rowPositionFrom: number,
     public rowPositionTo: number,
+    public highlightsOn: boolean,
     public isHighlighted: boolean,
     public settings: PersonReferenceSettings,
   ) {}
@@ -40,13 +41,6 @@ const PersonReferenceNode = (props: PersonReferenceNodeProps) => {
   };
   const boxSize2 = props.settings.boxSize;
   if (props.personReference.from && props.personReference.to) {
-    let extraSpacing = props.settings.boxSize * 2;
-    let mostLeft = Math.min(props.positionStart, props.positionEnd);
-    let mostRight = Math.max(props.positionStart, props.positionEnd);
-    let shrinkFactor =
-      mostRight - mostLeft < extraSpacing
-        ? ((mostRight - mostLeft) % extraSpacing) / extraSpacing
-        : 1.0;
     let start: Coordinates = new Coordinates(
       props.positionStart,
       props.rowPositionFrom + props.settings.boxSize / 2,
@@ -56,74 +50,38 @@ const PersonReferenceNode = (props: PersonReferenceNodeProps) => {
       props.rowPositionTo + props.settings.boxSize / 2,
     );
     let vdir: VDirection = start.y > end.y ? -1 : 1;
-    let isEqual: VDirection = start.y == end.y ? -1 : 1;
-    let hdir: HDirection = start.x > end.x ? -1 : 1;
-    let distanceFromFactor =
-      0.7 +
-      (0.7 *
-        ((props.personReference.to.born + props.personReference.from.born) %
-          15)) /
-        15;
-    let distanceToFactor =
-      1.4 +
-      (0.7 *
-        ((props.personReference.to.born + props.personReference.from.born) %
-          5)) /
-        5;
+    let hdir: HDirection = start.x + boxSize2 * 2 > end.x ? -1 : 1;
     let points = [];
-    if (props.positionEnd == props.positionStart) {
-      points.push(
-        new Coordinates(
-          start.x + (boxSize2 / 2) * hdir,
-          start.y + (boxSize2 / 2) * vdir,
-        ),
-      );
-      points.push(
-        new Coordinates(
-          end.x + (boxSize2 / 2 + 0.1 * hdir),
-          end.y - (boxSize2 / 2 + 0.1 * vdir),
-        ),
-      );
-    } else {
-      points.push(new Coordinates(start.x + props.settings.boxSize, start.y));
 
-      points.push(
-        new Coordinates(
-          start.x +
-            (props.settings.boxSize +
-              props.settings.boxSize * distanceFromFactor * hdir) *
-              shrinkFactor,
-          start.y +
-            props.settings.boxSize * distanceFromFactor * vdir * isEqual,
-        ),
-      );
+    points.push(
+      new Coordinates(
+        start.x + boxSize2 / 2 + (boxSize2 / 2) * hdir,
+        start.y + (boxSize2 / 3) * vdir,
+      ),
+    );
 
-      let xA =
-        start.x +
-        (props.settings.boxSize +
-          props.settings.boxSize * distanceFromFactor * hdir) *
-          shrinkFactor;
-      points.push(
-        new Coordinates(
-          xA,
-          end.y - props.settings.boxSize * distanceToFactor * vdir,
-        ),
-      );
+    points.push(
+      new Coordinates(
+        start.x + boxSize2 / 2 + boxSize2 * hdir,
+        start.y + (boxSize2 / 3) * vdir,
+      ),
+    );
 
-      let xB = end.x - props.settings.boxSize * hdir;
-      if (xA < xB - props.settings.boxSize) {
-        points.push(
-          new Coordinates(
-            xB,
-            end.y - props.settings.boxSize * distanceToFactor * vdir,
-          ),
-        );
-      }
+    points.push(
+      new Coordinates(
+        start.x + boxSize2 / 2 + boxSize2 * hdir,
+        end.y + (boxSize2 / 5) * -vdir,
+      ),
+    );
 
-      points.push(
-        new Coordinates(end.x + boxSize2 / 2, end.y - (boxSize2 / 2) * vdir),
-      );
-    }
+    points.push(
+      new Coordinates(
+        start.x + boxSize2 / 2 + boxSize2 * hdir > end.x
+          ? end.x + boxSize2 / 2 - (boxSize2 / 2) * hdir
+          : end.x,
+        end.y + (boxSize2 / 5) * -vdir,
+      ),
+    );
 
     let pathPoints = [
       ['M', points[0].x, points[0].y],
@@ -135,13 +93,16 @@ const PersonReferenceNode = (props: PersonReferenceNodeProps) => {
     let colorFrom = colorByAttitude(props.personReference.attitude);
     return (
       <path
-        d={roundPathCorners(pathPoints, 5, false)}
+        d={roundPathCorners(pathPoints, 15, false)}
         stroke={colorFrom}
-        strokeWidth="5"
+        strokeWidth="2"
         fill="none"
         className={
-          'opacity-70 bigdash ' +
-          (props.isHighlighted ? 'animated-bigdash' : '')
+          props.isHighlighted
+            ? 'animated-bigdash'
+            : props.highlightsOn
+              ? 'bigdash-highlights-on'
+              : ''
         }
       />
     );

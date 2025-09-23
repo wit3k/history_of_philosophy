@@ -7,7 +7,7 @@ class Person {
 
     public rowNumber: number,
 
-    public thumbnail?: string,
+    public thumbnail: string | null,
   ) {}
 }
 

@@ -9,6 +9,7 @@ class PersonNodeProps {
     public positionEnd: number,
     public settings: PersonNodeSettings,
     public rowPosition: number,
+    public highlightedAuthor: string,
     public updateHighlightedAuthor: React.Dispatch<
       React.SetStateAction<string>
     >,
@@ -22,6 +23,9 @@ export class PersonNodeSettings {
 
 const PersonNode = (props: PersonNodeProps) => {
   const appBasePath = '/history_of_philosophy';
+
+  console.log(props.highlightedAuthor);
+  // console.log(props.person.id)
 
   const dominantColor = getAccentColor(props.person.name);
   return (
@@ -51,6 +55,12 @@ const PersonNode = (props: PersonNodeProps) => {
             y2={props.rowPosition + props.settings.boxSize / 2}
             stroke={dominantColor}
             strokeWidth="4"
+            opacity={
+              props.highlightedAuthor == '0' ||
+              props.highlightedAuthor == props.person.id
+                ? '1'
+                : '0.3'
+            }
           />
         </g>
       )}
@@ -62,6 +72,12 @@ const PersonNode = (props: PersonNodeProps) => {
           y={props.rowPosition}
           rx="10"
           ry="10"
+          opacity={
+            props.highlightedAuthor == '0' ||
+            props.highlightedAuthor == props.person.id
+              ? '1'
+              : '0.3'
+          }
           width={props.settings.boxSize}
           height={props.settings.boxSize}
           className="cursor-pointer"
@@ -81,7 +97,11 @@ const PersonNode = (props: PersonNodeProps) => {
           stroke: dominantColor,
           strokeWidth: '4',
           fillOpacity: '0',
-          strokeOpacity: '1',
+          strokeOpacity:
+            props.highlightedAuthor == '0' ||
+            props.highlightedAuthor == props.person.id
+              ? '1'
+              : '0.3',
         }}
         className="cursor-pointer"
         onMouseMove={() => props.updateHighlightedAuthor(props.person.id)}
@@ -98,7 +118,11 @@ const PersonNode = (props: PersonNodeProps) => {
           fill: dominantColor,
           stroke: dominantColor,
           strokeWidth: '0',
-          fillOpacity: '0.3',
+          fillOpacity:
+            props.highlightedAuthor == '0' ||
+            props.highlightedAuthor == props.person.id
+              ? '0.3'
+              : '0.1',
           strokeOpacity: '0',
         }}
         className="cursor-pointer"
@@ -113,6 +137,12 @@ const PersonNode = (props: PersonNodeProps) => {
         fontSize="14"
         fill="white"
         className="cursor-pointer font-mono"
+        opacity={
+          props.highlightedAuthor == '0' ||
+          props.highlightedAuthor == props.person.id
+            ? '1'
+            : '0.3'
+        }
       >
         {props.person.name}
       </text>

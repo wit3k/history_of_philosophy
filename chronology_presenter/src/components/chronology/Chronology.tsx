@@ -15,6 +15,7 @@ import Menu from '../ui/Menu';
 import PublicationDetails from '../publication/PublicationDetails';
 import Publication from '../../data/dto/Publication';
 import Person from '../../data/dto/Person';
+import PeopleListService from '../../data/db/PeopleListService';
 class ChronologyProperies {
   constructor(
     public windowSize: Coordinates,
@@ -64,7 +65,7 @@ const Chronology = () => {
   const [displayPublicationRelations, setDisplayPublicationRelations] =
     React.useState(true);
 
-  const [zoom, setZoom] = React.useState(12);
+  const [zoom, setZoom] = React.useState(3);
   const [pinchDelta, setPinchDelta] = React.useState(0);
   const [drag, setDrag] = React.useState({
     isDragged: false,
@@ -80,11 +81,14 @@ const Chronology = () => {
   );
   const [highlightedPublication, updateHighlightedPublication] =
     React.useState('0');
-  const [viewPosition, setPosition] = React.useState({ x: 1590, y: -350 });
+  const [viewPosition, setPosition] = React.useState({
+    x: PeopleListService.startingPoint(),
+    y: 0,
+  });
   const [yearSelection, setYearSelection] = React.useState({
     from: -1200,
     to: 2101,
-    stepSize: 10,
+    stepSize: 100,
   });
 
   const personNodesSettings: PersonNodeSettings = {
@@ -104,7 +108,7 @@ const Chronology = () => {
 
   const publicationReferenceSettings: PublicationReferenceSettings = {
     dotSize: 15,
-    boxSize: 50,
+    boxSize: 30,
   };
 
   const yearsOnScale = [
@@ -283,6 +287,7 @@ const Chronology = () => {
             personNodesSettings={personNodesSettings}
             positionByYear={positionByYear}
             rowPosition={rowPosition}
+            highlightedAuthor={highlightedAuthor}
             updateHighlightedAuthor={updateHighlightedAuthor}
             displayAuthorsTimeline={displayAuthorsTimeline}
           />

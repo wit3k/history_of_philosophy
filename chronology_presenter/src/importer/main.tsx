@@ -121,7 +121,7 @@ let people = (await getTable('people')).list
       name: person['Imię i nazwisko'],
       born: person['Urodzony'] ? person['Urodzony']?.slice(0, 4) * 1 : null,
       died: person['Zmarł']
-        ? person['Zmarł']?.slice(0, 4)
+        ? person['Zmarł']?.slice(0, 4) * 1
         : person['Urodzony']?.slice(0, 4) * 1 + 100,
       rowNumber: person['Wiersz'] ? person['Wiersz'] * 1 : i + 1,
       thumbnail:
@@ -147,7 +147,7 @@ let peopleReference = (
         async (sideA: any, i: number) =>
           await getLinkedRecords(
             'peopleReference',
-            'cr4ogkxshzfg2cr',
+            'c5chrrav0rvti4l',
             sideA.Id,
           ).then((sideB) => ({ sideA, sideB })),
       ),

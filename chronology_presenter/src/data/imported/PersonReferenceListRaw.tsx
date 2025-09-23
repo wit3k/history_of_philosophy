@@ -1,1 +1,53 @@
-export const PersonReferenceListRaw = [{"id":"3","name":"Rekomendacje książki","attitude":"Positive","from":"7","to":"9"},{"id":"3","name":"Rekomendacje książki","attitude":"Positive","from":"7","to":"10"},{"id":"3","name":"Rekomendacje książki","attitude":"Positive","from":"7","to":"11"},{"id":"4","name":"Inspiracja nurtu","attitude":"Positive","from":"12","to":"23"},{"id":"4","name":"Inspiracja nurtu","attitude":"Positive","from":"12","to":"29"},{"id":"4","name":"Inspiracja nurtu","attitude":"Positive","from":"12","to":"13"},{"id":"4","name":"Inspiracja nurtu","attitude":"Positive","from":"12","to":"28"},{"id":"6","name":"Krytyka","attitude":"Negative","from":"20","to":"12"}]
+export const PersonReferenceListRaw = [
+  {
+    id: '3',
+    name: 'Rekomendacje książki',
+    attitude: 'Positive',
+    from: '7',
+    to: '9',
+  },
+  {
+    id: '3',
+    name: 'Rekomendacje książki',
+    attitude: 'Positive',
+    from: '7',
+    to: '10',
+  },
+  {
+    id: '3',
+    name: 'Rekomendacje książki',
+    attitude: 'Positive',
+    from: '7',
+    to: '11',
+  },
+  {
+    id: '4',
+    name: 'Inspiracja nurtu',
+    attitude: 'Positive',
+    from: '12',
+    to: '23',
+  },
+  {
+    id: '4',
+    name: 'Inspiracja nurtu',
+    attitude: 'Positive',
+    from: '12',
+    to: '29',
+  },
+  {
+    id: '4',
+    name: 'Inspiracja nurtu',
+    attitude: 'Positive',
+    from: '12',
+    to: '13',
+  },
+  {
+    id: '4',
+    name: 'Inspiracja nurtu',
+    attitude: 'Positive',
+    from: '12',
+    to: '28',
+  },
+  { id: '5', name: 'Krytyka', attitude: 'Negative', from: '13', to: '12' },
+  { id: '6', name: 'Krytyka', attitude: 'Negative', from: '20', to: '12' },
+];

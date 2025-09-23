@@ -7,6 +7,7 @@ class PeopleListProps {
     public isVisibleRange: (from: number, to: number) => boolean,
     public positionByYear: (year: number) => number,
     public rowPosition: (year: number) => number,
+    public highlightedAuthor: string,
     public updateHighlightedAuthor: React.Dispatch<
       React.SetStateAction<string>
     >,
@@ -26,6 +27,7 @@ const PeopleList = (props: PeopleListProps) =>
         positionEnd={props.positionByYear(person.died)}
         settings={props.personNodesSettings}
         rowPosition={props.rowPosition(person.rowNumber)}
+        highlightedAuthor={props.highlightedAuthor}
         updateHighlightedAuthor={props.updateHighlightedAuthor}
         displayAuthorsTimeline={props.displayAuthorsTimeline}
       />

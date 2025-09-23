@@ -4,6 +4,7 @@
 .animated-bigdash {
   stroke-dashoffset: 2000;
   stroke-dasharray: 1 5;
+  stroke-width: 5px;
 
   animation: dash-flow 50s linear infinite;
 }
@@ -12,4 +13,8 @@
   to {
     stroke-dashoffset: 0;
   }
+}
+
+.bigdash-highlights-on {
+  opacity: 0.1;
 }

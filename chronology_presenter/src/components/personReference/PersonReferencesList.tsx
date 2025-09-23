@@ -40,6 +40,7 @@ const PersonReferencesList = (props: PersonReferencesListProps) =>
             positionEnd={props.positionByYear(reference.to.born)}
             rowPositionFrom={props.rowPosition(authorFrom.rowNumber)}
             rowPositionTo={props.rowPosition(authorTo.rowNumber)}
+            highlightsOn={props.highlightedAuthor != '0'}
             isHighlighted={
               props.highlightedAuthor == authorFrom.id ||
               props.highlightedAuthor == authorTo.id

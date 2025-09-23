@@ -110,9 +110,7 @@ const PublicationReferenceNode = (props: PublicationReferenceNodeProps) => {
         ),
       );
 
-      points.push(
-        new Coordinates(end.x, end.y - props.settings.dotSize * vdir),
-      );
+      points.push(new Coordinates(end.x, end.y));
     }
 
     let pathPoints = [
