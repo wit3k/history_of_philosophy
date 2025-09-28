@@ -95,7 +95,7 @@ const PersonReferenceNode = (props: PersonReferenceNodeProps) => {
       <path
         d={roundPathCorners(pathPoints, 15, false)}
         stroke={colorFrom}
-        strokeWidth="2"
+        strokeWidth="1"
         fill="none"
         className={
           props.isHighlighted

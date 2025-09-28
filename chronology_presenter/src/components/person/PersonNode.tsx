@@ -23,11 +23,8 @@ export class PersonNodeSettings {
 
 const PersonNode = (props: PersonNodeProps) => {
   const appBasePath = '/history_of_philosophy';
-
-  console.log(props.highlightedAuthor);
-  // console.log(props.person.id)
-
   const dominantColor = getAccentColor(props.person.name);
+
   return (
     <g>
       (
