@@ -51,7 +51,7 @@ export const LocationListRaw = [
     id: 15,
     name: 'Paris',
     coordinates: '48.856667;2.352222',
-    thumbnail: 'at1tbhislwhgp6z8.png',
+    thumbnail: 'at2b1nejsbd4cdnw.png',
   },
   {
     id: 16,
