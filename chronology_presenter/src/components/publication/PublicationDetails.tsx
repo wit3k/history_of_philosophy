@@ -44,7 +44,8 @@ const PublicationDetails = (props: PublicationDetailsProps) => {
           </div>
           <div className="p-5">
             {props.currentAuthor.name} -{' '}
-            {props.currentPublication.publicationDate}
+            {props.currentPublication.publicationDate},{' '}
+            {props.currentPublication.publicationLocation}
             {props.currentPublication.isbn &&
               ', ' + props.currentPublication.isbn}
           </div>

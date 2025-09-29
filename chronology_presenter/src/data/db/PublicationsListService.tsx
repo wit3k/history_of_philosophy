@@ -9,6 +9,7 @@ const PublicationsListDB = PublicationsListRaw.map(
       pub.id,
       pub.title,
       pub.publicationDate,
+      pub.publicationLocation,
       pub.authorId,
       pub.isbn!,
       pub.description!,

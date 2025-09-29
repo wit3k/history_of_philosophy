@@ -199,6 +199,7 @@ let publications = (
     id: book.Id + '',
     title: book['Tytuł'],
     publicationDate: book['Rok wydania'].slice(0, 4) * 1,
+    publicationLocation: book['Miejsce wydania']['Nazwa'],
     authorId: author.Id + '',
     isbn: book['ISBN'],
     description: book['Opis'],
