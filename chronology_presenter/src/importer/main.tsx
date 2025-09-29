@@ -240,7 +240,7 @@ let locations = (await getTable('locations')).list
       downloadAndProcessImage(
         process.env.NOCO_URL + '/' + location['Zdjęcie'][0].path,
         './public/assets/location/' + location['Zdjęcie'][0].id + '.png',
-        new Coordinates(200, 200),
+        new Coordinates(480, 200),
       );
     }
     return {

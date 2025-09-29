@@ -242,6 +242,7 @@ const Chronology = () => {
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Escape') {
       setDisplayPublicationModal(false);
+      setDisplayLocationModal(false);
     }
   };
   React.useEffect(() => {
