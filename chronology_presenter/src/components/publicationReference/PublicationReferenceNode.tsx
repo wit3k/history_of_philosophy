@@ -69,24 +69,18 @@ const PublicationReferenceNode = (props: PublicationReferenceNodeProps) => {
     } else {
       points.push(
         new Coordinates(
-          start.x + props.settings.dotSize * cos05 * hdir * shrinkFactor,
-          start.y + props.settings.dotSize * cos05 * vdir * isEqual,
-        ),
-      );
-
-      points.push(
-        new Coordinates(
-          start.x + props.settings.boxSize * cos05 * hdir * shrinkFactor,
-          start.y +
-            props.settings.boxSize * distanceFromFactor * vdir * isEqual,
+          start.x + (props.settings.dotSize / 2) * cos05 * hdir * shrinkFactor,
+          start.y + (props.settings.dotSize / 2) * cos05 * vdir * isEqual,
         ),
       );
 
       points.push(
         new Coordinates(
           start.x +
-            (props.settings.boxSize +
-              props.settings.boxSize * distanceFromFactor * hdir) *
+            props.settings.boxSize *
+              distanceFromFactor *
+              cos05 *
+              hdir *
               shrinkFactor,
           start.y +
             props.settings.boxSize * distanceFromFactor * vdir * isEqual,
@@ -96,8 +90,10 @@ const PublicationReferenceNode = (props: PublicationReferenceNodeProps) => {
       points.push(
         new Coordinates(
           start.x +
-            (props.settings.boxSize +
-              props.settings.boxSize * distanceFromFactor * hdir) *
+            props.settings.boxSize *
+              distanceFromFactor *
+              cos05 *
+              hdir *
               shrinkFactor,
           end.y - props.settings.boxSize * distanceToFactor * vdir,
         ),
