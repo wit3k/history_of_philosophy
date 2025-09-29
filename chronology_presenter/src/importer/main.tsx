@@ -9,6 +9,7 @@ let tabMap: any = {
   peopleReference: { tableId: 'mixl3m1i8i3e2nt', viewId: 'vw08gj6s4gss1rnk' },
   publications: { tableId: 'me77551rlyondy9', viewId: 'vwrik2hmo15eufg6' },
   quotes: { tableId: 'mljf7f47zgv9mgv', viewId: 'vwpdfjd6bln6nmu9' },
+  locations: { tableId: 'my7pr4s2kwgoesx', viewId: 'vw1sg7plf8bnr46l' },
 };
 
 let getTable = async (tableName: string) =>
@@ -120,9 +121,9 @@ let people = (await getTable('people')).list
       id: person.Id + '',
       name: person['Imię i nazwisko'],
       born: person['Urodzony'] ? person['Urodzony']?.slice(0, 4) * 1 : null,
-      died: person['Zmarł']
-        ? person['Zmarł']?.slice(0, 4) * 1
-        : person['Urodzony']?.slice(0, 4) * 1 + 100,
+      died: person['Zmarł'] ? person['Zmarł']?.slice(0, 4) * 1 : undefined,
+      bornLocation: person['Urodzony w'].Id,
+      diedLocation: person['Zmarł w'].Id,
       rowNumber: person['Wiersz'] ? person['Wiersz'] * 1 : i + 1,
       thumbnail:
         person['Zdjęcie'] != null && person['Zdjęcie'][0] != null
@@ -199,7 +200,7 @@ let publications = (
     id: book.Id + '',
     title: book['Tytuł'],
     publicationDate: book['Rok wydania'].slice(0, 4) * 1,
-    publicationLocation: book['Miejsce wydania']['Nazwa'],
+    publicationLocation: book['Miejsce wydania'].Id,
     authorId: author.Id + '',
     isbn: book['ISBN'],
     description: book['Opis'],
@@ -228,5 +229,32 @@ let quotes = (await getTable('quotes')).list
 fs.writeFileSync(
   './src/data/imported/PublicationReferenceListRaw.tsx',
   'export const PublicationReferenceListRaw = ' + JSON.stringify(quotes),
+  'utf8',
+);
+
+let locations = (await getTable('locations')).list
+  .filter((location: any) => location['Nazwa'] && location['Koordynaty'])
+  .map((location: any, i: number) => {
+    if (location['Zdjęcie'] != null) {
+      downloadAndProcessImage(
+        process.env.NOCO_URL + '/' + location['Zdjęcie'][0].path,
+        './public/assets/location/' + location['Zdjęcie'][0].id + '.png',
+        new Coordinates(200, 200),
+      );
+    }
+    return {
+      id: location.Id,
+      name: location['Nazwa'],
+      coordinates: location['Koordynaty'],
+      thumbnail:
+        location['Zdjęcie'] != undefined
+          ? location['Zdjęcie'][0].id + '.png'
+          : '',
+    };
+  });
+
+fs.writeFileSync(
+  './src/data/imported/LocationListRaw.tsx',
+  'export const LocationListRaw = ' + JSON.stringify(locations),
   'utf8',
 );

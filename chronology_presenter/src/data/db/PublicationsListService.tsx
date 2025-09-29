@@ -2,6 +2,7 @@ import type Person from '../dto/Person';
 import Publication from '../dto/Publication';
 import PeopleListService from './PeopleListService';
 import { PublicationsListRaw } from '../imported/PublicationsListRaw';
+import LocationListService from './LocationListService';
 
 const PublicationsListDB = PublicationsListRaw.map(
   (pub) =>
@@ -9,7 +10,7 @@ const PublicationsListDB = PublicationsListRaw.map(
       pub.id,
       pub.title,
       pub.publicationDate,
-      pub.publicationLocation,
+      LocationListService.getById(pub.publicationLocation + '')!,
       pub.authorId,
       pub.isbn!,
       pub.description!,
@@ -31,6 +32,8 @@ export const PublicationsListService = {
   getById: (id: string) => PublicationsListDB.find((p) => p.id == id),
   getPublicationAuthor: (publication: Publication) =>
     bookAuthorsMap.get(publication.id),
+  getAllByLocationId: (locationId: string) =>
+    PublicationsListDB.filter((p) => p.publicationLocation.id == locationId),
 };
 
 export default PublicationsListService;

@@ -29,13 +29,13 @@ const PersonReferenceNode = (props: PersonReferenceNodeProps) => {
   const colorByAttitude = (attitude: Attitude) => {
     switch (attitude) {
       case Attitude.Negative:
-        return 'rgba(198, 18, 84, 1)';
+        return 'rgb(198, 18, 84)';
         break;
       case Attitude.Neutral:
-        return 'rgba(10, 25, 119, 1)';
+        return 'rgb(10, 25, 119)';
         break;
       case Attitude.Positive:
-        return 'rgba(154, 231, 32, 1)';
+        return 'rgb(154, 231, 32)';
         break;
     }
   };
@@ -95,6 +95,7 @@ const PersonReferenceNode = (props: PersonReferenceNodeProps) => {
       <path
         d={roundPathCorners(pathPoints, 15, false)}
         stroke={colorFrom}
+        strokeOpacity={props.isHighlighted ? 0.8 : 0.4}
         strokeWidth="1"
         fill="none"
         className={

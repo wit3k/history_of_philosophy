@@ -16,6 +16,10 @@ import PublicationDetails from '../publication/PublicationDetails';
 import Publication from '../../data/dto/Publication';
 import Person from '../../data/dto/Person';
 import PeopleListService from '../../data/db/PeopleListService';
+import LocationDetails from '../location/LocationDetails';
+import Location from '../../data/dto/Location';
+import LocationListService from '../../data/db/LocationListService';
+
 class ChronologyProperies {
   constructor(
     public windowSize: Coordinates,
@@ -54,7 +58,13 @@ const Chronology = () => {
     rowHeight: 85,
   };
 
-  const [displayModal, setDisplayModal] = React.useState<boolean>(false);
+  const [displayPublicationModal, setDisplayPublicationModal] =
+    React.useState<boolean>(false);
+  const [displayLocationModal, setDisplayLocationModal] =
+    React.useState<boolean>(false);
+  const [currentLocation, setCurrentLocation] = React.useState(
+    new Location('', '', new Coordinates(0, 0), ''),
+  );
 
   const [displayAuthors, setDisplayAuthors] = React.useState(true);
   const [displayAuthorsTimeline, setDisplayAuthorsTimeline] =
@@ -74,7 +84,14 @@ const Chronology = () => {
   });
   const [highlightedAuthor, updateHighlightedAuthor] = React.useState('0');
   const [currentPublication, setCurrentPublication] = React.useState(
-    new Publication('', '', 0, ''),
+    new Publication(
+      '',
+      '',
+      0,
+      new Location('', '', new Coordinates(0, 0), ''),
+      '',
+      '',
+    ),
   );
   const [currentAuthor, setCurrentAuthor] = React.useState(
     new Person('', '', 0, 0, 1, ''),
@@ -224,7 +241,7 @@ const Chronology = () => {
 
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Escape') {
-      setDisplayModal(false);
+      setDisplayPublicationModal(false);
     }
   };
   React.useEffect(() => {
@@ -313,7 +330,7 @@ const Chronology = () => {
             setCurrentAuthor={setCurrentAuthor}
             setCurrentPublication={setCurrentPublication}
             updateHighlightedPublication={updateHighlightedPublication}
-            modalHandle={setDisplayModal}
+            modalHandle={setDisplayPublicationModal}
           />
         )}
       </svg>
@@ -342,8 +359,19 @@ const Chronology = () => {
       <PublicationDetails
         currentPublication={currentPublication}
         currentAuthor={currentAuthor}
-        displayModal={displayModal}
-        setDisplayModal={setDisplayModal}
+        displayModal={displayPublicationModal}
+        setDisplayModal={setDisplayPublicationModal}
+        callback={(id) => {
+          setCurrentLocation(LocationListService.getById(id)!);
+          setDisplayLocationModal(true);
+          setDisplayPublicationModal(false);
+        }}
+      />
+
+      <LocationDetails
+        currentLocation={currentLocation}
+        displayModal={displayLocationModal}
+        setDisplayModal={setDisplayLocationModal}
       />
     </div>
   );

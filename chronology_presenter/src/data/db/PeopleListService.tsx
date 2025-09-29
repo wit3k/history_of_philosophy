@@ -9,7 +9,17 @@ const PeopleList = PeopleListRaw.filter(
   (p) => p.born != undefined && p.died != undefined,
 )
   .map(
-    (p) => new Person(p.id, p.name, p.born, p.died, p.rowNumber, p.thumbnail),
+    (p) =>
+      new Person(
+        p.id,
+        p.name,
+        p.born,
+        p.died,
+        p.bornLocation + '',
+        p.diedLocation + '',
+        p.rowNumber,
+        p.thumbnail,
+      ),
   )
   .sort((a, b) => a.born - b.born)
   .map((p) => {
