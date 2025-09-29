@@ -124,6 +124,7 @@ let people = (await getTable('people')).list
       died: person['Zmarł'] ? person['Zmarł']?.slice(0, 4) * 1 : undefined,
       bornLocation: person['Urodzony w'].Id,
       diedLocation: person['Zmarł w'].Id,
+      nationality: person['Narodowości'].split(',')[0],
       rowNumber: person['Wiersz'] ? person['Wiersz'] * 1 : i + 1,
       thumbnail:
         person['Zdjęcie'] != null && person['Zdjęcie'][0] != null

@@ -8,6 +8,8 @@ class Person {
     public bornLocation: string,
     public diedLocation: string,
 
+    public nationality: string,
+
     public rowNumber: number,
 
     public thumbnail: string | null,

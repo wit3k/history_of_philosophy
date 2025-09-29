@@ -17,6 +17,7 @@ const PeopleList = PeopleListRaw.filter(
         p.died,
         p.bornLocation + '',
         p.diedLocation + '',
+        p.nationality,
         p.rowNumber,
         p.thumbnail,
       ),

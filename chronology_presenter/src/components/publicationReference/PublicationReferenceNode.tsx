@@ -120,7 +120,7 @@ const PublicationReferenceNode = (props: PublicationReferenceNodeProps) => {
       .map((p) => p.join(' '))
       .join(' ');
 
-    let colorFrom = getAccentColor(props.authorFrom.name);
+    let colorFrom = getAccentColor(props.authorFrom.nationality);
     return (
       <path
         d={roundPathCorners(pathPoints, 5, false)}

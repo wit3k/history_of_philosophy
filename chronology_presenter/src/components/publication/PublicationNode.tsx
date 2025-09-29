@@ -31,7 +31,7 @@ export class PublicationNodeSettings {
 }
 
 const PublicationNode = (props: PublicationNodeProps) => {
-  const dominantColor = getAccentColor(props.author.name);
+  const dominantColor = getAccentColor(props.author.nationality);
   const titleSections = props.publication.title
     .split(' ')
     .map((e) => [e])
