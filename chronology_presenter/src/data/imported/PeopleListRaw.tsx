@@ -1,42 +1,10 @@
 export const PeopleListRaw = [
   {
-    id: '7',
-    name: 'Vittorio Hösle',
-    born: 1960,
-    died: 2060,
-    rowNumber: 1,
-    thumbnail: 'atvp350jvi6a1u4s.png',
-  },
-  {
-    id: '9',
-    name: 'Jonathan Israel',
-    born: 1946,
-    died: 2046,
-    rowNumber: 2,
-    thumbnail: 'atmtr1d3p1lu1c4x.png',
-  },
-  {
-    id: '10',
-    name: 'Mark William Roche',
-    born: 1956,
-    died: 2056,
-    rowNumber: 3,
-    thumbnail: 'at6qh63pwvubbs1t.png',
-  },
-  {
-    id: '11',
-    name: 'Chad Wellmon',
-    born: 1976,
-    died: 2076,
-    rowNumber: 4,
-    thumbnail: 'atbpvywi048ke1ac.png',
-  },
-  {
     id: '20',
     name: 'Pierre Gassendi',
     born: 1592,
     died: 1655,
-    rowNumber: 5,
+    rowNumber: 1,
     thumbnail: 'atvn4s4dhuovti06.png',
   },
   {
@@ -44,7 +12,7 @@ export const PeopleListRaw = [
     name: 'Rene Descartes',
     born: 1596,
     died: 1650,
-    rowNumber: 6,
+    rowNumber: 2,
     thumbnail: 'atao3gax36v3fn9n.png',
   },
   {
@@ -52,7 +20,7 @@ export const PeopleListRaw = [
     name: 'Robert Desgabets',
     born: 1609,
     died: 1678,
-    rowNumber: 7,
+    rowNumber: 3,
     thumbnail: null,
   },
   {
@@ -60,7 +28,7 @@ export const PeopleListRaw = [
     name: 'Antoine Arnauld',
     born: 1611,
     died: 1694,
-    rowNumber: 8,
+    rowNumber: 4,
     thumbnail: 'atfzvjepjxfwke3i.png',
   },
   {
@@ -68,7 +36,7 @@ export const PeopleListRaw = [
     name: 'Elisabeth von der Pfalz',
     born: 1618,
     died: 1680,
-    rowNumber: 9,
+    rowNumber: 5,
     thumbnail: 'at1rjv3zj64y79ny.png',
   },
   {
@@ -76,7 +44,7 @@ export const PeopleListRaw = [
     name: 'Géraud de Cordemoy',
     born: 1626,
     died: 1684,
-    rowNumber: 10,
+    rowNumber: 6,
     thumbnail: 'atdwp3pranwjvpnf.png',
   },
   {
@@ -84,7 +52,7 @@ export const PeopleListRaw = [
     name: 'Antoine Le Grand',
     born: 1628,
     died: 1699,
-    rowNumber: 11,
+    rowNumber: 7,
     thumbnail: 'atbug5vg19ld73fp.png',
   },
   {
@@ -92,7 +60,7 @@ export const PeopleListRaw = [
     name: 'Baruch de Spinoza',
     born: 1632,
     died: 1677,
-    rowNumber: 12,
+    rowNumber: 8,
     thumbnail: 'atykxhjp1x4ujvb5.png',
   },
   {
@@ -100,7 +68,7 @@ export const PeopleListRaw = [
     name: 'Louis de La Forge',
     born: 1632,
     died: 1665,
-    rowNumber: 13,
+    rowNumber: 9,
     thumbnail: 'atueqad7ppqrk7g3.png',
   },
   {
@@ -108,7 +76,7 @@ export const PeopleListRaw = [
     name: 'Nicolas Malebranche',
     born: 1638,
     died: 1715,
-    rowNumber: 14,
+    rowNumber: 10,
     thumbnail: 'atqaw3uot12apfu6.png',
   },
   {
@@ -116,7 +84,7 @@ export const PeopleListRaw = [
     name: 'Gottfried Wilhelm Leibniz',
     born: 1646,
     died: 1716,
-    rowNumber: 15,
+    rowNumber: 11,
     thumbnail: 'at4cr41wq4mqgw4y.png',
   },
   {
@@ -124,7 +92,7 @@ export const PeopleListRaw = [
     name: 'Karl Popper',
     born: 1902,
     died: 1994,
-    rowNumber: 16,
+    rowNumber: 12,
     thumbnail: 'ath1ymdk6ku82cor.png',
   },
   {
@@ -132,7 +100,7 @@ export const PeopleListRaw = [
     name: 'Imre Lakatos',
     born: 1922,
     died: 1974,
-    rowNumber: 17,
+    rowNumber: 13,
     thumbnail: 'atr5s3zt9b7ms0ks.png',
   },
   {
@@ -140,7 +108,7 @@ export const PeopleListRaw = [
     name: 'Thomas Kuhn',
     born: 1922,
     died: 1993,
-    rowNumber: 18,
+    rowNumber: 14,
     thumbnail: 'atcd2wr9fyenjkuo.png',
   },
   {
@@ -148,7 +116,7 @@ export const PeopleListRaw = [
     name: 'Karl Marx',
     born: 1818,
     died: 1883,
-    rowNumber: 19,
+    rowNumber: 15,
     thumbnail: 'at28p41hz389tqos.png',
   },
   {
@@ -156,7 +124,7 @@ export const PeopleListRaw = [
     name: 'Sigismund Schlomo Freud',
     born: 1856,
     died: 1939,
-    rowNumber: 20,
+    rowNumber: 16,
     thumbnail: 'ati10fsydlcwxtlr.png',
   },
   {
@@ -164,7 +132,7 @@ export const PeopleListRaw = [
     name: 'Charles Darwin',
     born: 1809,
     died: 1882,
-    rowNumber: 21,
+    rowNumber: 17,
     thumbnail: 'atjn4k6959bolztr.png',
   },
   {
@@ -172,7 +140,7 @@ export const PeopleListRaw = [
     name: 'Gottlob Frege',
     born: 1848,
     died: 1925,
-    rowNumber: 22,
+    rowNumber: 18,
     thumbnail: 'atgoiq4g0udw69be.png',
   },
   {
@@ -180,7 +148,7 @@ export const PeopleListRaw = [
     name: 'Sir Alfred Jules "Frayer" Ayer',
     born: 1910,
     died: 1989,
-    rowNumber: 23,
+    rowNumber: 19,
     thumbnail: 'atr9xmnlionsnuuu.png',
   },
   {
@@ -188,7 +156,7 @@ export const PeopleListRaw = [
     name: 'Ludwig Wittgenstein',
     born: 1889,
     died: 1951,
-    rowNumber: 24,
+    rowNumber: 20,
     thumbnail: 'at14lk772e5vet1u.png',
   },
   {
@@ -196,7 +164,7 @@ export const PeopleListRaw = [
     name: 'John Locke',
     born: 1632,
     died: 1704,
-    rowNumber: 25,
+    rowNumber: 21,
     thumbnail: 'atbkekfrqtz08yp3.png',
   },
   {
@@ -204,7 +172,7 @@ export const PeopleListRaw = [
     name: 'Willard Van Orman Quine',
     born: 1908,
     died: 2000,
-    rowNumber: 26,
+    rowNumber: 22,
     thumbnail: 'at4wjrbvzzco19ia.png',
   },
   {
@@ -212,7 +180,7 @@ export const PeopleListRaw = [
     name: 'Bertrand Russell',
     born: 1872,
     died: 1970,
-    rowNumber: 27,
+    rowNumber: 23,
     thumbnail: 'at257mf44uf2l0cg.png',
   },
   {
@@ -220,7 +188,7 @@ export const PeopleListRaw = [
     name: 'Marin Mersenne',
     born: 1588,
     died: 1648,
-    rowNumber: 28,
+    rowNumber: 24,
     thumbnail: 'atprtx3tcmp6t6vx.png',
   },
   {
@@ -228,7 +196,7 @@ export const PeopleListRaw = [
     name: 'Henricus Regius',
     born: 1598,
     died: 1679,
-    rowNumber: 29,
+    rowNumber: 25,
     thumbnail: 'at2iy1e7ykba4b0t.png',
   },
   {
@@ -236,7 +204,7 @@ export const PeopleListRaw = [
     name: 'François Poulain de la Barre',
     born: 1647,
     died: 1723,
-    rowNumber: 30,
+    rowNumber: 26,
     thumbnail: null,
   },
   {
@@ -244,7 +212,7 @@ export const PeopleListRaw = [
     name: 'Pierre Bayle',
     born: 1647,
     died: 1706,
-    rowNumber: 31,
+    rowNumber: 27,
     thumbnail: 'at9h7cfnr27q6z5u.png',
   },
   {
@@ -252,7 +220,7 @@ export const PeopleListRaw = [
     name: 'Christian Wolff ',
     born: 1679,
     died: 1754,
-    rowNumber: 32,
+    rowNumber: 28,
     thumbnail: 'atvdksfk90hp4brt.png',
   },
   {
@@ -260,7 +228,7 @@ export const PeopleListRaw = [
     name: 'Pierre Nicole',
     born: 1624,
     died: 1695,
-    rowNumber: 33,
+    rowNumber: 29,
     thumbnail: 'atvt887y44py1fc9.png',
   },
 ];

@@ -214,7 +214,9 @@ fs.writeFileSync(
 );
 
 let quotes = (await getTable('quotes')).list
-  .filter((quote: any) => quote['Nagłówek'])
+  .filter(
+    (quote: any) => quote['Nagłówek'] && quote['Nawiązanie do publikacji'],
+  )
   .map((quote: any, i: number) => ({
     id: quote.Id,
     name: quote['Nagłówek'],
