@@ -14,6 +14,7 @@ class PersonNodeProps {
       React.SetStateAction<string>
     >,
     public displayAuthorsTimeline: boolean,
+    public authorCallback: (id: string) => void,
   ) {}
 }
 
@@ -79,7 +80,10 @@ const PersonNode = (props: PersonNodeProps) => {
           height={props.settings.boxSize}
           className="cursor-pointer"
           onMouseMove={() => props.updateHighlightedAuthor(props.person.id)}
-          onClick={() => props.updateHighlightedAuthor(props.person.id)}
+          onClick={() => {
+            props.updateHighlightedAuthor(props.person.id);
+            props.authorCallback(props.person.id);
+          }}
         />
       )}
       <rect
@@ -102,7 +106,10 @@ const PersonNode = (props: PersonNodeProps) => {
         }}
         className="cursor-pointer"
         onMouseMove={() => props.updateHighlightedAuthor(props.person.id)}
-        onClick={() => props.updateHighlightedAuthor(props.person.id)}
+        onClick={() => {
+          props.updateHighlightedAuthor(props.person.id);
+          props.authorCallback(props.person.id);
+        }}
       />
       <rect
         x={props.positionStart - 1}

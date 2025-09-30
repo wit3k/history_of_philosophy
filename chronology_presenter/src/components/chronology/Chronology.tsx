@@ -19,6 +19,8 @@ import PeopleListService from '../../data/db/PeopleListService';
 import LocationDetails from '../location/LocationDetails';
 import Location from '../../data/dto/Location';
 import LocationListService from '../../data/db/LocationListService';
+import PublicationsListService from '../../data/db/PublicationsListService';
+import PersonDetails from '../person/PersonDetails';
 
 class ChronologyProperies {
   constructor(
@@ -61,6 +63,8 @@ const Chronology = () => {
   const [displayPublicationModal, setDisplayPublicationModal] =
     React.useState<boolean>(false);
   const [displayLocationModal, setDisplayLocationModal] =
+    React.useState<boolean>(false);
+  const [displayPersonModal, setDisplayPersonModal] =
     React.useState<boolean>(false);
   const [currentLocation, setCurrentLocation] = React.useState(
     new Location('', '', new Coordinates(0, 0), ''),
@@ -308,6 +312,12 @@ const Chronology = () => {
             highlightedAuthor={highlightedAuthor}
             updateHighlightedAuthor={updateHighlightedAuthor}
             displayAuthorsTimeline={displayAuthorsTimeline}
+            authorCallback={(id) => {
+              setCurrentAuthor(PeopleListService.getById(id)!);
+              setDisplayLocationModal(false);
+              setDisplayPublicationModal(false);
+              setDisplayPersonModal(true);
+            }}
           />
         )}
 
@@ -362,10 +372,17 @@ const Chronology = () => {
         currentAuthor={currentAuthor}
         displayModal={displayPublicationModal}
         setDisplayModal={setDisplayPublicationModal}
-        callback={(id) => {
+        locationCallback={(id) => {
           setCurrentLocation(LocationListService.getById(id)!);
           setDisplayLocationModal(true);
           setDisplayPublicationModal(false);
+          setDisplayPersonModal(false);
+        }}
+        authorCallback={(id) => {
+          setCurrentAuthor(PeopleListService.getById(id)!);
+          setDisplayLocationModal(false);
+          setDisplayPublicationModal(false);
+          setDisplayPersonModal(true);
         }}
       />
 
@@ -373,6 +390,36 @@ const Chronology = () => {
         currentLocation={currentLocation}
         displayModal={displayLocationModal}
         setDisplayModal={setDisplayLocationModal}
+        publicationCallback={(id) => {
+          setCurrentPublication(PublicationsListService.getById(id)!);
+          setDisplayPublicationModal(true);
+          setDisplayLocationModal(false);
+          setDisplayPersonModal(false);
+        }}
+        authorCallback={(id) => {
+          setCurrentAuthor(PeopleListService.getById(id)!);
+          setDisplayPersonModal(true);
+          setDisplayLocationModal(false);
+          setDisplayPublicationModal(false);
+        }}
+      />
+
+      <PersonDetails
+        currentPerson={currentAuthor}
+        displayModal={displayPersonModal}
+        setDisplayModal={setDisplayPersonModal}
+        locationCallback={(id) => {
+          setCurrentLocation(LocationListService.getById(id)!);
+          setDisplayLocationModal(true);
+          setDisplayPersonModal(false);
+          setDisplayPublicationModal(false);
+        }}
+        publicationCallback={(id) => {
+          setCurrentPublication(PublicationsListService.getById(id)!);
+          setDisplayPublicationModal(true);
+          setDisplayPersonModal(false);
+          setDisplayLocationModal(false);
+        }}
       />
     </div>
   );

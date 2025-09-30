@@ -32,6 +32,8 @@ export const PublicationsListService = {
   getById: (id: string) => PublicationsListDB.find((p) => p.id == id),
   getPublicationAuthor: (publication: Publication) =>
     bookAuthorsMap.get(publication.id),
+  getAllByAuthor: (authorId: string) =>
+    PublicationsListDB.filter((p) => p.authorId == authorId),
   getAllByLocationId: (locationId: string) =>
     PublicationsListDB.filter((p) => p.publicationLocation.id == locationId),
 };

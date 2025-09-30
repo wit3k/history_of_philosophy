@@ -115,6 +115,11 @@ let people = (await getTable('people')).list
         './public/assets/person/' + person['Zdjęcie'][0].id + '.png',
         new Coordinates(50, 50),
       );
+      downloadAndProcessImage(
+        process.env.NOCO_URL + '/' + person['Zdjęcie'][0].path,
+        './public/assets/person_big/' + person['Zdjęcie'][0].id + '.png',
+        new Coordinates(200, 300),
+      );
     }
 
     return {

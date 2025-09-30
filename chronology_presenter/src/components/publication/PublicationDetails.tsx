@@ -9,7 +9,8 @@ class PublicationDetailsProps {
     public currentAuthor: Person,
     public displayModal: boolean,
     public setDisplayModal: React.Dispatch<React.SetStateAction<boolean>>,
-    public callback: (id: string) => void,
+    public locationCallback: (id: string) => void,
+    public authorCallback: (id: string) => void,
   ) {}
 }
 
@@ -26,14 +27,19 @@ const PublicationDetails = (props: PublicationDetailsProps) => {
           &bdquo;{props.currentPublication.title}&rdquo;
         </div>
         <div className="p-5">
-          <span className="text-pink-700 underline cursor-pointer">
+          <span
+            onClick={() => props.authorCallback(props.currentAuthor.id)}
+            className="text-pink-700 underline cursor-pointer"
+          >
             {props.currentAuthor.name}
           </span>{' '}
           - {props.currentPublication.publicationDate},{' '}
           <span
             className="text-pink-700 underline cursor-pointer"
             onClick={() =>
-              props.callback(props.currentPublication.publicationLocation.id)
+              props.locationCallback(
+                props.currentPublication.publicationLocation.id,
+              )
             }
           >
             {props.currentPublication.publicationLocation.name}

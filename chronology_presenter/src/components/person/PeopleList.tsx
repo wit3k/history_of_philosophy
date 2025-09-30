@@ -13,6 +13,7 @@ class PeopleListProps {
     >,
     public personNodesSettings: PersonNodeSettings,
     public displayAuthorsTimeline: boolean,
+    public authorCallback: (id: string) => void,
   ) {}
 }
 
@@ -30,6 +31,7 @@ const PeopleList = (props: PeopleListProps) =>
         highlightedAuthor={props.highlightedAuthor}
         updateHighlightedAuthor={props.updateHighlightedAuthor}
         displayAuthorsTimeline={props.displayAuthorsTimeline}
+        authorCallback={props.authorCallback}
       />
     ));
 

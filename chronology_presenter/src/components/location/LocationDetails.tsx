@@ -8,6 +8,8 @@ class LocationDetailsProps {
     public currentLocation: Location,
     public displayModal: boolean,
     public setDisplayModal: React.Dispatch<React.SetStateAction<boolean>>,
+    public publicationCallback: (id: string) => void,
+    public authorCallback: (id: string) => void,
   ) {}
 }
 
@@ -63,7 +65,7 @@ const LocationDetails = (props: LocationDetailsProps) => {
             target="_blank"
             rel="noopener noreferrer"
             className="relative z-10 grid h-8 w-8 place-items-center rounded-md text-slate-900 hover:text-white float-left"
-            style={{background: 'linear-gradient(90deg, #ff4f7e, #fe27be)'}}
+            style={{ background: 'linear-gradient(90deg, #ff4f7e, #fe27be)' }}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -120,21 +122,28 @@ const LocationDetails = (props: LocationDetailsProps) => {
                   </svg>
                 </span>
               );
+              let author = PublicationsListService.getPublicationAuthor(
+                historyItem.publication,
+              );
               content = (
                 <small className="mt-2 font-sans text-sm text-slate-300 antialiased">
                   <span className="text-slate-100 -ml-3">
                     {historyItem.date}
                   </span>{' '}
                   -{' '}
-                  <span className="italic hover:text-pink-700 underline cursor-pointer">
+                  <span
+                    onClick={() =>
+                      props.publicationCallback(historyItem.publication.id)
+                    }
+                    className="italic hover:text-pink-700 underline cursor-pointer"
+                  >
                     &bdquo;{historyItem.publication.title}&rdquo;
                   </span>{' '}
-                  <span className="text-slate-100 font-black hover:text-pink-700 hover:underline cursor-pointer">
-                    {
-                      PublicationsListService.getPublicationAuthor(
-                        historyItem.publication,
-                      )?.name
-                    }
+                  <span
+                    onClick={() => props.authorCallback(author!.id)}
+                    className="text-slate-100 font-black hover:text-pink-700 hover:underline cursor-pointer"
+                  >
+                    {author?.name}
                   </span>
                   {historyItem.publication.isbn &&
                     ' / ' + historyItem.publication.isbn}
@@ -152,12 +161,12 @@ const LocationDetails = (props: LocationDetailsProps) => {
                     className="size-5"
                   >
                     <path
-                          stroke="currentColor"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M16 12h4m-2 2v-4M4 18v-1a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Zm8-10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
-                        />
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M16 12h4m-2 2v-4M4 18v-1a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Zm8-10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                    />
                   </svg>
                 </span>
               );
@@ -166,10 +175,15 @@ const LocationDetails = (props: LocationDetailsProps) => {
                   <span className="text-slate-100 -ml-3">
                     {historyItem.date}
                   </span>{' '}
-                  -{' '}
-                  Urodził się: <span className="font-black hover:text-pink-700 hover:underline cursor-pointer">
-                      {historyItem.personBorn.name}
-                    </span>{' '}
+                  - Urodził się:{' '}
+                  <span
+                    className="font-black hover:text-pink-700 hover:underline cursor-pointer"
+                    onClick={() =>
+                      props.authorCallback(historyItem.personBorn.id)
+                    }
+                  >
+                    {historyItem.personBorn.name}
+                  </span>{' '}
                 </small>
               );
             } else if (historyItem.personDied) {
@@ -184,12 +198,12 @@ const LocationDetails = (props: LocationDetailsProps) => {
                     className="size-5"
                   >
                     <path
-                          stroke="currentColor"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M16 12h4M4 18v-1a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Zm8-10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
-                        />
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M16 12h4M4 18v-1a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Zm8-10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                    />
                   </svg>
                 </span>
               );
@@ -198,10 +212,15 @@ const LocationDetails = (props: LocationDetailsProps) => {
                   <span className="text-slate-100 -ml-3">
                     {historyItem.date}
                   </span>{' '}
-                  -{' '}
-                    Zmarł: <span className="font-black hover:text-pink-700 hover:underline cursor-pointer">
-                      {historyItem.personDied.name}
-                    </span>
+                  - Zmarł:{' '}
+                  <span
+                    className="font-black hover:text-pink-700 hover:underline cursor-pointer"
+                    onClick={() =>
+                      props.authorCallback(historyItem.personDied.id)
+                    }
+                  >
+                    {historyItem.personDied.name}
+                  </span>
                 </small>
               );
             }
@@ -216,13 +235,10 @@ const LocationDetails = (props: LocationDetailsProps) => {
                   )}
                   {icon}
                 </div>
-                <div className="translate-y-0.5 pb-8 ">
-                  {content}
-                </div>
+                <div className="translate-y-0.5 pb-8 ">{content}</div>
               </div>
             );
           })}
-          
         </div>
       </div>
     </Modal>
