@@ -11,6 +11,13 @@ export const PersonReferenceListRaw = [
     name: 'Inspiracja nurtu',
     attitude: 'Positive',
     from: '12',
+    to: '31',
+  },
+  {
+    id: '4',
+    name: 'Inspiracja nurtu',
+    attitude: 'Positive',
+    from: '12',
     to: '29',
   },
   {
@@ -19,6 +26,13 @@ export const PersonReferenceListRaw = [
     attitude: 'Positive',
     from: '12',
     to: '32',
+  },
+  {
+    id: '4',
+    name: 'Inspiracja nurtu',
+    attitude: 'Positive',
+    from: '12',
+    to: '13',
   },
   {
     id: '4',
@@ -39,13 +53,6 @@ export const PersonReferenceListRaw = [
     name: 'Inspiracja nurtu',
     attitude: 'Positive',
     from: '12',
-    to: '40',
-  },
-  {
-    id: '4',
-    name: 'Inspiracja nurtu',
-    attitude: 'Positive',
-    from: '12',
     to: '39',
   },
   {
@@ -53,14 +60,7 @@ export const PersonReferenceListRaw = [
     name: 'Inspiracja nurtu',
     attitude: 'Positive',
     from: '12',
-    to: '13',
-  },
-  {
-    id: '4',
-    name: 'Inspiracja nurtu',
-    attitude: 'Positive',
-    from: '12',
-    to: '31',
+    to: '40',
   },
   { id: '5', name: 'Krytyka', attitude: 'Negative', from: '13', to: '12' },
   { id: '6', name: 'Krytyka', attitude: 'Negative', from: '20', to: '12' },

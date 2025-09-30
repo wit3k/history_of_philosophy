@@ -33,7 +33,7 @@ const Menu = (props: MenuProps) => {
             onClick={() => setIsVisible(true)}
           >
             <i
-              className="bi bi-app-indicator px-2 py-1 bg-blue-600 rounded-md"
+              className="bi bi-app-indicator px-2 py-1 bg-blue-600 rounded-md text-slate-900 hover:text-white"
               style={{ background: 'linear-gradient(90deg, #ff4f7e, #fe27be)' }}
             >
               <svg
