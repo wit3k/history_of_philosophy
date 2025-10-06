@@ -281,4 +281,28 @@ export const LocationListRaw = [
     coordinates: '48.456;1.484',
     thumbnail: 'atu8l1sgo669n3y6.png',
   },
+  {
+    id: 55,
+    name: 'Malmesbury',
+    coordinates: '51.584;-2.0980000000',
+    thumbnail: 'at1xc0ic91i139ui.png',
+  },
+  {
+    id: 56,
+    name: 'Ault Hucknall',
+    coordinates: '53.182;-1.3020000000',
+    thumbnail: 'at7fjwo5otrerf00.png',
+  },
+  {
+    id: 57,
+    name: 'Ragley Hall',
+    coordinates: '52.198;-1.896',
+    thumbnail: 'atazi498zxpwg3bn.png',
+  },
+  {
+    id: 58,
+    name: 'Grantham',
+    coordinates: '52.918;-0.638',
+    thumbnail: 'atmcqf4zs0f1avqw.png',
+  },
 ];

@@ -65,4 +65,7 @@ export const PersonReferenceListRaw = [
   { id: '5', name: 'Krytyka', attitude: 'Negative', from: '13', to: '12' },
   { id: '6', name: 'Krytyka', attitude: 'Negative', from: '20', to: '12' },
   { id: '7', name: 'Inspiracja', attitude: 'Positive', from: '31', to: '12' },
+  { id: '8', name: 'Inspiracja', attitude: 'Positive', from: '45', to: '30' },
+  { id: '9', name: 'Krytyka', attitude: 'Negative', from: '45', to: '12' },
+  { id: '10', name: 'Nauczyciel', attitude: 'Positive', from: '46', to: '45' },
 ];
