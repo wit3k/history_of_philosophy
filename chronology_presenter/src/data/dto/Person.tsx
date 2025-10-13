@@ -8,7 +8,7 @@ class Person {
     public bornLocation: string,
     public diedLocation: string,
 
-    public nationality: string,
+    public nationality: string | null,
 
     public rowNumber: number,
 

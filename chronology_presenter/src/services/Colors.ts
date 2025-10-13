@@ -11,6 +11,9 @@ const palette = [
   '#3f9db9ff',
 ];
 export const getAccentColor = (name: string) => {
+  if (name == null) {
+    return '#0f0';
+  }
   let fixedColors = new Map<string, string>();
   fixedColors.set('Amerykanin', '#0379dfff');
   fixedColors.set('Austryjak', '#EF3340');

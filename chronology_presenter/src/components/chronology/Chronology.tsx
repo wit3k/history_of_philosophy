@@ -103,7 +103,7 @@ const Chronology = () => {
   const [highlightedPublication, updateHighlightedPublication] =
     React.useState('0');
   const [viewPosition, setPosition] = React.useState({
-    x: PeopleListService.startingPoint(),
+    x: 1580,
     y: 0,
   });
   const [yearSelection, setYearSelection] = React.useState({

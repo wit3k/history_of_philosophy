@@ -35,7 +35,9 @@ export const PublicationsListService = {
   getAllByAuthor: (authorId: string) =>
     PublicationsListDB.filter((p) => p.authorId == authorId),
   getAllByLocationId: (locationId: string) =>
-    PublicationsListDB.filter((p) => p.publicationLocation && p.publicationLocation.id == locationId),
+    PublicationsListDB.filter(
+      (p) => p.publicationLocation && p.publicationLocation.id == locationId,
+    ),
 };
 
 export default PublicationsListService;
