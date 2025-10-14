@@ -125,8 +125,14 @@ let people = (await getTable('people')).list
     return {
       id: person.Id + '',
       name: person['Imię i nazwisko'],
-      born: person['Urodzony'] ? person['Urodzony']?.slice(0, 4) * 1 : null,
-      died: person['Zmarł'] ? person['Zmarł']?.slice(0, 4) * 1 : undefined,
+      born: person['Urodzony']
+        ? person['Urodzony']?.slice(0, 4) *
+          (person['Urodzony Era'] == 'N.E.' ? 1 : -1)
+        : null,
+      died: person['Zmarł']
+        ? person['Zmarł']?.slice(0, 4) *
+          (person['Zmarł Era'] == 'N.E.' ? 1 : -1)
+        : undefined,
       bornLocation: person['Urodzony w'] ? person['Urodzony w'].Id : null,
       diedLocation: person['Zmarł w'] ? person['Zmarł w'].Id : null,
       nationality: person['Narodowości']
