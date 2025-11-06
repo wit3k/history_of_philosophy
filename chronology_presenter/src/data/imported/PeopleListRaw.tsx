@@ -435,7 +435,7 @@ export const PeopleListRaw = [
     died: -261,
     bornLocation: 88,
     diedLocation: 109,
-    nationality: 'Crypryjczyk',
+    nationality: 'Grek',
     rowNumber: 40,
     thumbnail: 'atq01ja9w95ymcdn.png',
   },
