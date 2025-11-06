@@ -33,17 +33,22 @@ const PublicationDetails = (props: PublicationDetailsProps) => {
           >
             {props.currentAuthor.name}
           </span>{' '}
-          - {props.currentPublication.publicationDate},{' '}
-          <span
-            className="text-pink-700 underline cursor-pointer"
-            onClick={() =>
-              props.locationCallback(
-                props.currentPublication.publicationLocation.id,
-              )
-            }
-          >
-            {props.currentPublication.publicationLocation.name}
-          </span>
+          - {props.currentPublication.publicationDate}
+          {props.currentPublication.publicationLocation && (
+            <span>
+              ,
+              <span
+                className="text-pink-700 underline cursor-pointer"
+                onClick={() =>
+                  props.locationCallback(
+                    props.currentPublication.publicationLocation.id,
+                  )
+                }
+              >
+                {props.currentPublication.publicationLocation.name}
+              </span>
+            </span>
+          )}
           {props.currentPublication.isbn &&
             ', ' + props.currentPublication.isbn}
         </div>

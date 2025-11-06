@@ -119,16 +119,18 @@ const PersonDetails = (props: PersonDetailsProps) => {
                     &bdquo;{historyItem.publication.title}&rdquo;
                   </span>
                   {' / '}
-                  <span
-                    onClick={() =>
-                      props.locationCallback(
-                        historyItem.publication.publicationLocation!.id,
-                      )
-                    }
-                    className="text-slate-100 hover:text-pink-700 underline cursor-pointer"
-                  >
-                    {historyItem.publication?.publicationLocation.name}
-                  </span>
+                  {historyItem.publication?.publicationLocation && (
+                    <span
+                      onClick={() =>
+                        props.locationCallback(
+                          historyItem.publication.publicationLocation!.id,
+                        )
+                      }
+                      className="text-slate-100 hover:text-pink-700 underline cursor-pointer"
+                    >
+                      {historyItem.publication?.publicationLocation.name}
+                    </span>
+                  )}
                   {historyItem.publication.isbn &&
                     ' / ' + historyItem.publication.isbn}
                 </small>

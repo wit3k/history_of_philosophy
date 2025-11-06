@@ -373,4 +373,22 @@ export const LocationListRaw = [
   { id: 114, name: 'Friedrichsruh', coordinates: '53.68;10.55', thumbnail: '' },
   { id: 115, name: 'Longwood', coordinates: '-15.55;-5.72', thumbnail: '' },
   { id: 116, name: 'Valladolid', coordinates: '41.65;-4.72', thumbnail: '' },
+  {
+    id: 118,
+    name: 'Kair',
+    coordinates: '30.0595563000;31.2171792',
+    thumbnail: 'at9ihqwr7je6xjjm.png',
+  },
+  {
+    id: 119,
+    name: 'Tunis',
+    coordinates: '36.7949445;10.1019925000',
+    thumbnail: 'at0igcarfckdxrbw.png',
+  },
+  {
+    id: 120,
+    name: 'Milet',
+    coordinates: '37.5311146;27.2734476',
+    thumbnail: 'atwa8koiek1ab7wl.png',
+  },
 ];

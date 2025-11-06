@@ -10,7 +10,7 @@ const palette = [
   '#962281ff',
   '#3f9db9ff',
 ];
-export const getAccentColor = (name: string) => {
+export const getAccentColor = (name: string | null) => {
   if (name == null) {
     return '#0f0';
   }
