@@ -79,7 +79,7 @@ const Chronology = () => {
   const [displayPublicationRelations, setDisplayPublicationRelations] =
     React.useState(true);
 
-  const [zoom, setZoom] = React.useState(16);
+  const [zoom, setZoom] = React.useState(1);
   const [pinchDelta, setPinchDelta] = React.useState(0);
   const [drag, setDrag] = React.useState({
     isDragged: false,
@@ -103,13 +103,13 @@ const Chronology = () => {
   const [highlightedPublication, updateHighlightedPublication] =
     React.useState('0');
   const [viewPosition, setPosition] = React.useState({
-    x: 1580,
+    x: -630,
     y: 0,
   });
   const [yearSelection, setYearSelection] = React.useState({
     from: -1200,
     to: 2101,
-    stepSize: 10,
+    stepSize: 100,
   });
 
   const personNodesSettings: PersonNodeSettings = {
