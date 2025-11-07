@@ -32,7 +32,7 @@ const PersonReferenceNode = (props: PersonReferenceNodeProps) => {
         return 'rgb(198, 18, 84)';
         break;
       case Attitude.Neutral:
-        return 'rgb(10, 25, 119)';
+        return 'rgba(0, 221, 255, 1)';
         break;
       case Attitude.Positive:
         return 'rgb(154, 231, 32)';
