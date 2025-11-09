@@ -283,7 +283,7 @@ export const PeopleListRaw = [
     diedLocation: 49,
     nationality: 'Francuz',
     rowNumber: 26,
-    thumbnail: null,
+    thumbnail: 'at95i8pqe9fp7j8y.png',
   },
   {
     id: '41',
@@ -646,7 +646,7 @@ export const PeopleListRaw = [
     diedLocation: null,
     nationality: 'Grek',
     rowNumber: 59,
-    thumbnail: null,
+    thumbnail: 'atvmz0drj5lm4271.png',
   },
   {
     id: '77',
@@ -668,7 +668,7 @@ export const PeopleListRaw = [
     diedLocation: null,
     nationality: 'Grek',
     rowNumber: 61,
-    thumbnail: null,
+    thumbnail: 'att71ss5lvpnp6bp.png',
   },
   {
     id: '79',
@@ -679,7 +679,7 @@ export const PeopleListRaw = [
     diedLocation: null,
     nationality: 'Grek',
     rowNumber: 62,
-    thumbnail: null,
+    thumbnail: 'athf4rsp3vtfgjzi.png',
   },
   {
     id: '80',
@@ -690,7 +690,7 @@ export const PeopleListRaw = [
     diedLocation: null,
     nationality: 'Grek',
     rowNumber: 63,
-    thumbnail: null,
+    thumbnail: 'atfxf4t7b16jhvqi.png',
   },
   {
     id: '81',
@@ -701,7 +701,7 @@ export const PeopleListRaw = [
     diedLocation: null,
     nationality: 'Grek',
     rowNumber: 64,
-    thumbnail: null,
+    thumbnail: 'athvq8nwjjubrxzg.png',
   },
   {
     id: '82',
@@ -712,7 +712,7 @@ export const PeopleListRaw = [
     diedLocation: null,
     nationality: 'Grek',
     rowNumber: 65,
-    thumbnail: null,
+    thumbnail: 'ato3tcmku8q6m07f.png',
   },
   {
     id: '83',
@@ -723,7 +723,7 @@ export const PeopleListRaw = [
     diedLocation: null,
     nationality: 'Grek',
     rowNumber: 66,
-    thumbnail: null,
+    thumbnail: 'at6bhcuj3j37jkgo.png',
   },
   {
     id: '85',
@@ -734,6 +734,6 @@ export const PeopleListRaw = [
     diedLocation: null,
     nationality: 'Grek',
     rowNumber: 67,
-    thumbnail: null,
+    thumbnail: 'at89i71owlxp1ark.png',
   },
 ];
