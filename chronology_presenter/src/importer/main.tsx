@@ -129,6 +129,7 @@ let people = (await getTable('people')).list
         ? person['Urodzony']?.slice(0, 4) *
           (person['Urodzony Era'] == 'N.E.' ? 1 : -1)
         : null,
+      stillAlive: person['Nadal żyje'],
       died: person['Zmarł']
         ? person['Zmarł']?.slice(0, 4) *
           (person['Zmarł Era'] == 'N.E.' ? 1 : -1)

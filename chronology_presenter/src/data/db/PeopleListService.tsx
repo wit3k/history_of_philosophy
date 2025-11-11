@@ -6,7 +6,7 @@ let PeopleListFirstPersonBirth: number;
 let PeopleListLastPersonDeath: number;
 
 const PeopleList = PeopleListRaw.filter(
-  (p) => p.born != undefined && p.died != undefined,
+  (p) => p.born != undefined, // && p.died != undefined,
 )
   .map(
     (p) =>
@@ -14,7 +14,8 @@ const PeopleList = PeopleListRaw.filter(
         p.id,
         p.name,
         p.born,
-        p.died,
+        p.died ? p.died : new Date().getFullYear() * 1,
+        p.stillAlive,
         p.bornLocation + '',
         p.diedLocation + '',
         p.nationality,

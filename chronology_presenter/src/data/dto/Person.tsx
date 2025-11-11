@@ -4,6 +4,7 @@ class Person {
     public name: string,
     public born: number,
     public died: number,
+    public stillAlive: boolean,
 
     public bornLocation: string,
     public diedLocation: string,

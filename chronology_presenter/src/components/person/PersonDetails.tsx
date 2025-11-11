@@ -63,18 +63,24 @@ const PersonDetails = (props: PersonDetailsProps) => {
             }
           </span>{' '}
           <br />
-          Zmarł: {props.currentPerson.died} -{' '}
-          <span
-            className="hover:text-pink-700 underline cursor-pointer"
-            onClick={() =>
-              props.locationCallback(props.currentPerson.diedLocation)
-            }
-          >
-            {
-              LocationListService.getById(props.currentPerson.diedLocation)
-                ?.name
-            }
-          </span>{' '}
+          {props.currentPerson.stillAlive ? (
+            <span>Wciąż żyje</span>
+          ) : (
+            <span>
+              Zmarł: {props.currentPerson.died} -{' '}
+              <span
+                className="hover:text-pink-700 underline cursor-pointer"
+                onClick={() =>
+                  props.locationCallback(props.currentPerson.diedLocation)
+                }
+              >
+                {
+                  LocationListService.getById(props.currentPerson.diedLocation)
+                    ?.name
+                }
+              </span>
+            </span>
+          )}
           <br />({props.currentPerson.died - props.currentPerson.born} lat)
           <br />
           {props.currentPerson.nationality}
