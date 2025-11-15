@@ -19,7 +19,7 @@ export const LocationListRaw = [
   },
   {
     id: 9,
-    name: 'Stockholm',
+    name: 'Sztokholm',
     coordinates: '59.329444;18.0686110000',
     thumbnail: 'ath2n6dkq2oerklj.png',
   },
@@ -31,7 +31,7 @@ export const LocationListRaw = [
   },
   {
     id: 11,
-    name: 'Hague',
+    name: 'Haga',
     coordinates: '52.0800000000;4.31',
     thumbnail: 'atvqn0vtifw73q0d.png',
   },
@@ -49,7 +49,7 @@ export const LocationListRaw = [
   },
   {
     id: 15,
-    name: 'Paris',
+    name: 'Paryż',
     coordinates: '48.856667;2.352222',
     thumbnail: 'at2b1nejsbd4cdnw.png',
   },
@@ -115,7 +115,7 @@ export const LocationListRaw = [
   },
   {
     id: 26,
-    name: 'London',
+    name: 'Londyn',
     coordinates: '51.5072220000;-0.1275',
     thumbnail: 'atqupl9kogjepz44.png',
   },

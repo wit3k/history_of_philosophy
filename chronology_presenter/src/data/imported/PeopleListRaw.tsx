@@ -909,4 +909,15 @@ export const PeopleListRaw = [
     rowNumber: 76,
     thumbnail: 'atrg6b0mankx155z.png',
   },
+  {
+    id: '96',
+    name: 'Lucius Annaeus Seneca',
+    born: null,
+    stillAlive: false,
+    bornLocation: null,
+    diedLocation: null,
+    nationality: null,
+    rowNumber: 77,
+    thumbnail: null,
+  },
 ];
