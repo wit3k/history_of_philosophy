@@ -575,4 +575,22 @@ export const LocationListRaw = [
     coordinates: '59.3514236;10.4404529000',
     thumbnail: 'atg2wi7kppgscw9d.png',
   },
+  {
+    id: 135,
+    name: 'Blanquefort-sur-Briolance',
+    coordinates: '44.6;0.97',
+    thumbnail: 'atmwbqhnivn4v137.png',
+  },
+  {
+    id: 136,
+    name: 'Clermont-Ferrand',
+    coordinates: '45.7831;3.0824000000',
+    thumbnail: 'atanoncxwt9w6roq.png',
+  },
+  {
+    id: 137,
+    name: 'Amiens',
+    coordinates: '49.892;2.299',
+    thumbnail: 'atrjsnyrtegddguv.png',
+  },
 ];
