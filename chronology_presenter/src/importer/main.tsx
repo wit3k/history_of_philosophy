@@ -121,17 +121,20 @@ let people = (await getTable('people')).list
         new Coordinates(200, 300),
       );
     }
-
     return {
       id: person.Id + '',
       name: person['Imię i nazwisko'],
       born: person['Urodzony']
-        ? person['Urodzony']?.slice(0, 4) *
+        ? (person['Urodzony']?.slice(0, 1) == '3'
+            ? person['Urodzony']?.slice(2, 4)
+            : person['Urodzony']?.slice(0, 4)) *
           (person['Urodzony Era'] == 'N.E.' ? 1 : -1)
-        : null,
+        : undefined,
       stillAlive: person['Nadal żyje'],
       died: person['Zmarł']
-        ? person['Zmarł']?.slice(0, 4) *
+        ? (person['Zmarł']?.slice(0, 1) == '3'
+            ? person['Zmarł']?.slice(2, 4)
+            : person['Zmarł']?.slice(0, 4)) *
           (person['Zmarł Era'] == 'N.E.' ? 1 : -1)
         : undefined,
       bornLocation: person['Urodzony w'] ? person['Urodzony w'].Id : null,
