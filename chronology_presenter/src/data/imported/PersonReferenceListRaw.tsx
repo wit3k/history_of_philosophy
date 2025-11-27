@@ -4,13 +4,6 @@ export const PersonReferenceListRaw = [
     name: 'Inspiracja nurtu',
     attitude: 'Positive',
     from: '12',
-    to: '39',
-  },
-  {
-    id: '4',
-    name: 'Inspiracja nurtu',
-    attitude: 'Positive',
-    from: '12',
     to: '23',
   },
   {
@@ -39,13 +32,6 @@ export const PersonReferenceListRaw = [
     name: 'Inspiracja nurtu',
     attitude: 'Positive',
     from: '12',
-    to: '33',
-  },
-  {
-    id: '4',
-    name: 'Inspiracja nurtu',
-    attitude: 'Positive',
-    from: '12',
     to: '13',
   },
   {
@@ -53,7 +39,21 @@ export const PersonReferenceListRaw = [
     name: 'Inspiracja nurtu',
     attitude: 'Positive',
     from: '12',
+    to: '33',
+  },
+  {
+    id: '4',
+    name: 'Inspiracja nurtu',
+    attitude: 'Positive',
+    from: '12',
     to: '28',
+  },
+  {
+    id: '4',
+    name: 'Inspiracja nurtu',
+    attitude: 'Positive',
+    from: '12',
+    to: '39',
   },
   {
     id: '4',
@@ -73,14 +73,14 @@ export const PersonReferenceListRaw = [
     name: 'Filozofia Jońska',
     attitude: 'Positive',
     from: '71',
-    to: '74',
+    to: '73',
   },
   {
     id: '11',
     name: 'Filozofia Jońska',
     attitude: 'Positive',
     from: '71',
-    to: '73',
+    to: '74',
   },
   {
     id: '12',
@@ -115,14 +115,14 @@ export const PersonReferenceListRaw = [
     name: 'Szkoła Eleatycka',
     attitude: 'Neutral',
     from: '75',
-    to: '82',
+    to: '79',
   },
   {
     id: '16',
     name: 'Szkoła Eleatycka',
     attitude: 'Neutral',
     from: '75',
-    to: '79',
+    to: '82',
   },
   {
     id: '17',
