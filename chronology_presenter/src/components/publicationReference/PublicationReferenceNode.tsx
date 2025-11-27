@@ -5,9 +5,11 @@ import Coordinates from '../../geometry/Coordinates';
 import { VDirection, HDirection } from '../../geometry/Directions';
 import { roundPathCorners } from '../../geometry/PathRounding';
 import getAccentColor from '../../services/Colors';
+import type Publication from '../../data/dto/Publication';
 
 class PublicationReferenceNodeProps {
   constructor(
+    public publicationsList: Publication[],
     public publicationReference: PublicationReference,
     public authorFrom: Person,
     public authorTo: Person,
@@ -29,40 +31,44 @@ export class PublicationReferenceSettings {
 
 const PublicationReferenceNode = (props: PublicationReferenceNodeProps) => {
   if (props.publicationReference.from && props.publicationReference.to) {
-    let extraSpacing = props.settings.boxSize * 2;
-    let mostLeft = Math.min(props.positionStart, props.positionEnd);
-    let mostRight = Math.max(props.positionStart, props.positionEnd);
-    let shrinkFactor =
+    const publicationFrom = props.publicationsList.find(
+      (p) => p.id == props.publicationReference.from + '',
+    )!;
+    const publicationTo = props.publicationsList.find(
+      (p) => p.id == props.publicationReference.to + '',
+    )!;
+    const extraSpacing = props.settings.boxSize * 2;
+    const mostLeft = Math.min(props.positionStart, props.positionEnd);
+    const mostRight = Math.max(props.positionStart, props.positionEnd);
+    const shrinkFactor =
       mostRight - mostLeft < extraSpacing
         ? ((mostRight - mostLeft) % extraSpacing) / extraSpacing
         : 1.0;
-    let start: Coordinates = new Coordinates(
+    const start: Coordinates = new Coordinates(
       props.positionStart,
       props.rowPositionFrom + props.settings.boxSize / 2,
     );
-    let end: Coordinates = new Coordinates(
+    const end: Coordinates = new Coordinates(
       props.positionEnd,
       props.rowPositionTo + props.settings.boxSize / 2,
     );
-    let vdir: VDirection = start.y > end.y ? -1 : 1;
-    let isEqual: VDirection = start.y == end.y ? -1 : 1;
-    let hdir: HDirection = start.x > end.x ? -1 : 1;
-    let cos05 = 0.877;
-    let distanceFromFactor =
+    const vdir: VDirection = start.y > end.y ? -1 : 1;
+    const isEqual: VDirection = start.y == end.y ? -1 : 1;
+    const hdir: HDirection = start.x > end.x ? -1 : 1;
+    const cos05 = 0.877;
+    const distanceFromFactor =
       0.7 +
       (0.7 *
-        ((props.publicationReference.to.publicationDate +
-          props.publicationReference.from.publicationDate) %
+        ((publicationTo.publicationDate + publicationFrom.publicationDate) %
           15)) /
         15;
-    let distanceToFactor =
+    const distanceToFactor =
       1.4 +
       (0.7 *
-        ((props.publicationReference.to.publicationDate +
-          props.publicationReference.from.publicationDate) %
+        ((publicationTo.publicationDate + publicationFrom.publicationDate) %
           5)) /
         5;
-    let points = [];
+    const points = [];
     if (props.positionEnd == props.positionStart) {
       points.push(new Coordinates(start.x, start.y));
       points.push(new Coordinates(end.x + 0.1, end.y + 0.1));
@@ -109,14 +115,14 @@ const PublicationReferenceNode = (props: PublicationReferenceNodeProps) => {
       points.push(new Coordinates(end.x, end.y));
     }
 
-    let pathPoints = [
+    const pathPoints = [
       ['M', points[0].x, points[0].y],
       ...points.map((p) => ['L', p.x, p.y]),
     ]
       .map((p) => p.join(' '))
       .join(' ');
 
-    let colorFrom = getAccentColor(props.authorFrom.nationality);
+    const colorFrom = getAccentColor(props.authorFrom.nationality);
     return (
       <path
         d={roundPathCorners(pathPoints, 5, false)}

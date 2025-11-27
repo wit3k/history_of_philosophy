@@ -82,7 +82,6 @@ const Chronology = () => {
     React.useState<PublicationReference[]>(
       PublicationReferenceListService.getAll(),
     );
-
   const [collectionsState, setCollectionsState] = React.useState<Collection[]>(
     CollectionsListService.getAll(),
   );
@@ -93,24 +92,29 @@ const Chronology = () => {
     const newCollectionsState = collectionsState.map((c: Collection) =>
       c.id == collectionId + '' ? { ...c, isActive: checked } : c,
     );
+
     function itemsFilter<S extends HasId>(
       cmap: (collections: Collection) => number[],
     ) {
-      const isWhiteList: boolean = !newCollectionsState.find(
-        (cs) => cs.id == '0',
-      )?.isActive;
+      const includeUnassigned = newCollectionsState.find((cs) => cs.id == '0');
+      const isWhiteList: boolean =
+        includeUnassigned != undefined && includeUnassigned.isActive;
       const includedIds: string[] = newCollectionsState
-        .filter((c) => c.isActive == isWhiteList)
+        .filter((c) => c.isActive)
         .flatMap(cmap)
         .map((c) => c + '');
-      return (item: S, _: number) => {
-        return isWhiteList
-          ? includedIds.includes(item.id)
-          : !includedIds.includes(item.id);
-      };
+      const allCollectionIds: string[] = newCollectionsState
+        .flatMap(cmap)
+        .map((c) => c + '');
+
+      return (item: S, _: number) =>
+        isWhiteList
+          ? !allCollectionIds.includes(item.id) || includedIds.includes(item.id)
+          : includedIds.includes(item.id);
     }
 
     setCollectionsState(newCollectionsState);
+
     setPeopleList(
       PeopleListService.withRowNumbers(
         PeopleListService.getAll().filter(itemsFilter((c) => c.includedPeople)),
@@ -318,6 +322,7 @@ const Chronology = () => {
     if (e.key === 'Escape') {
       setDisplayPublicationModal(false);
       setDisplayLocationModal(false);
+      setDisplayPersonModal(false);
     }
   };
   React.useEffect(() => {
@@ -449,6 +454,7 @@ const Chronology = () => {
       />
 
       <PublicationDetails
+        locationsList={locationsList}
         currentPublication={currentPublication}
         currentAuthor={currentAuthor}
         displayModal={displayPublicationModal}
@@ -468,6 +474,7 @@ const Chronology = () => {
       />
 
       <LocationDetails
+        peopleList={peopleList}
         currentLocation={currentLocation}
         displayModal={displayLocationModal}
         setDisplayModal={setDisplayLocationModal}

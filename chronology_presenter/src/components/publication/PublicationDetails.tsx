@@ -2,9 +2,11 @@ import type Publication from '../../data/dto/Publication';
 import type Person from '../../data/dto/Person';
 import Modal from '../ui/Modal';
 import React from 'react';
+import type Location from '../../data/dto/Location';
 
 class PublicationDetailsProps {
   constructor(
+    public locationsList: Location[],
     public currentPublication: Publication,
     public currentAuthor: Person,
     public displayModal: boolean,
@@ -16,6 +18,9 @@ class PublicationDetailsProps {
 
 const PublicationDetails = (props: PublicationDetailsProps) => {
   const appBasePath = '/history_of_philosophy/';
+  const locations = props.locationsList.find(
+    (l) => l.id == props.currentPublication.publicationLocation + '',
+  );
 
   return (
     <Modal
@@ -41,11 +46,11 @@ const PublicationDetails = (props: PublicationDetailsProps) => {
                 className="text-pink-700 underline cursor-pointer"
                 onClick={() =>
                   props.locationCallback(
-                    props.currentPublication.publicationLocation.id,
+                    props.currentPublication.publicationLocation + '',
                   )
                 }
               >
-                {props.currentPublication.publicationLocation.name}
+                {locations?.name}
               </span>
             </span>
           )}

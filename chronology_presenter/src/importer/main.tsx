@@ -285,7 +285,6 @@ let collections = (await getTable('collections')).list
       collection['_nc_m2m_Kolekcje_Osobies'].length > 0,
   )
   .map((collection: any, i: number) => {
-    console.log(collection);
     return {
       id: collection['Id'],
       name: collection['Title'],

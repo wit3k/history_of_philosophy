@@ -57,6 +57,7 @@ const PublicationReferencesList = (props: PublicationReferencesListProps) =>
       return (
         <PublicationReferenceNode
           key={'pubref' + reference.id + i}
+          publicationsList={props.publicationsList}
           publicationReference={reference}
           settings={props.publicationReferenceSettings}
           authorFrom={authorFrom}

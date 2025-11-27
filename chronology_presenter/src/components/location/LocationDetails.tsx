@@ -2,9 +2,11 @@ import Modal from '../ui/Modal';
 import Location from '../../data/dto/Location';
 import PublicationsListService from '../../data/db/PublicationsListService';
 import PeopleListService from '../../data/db/PeopleListService';
+import Person from '../../data/dto/Person';
 
 class LocationDetailsProps {
   constructor(
+    public peopleList: Person[],
     public currentLocation: Location,
     public displayModal: boolean,
     public setDisplayModal: React.Dispatch<React.SetStateAction<boolean>>,
@@ -122,8 +124,8 @@ const LocationDetails = (props: LocationDetailsProps) => {
                   </svg>
                 </span>
               );
-              let author = PublicationsListService.getPublicationAuthor(
-                historyItem.publication,
+              let author = props.peopleList.find(
+                (p) => p.id == historyItem.publication.authorId,
               );
               content = (
                 <small className="mt-2 font-sans text-sm text-slate-300 antialiased">
