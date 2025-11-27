@@ -14,6 +14,8 @@ class Person {
     public rowNumber: number,
 
     public thumbnail: string | null,
+
+    public category: string | null,
   ) {}
 }
 

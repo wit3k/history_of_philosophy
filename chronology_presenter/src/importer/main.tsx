@@ -142,11 +142,12 @@ let people = (await getTable('people')).list
       nationality: person['Narodowości']
         ? person['Narodowości'].split(',')[0]
         : null,
-      rowNumber: person['Wiersz'] ? person['Wiersz'] * 1 : i + 1,
+      // rowNumber: person['Wiersz'] ? person['Wiersz'] * 1 : i + 1,
       thumbnail:
         person['Zdjęcie'] != null && person['Zdjęcie'][0] != null
           ? person['Zdjęcie'][0].id + '.png'
           : null,
+      category: person['Kategoria'],
     };
   });
 

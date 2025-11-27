@@ -8,8 +8,8 @@ export const PeopleListRaw = [
     bornLocation: 14,
     diedLocation: 15,
     nationality: 'Francuz',
-    rowNumber: 1,
     thumbnail: 'atvn4s4dhuovti06.png',
+    category: null,
   },
   {
     id: '12',
@@ -20,8 +20,8 @@ export const PeopleListRaw = [
     bornLocation: 7,
     diedLocation: 9,
     nationality: 'Francuz',
-    rowNumber: 2,
     thumbnail: 'atao3gax36v3fn9n.png',
+    category: null,
   },
   {
     id: '23',
@@ -32,8 +32,8 @@ export const PeopleListRaw = [
     bornLocation: 16,
     diedLocation: 17,
     nationality: 'Francuz',
-    rowNumber: 3,
     thumbnail: null,
+    category: null,
   },
   {
     id: '27',
@@ -44,8 +44,8 @@ export const PeopleListRaw = [
     bornLocation: 15,
     diedLocation: 18,
     nationality: 'Francuz',
-    rowNumber: 4,
     thumbnail: 'atfzvjepjxfwke3i.png',
+    category: null,
   },
   {
     id: '31',
@@ -56,8 +56,8 @@ export const PeopleListRaw = [
     bornLocation: 21,
     diedLocation: 22,
     nationality: 'Niemiec',
-    rowNumber: 5,
     thumbnail: 'at1rjv3zj64y79ny.png',
+    category: null,
   },
   {
     id: '29',
@@ -68,8 +68,8 @@ export const PeopleListRaw = [
     bornLocation: 15,
     diedLocation: 15,
     nationality: 'Francuz',
-    rowNumber: 6,
     thumbnail: 'atdwp3pranwjvpnf.png',
+    category: null,
   },
   {
     id: '32',
@@ -80,8 +80,8 @@ export const PeopleListRaw = [
     bornLocation: 25,
     diedLocation: 26,
     nationality: 'Francuz',
-    rowNumber: 7,
     thumbnail: null,
+    category: null,
   },
   {
     id: '13',
@@ -92,8 +92,8 @@ export const PeopleListRaw = [
     bornLocation: 10,
     diedLocation: 11,
     nationality: 'Holender',
-    rowNumber: 8,
     thumbnail: 'atykxhjp1x4ujvb5.png',
+    category: null,
   },
   {
     id: '33',
@@ -104,8 +104,8 @@ export const PeopleListRaw = [
     bornLocation: 23,
     diedLocation: 24,
     nationality: 'Francuz',
-    rowNumber: 9,
     thumbnail: 'atueqad7ppqrk7g3.png',
+    category: null,
   },
   {
     id: '28',
@@ -116,8 +116,8 @@ export const PeopleListRaw = [
     bornLocation: 15,
     diedLocation: 15,
     nationality: 'Francuz',
-    rowNumber: 10,
     thumbnail: 'atqaw3uot12apfu6.png',
+    category: null,
   },
   {
     id: '30',
@@ -128,8 +128,8 @@ export const PeopleListRaw = [
     bornLocation: 19,
     diedLocation: 20,
     nationality: 'Niemiec',
-    rowNumber: 11,
     thumbnail: 'at4cr41wq4mqgw4y.png',
+    category: null,
   },
   {
     id: '14',
@@ -140,8 +140,8 @@ export const PeopleListRaw = [
     bornLocation: 27,
     diedLocation: 26,
     nationality: 'Austriak',
-    rowNumber: 12,
     thumbnail: 'ath1ymdk6ku82cor.png',
+    category: null,
   },
   {
     id: '15',
@@ -152,8 +152,8 @@ export const PeopleListRaw = [
     bornLocation: 29,
     diedLocation: 26,
     nationality: 'Węgier',
-    rowNumber: 13,
     thumbnail: 'atr5s3zt9b7ms0ks.png',
+    category: null,
   },
   {
     id: '16',
@@ -164,8 +164,8 @@ export const PeopleListRaw = [
     bornLocation: 30,
     diedLocation: 31,
     nationality: 'Amerykanin',
-    rowNumber: 14,
     thumbnail: 'atcd2wr9fyenjkuo.png',
+    category: null,
   },
   {
     id: '17',
@@ -176,8 +176,8 @@ export const PeopleListRaw = [
     bornLocation: 32,
     diedLocation: 26,
     nationality: 'Niemiec',
-    rowNumber: 15,
     thumbnail: 'at28p41hz389tqos.png',
+    category: 'Polityk',
   },
   {
     id: '18',
@@ -188,8 +188,8 @@ export const PeopleListRaw = [
     bornLocation: 33,
     diedLocation: 34,
     nationality: 'Austriak',
-    rowNumber: 16,
     thumbnail: 'ati10fsydlcwxtlr.png',
+    category: 'Naukowiec',
   },
   {
     id: '19',
@@ -200,8 +200,8 @@ export const PeopleListRaw = [
     bornLocation: 35,
     diedLocation: 36,
     nationality: 'Brytyjczyk',
-    rowNumber: 17,
     thumbnail: 'atjn4k6959bolztr.png',
+    category: 'Naukowiec',
   },
   {
     id: '21',
@@ -212,8 +212,8 @@ export const PeopleListRaw = [
     bornLocation: 37,
     diedLocation: 38,
     nationality: 'Niemiec',
-    rowNumber: 18,
     thumbnail: 'atgoiq4g0udw69be.png',
+    category: null,
   },
   {
     id: '22',
@@ -224,8 +224,8 @@ export const PeopleListRaw = [
     bornLocation: 39,
     diedLocation: 26,
     nationality: 'Brytyjczyk',
-    rowNumber: 19,
     thumbnail: 'atr9xmnlionsnuuu.png',
+    category: null,
   },
   {
     id: '24',
@@ -236,8 +236,8 @@ export const PeopleListRaw = [
     bornLocation: 40,
     diedLocation: 31,
     nationality: 'Austriak',
-    rowNumber: 20,
     thumbnail: 'at14lk772e5vet1u.png',
+    category: null,
   },
   {
     id: '26',
@@ -248,8 +248,8 @@ export const PeopleListRaw = [
     bornLocation: 41,
     diedLocation: 42,
     nationality: 'Brytyjczyk',
-    rowNumber: 21,
     thumbnail: 'atbkekfrqtz08yp3.png',
+    category: null,
   },
   {
     id: '36',
@@ -260,8 +260,8 @@ export const PeopleListRaw = [
     bornLocation: 43,
     diedLocation: 44,
     nationality: 'Amerykanin',
-    rowNumber: 22,
     thumbnail: 'at4wjrbvzzco19ia.png',
+    category: null,
   },
   {
     id: '37',
@@ -272,8 +272,8 @@ export const PeopleListRaw = [
     bornLocation: 45,
     diedLocation: 46,
     nationality: 'Brytyjczyk',
-    rowNumber: 23,
     thumbnail: 'at257mf44uf2l0cg.png',
+    category: null,
   },
   {
     id: '38',
@@ -284,8 +284,8 @@ export const PeopleListRaw = [
     bornLocation: 47,
     diedLocation: 15,
     nationality: 'Francuz',
-    rowNumber: 24,
     thumbnail: 'atprtx3tcmp6t6vx.png',
+    category: null,
   },
   {
     id: '39',
@@ -296,8 +296,8 @@ export const PeopleListRaw = [
     bornLocation: 48,
     diedLocation: 48,
     nationality: 'Holender',
-    rowNumber: 25,
     thumbnail: 'at2iy1e7ykba4b0t.png',
+    category: null,
   },
   {
     id: '40',
@@ -308,8 +308,8 @@ export const PeopleListRaw = [
     bornLocation: 15,
     diedLocation: 49,
     nationality: 'Francuz',
-    rowNumber: 26,
     thumbnail: 'at95i8pqe9fp7j8y.png',
+    category: null,
   },
   {
     id: '41',
@@ -320,8 +320,8 @@ export const PeopleListRaw = [
     bornLocation: 50,
     diedLocation: 51,
     nationality: 'Francuz',
-    rowNumber: 27,
     thumbnail: 'at9h7cfnr27q6z5u.png',
+    category: null,
   },
   {
     id: '42',
@@ -332,8 +332,8 @@ export const PeopleListRaw = [
     bornLocation: 52,
     diedLocation: 53,
     nationality: 'Niemiec',
-    rowNumber: 28,
     thumbnail: 'atvdksfk90hp4brt.png',
+    category: null,
   },
   {
     id: '43',
@@ -344,8 +344,8 @@ export const PeopleListRaw = [
     bornLocation: 54,
     diedLocation: 15,
     nationality: 'Francuz',
-    rowNumber: 29,
     thumbnail: 'atvt887y44py1fc9.png',
+    category: null,
   },
   {
     id: '44',
@@ -356,8 +356,8 @@ export const PeopleListRaw = [
     bornLocation: 55,
     diedLocation: 56,
     nationality: 'Anglik',
-    rowNumber: 30,
     thumbnail: 'at6jxp6i58kgt840.png',
+    category: null,
   },
   {
     id: '45',
@@ -368,8 +368,8 @@ export const PeopleListRaw = [
     bornLocation: 26,
     diedLocation: 57,
     nationality: 'Anglik',
-    rowNumber: 31,
     thumbnail: 'atfsiqnqqr5mvzbl.png',
+    category: null,
   },
   {
     id: '46',
@@ -380,8 +380,8 @@ export const PeopleListRaw = [
     bornLocation: 58,
     diedLocation: 31,
     nationality: 'Anglik',
-    rowNumber: 32,
     thumbnail: 'atoeidb2yxsyezh3.png',
+    category: null,
   },
   {
     id: '47',
@@ -392,8 +392,8 @@ export const PeopleListRaw = [
     bornLocation: 59,
     diedLocation: 60,
     nationality: 'Kurajszyta',
-    rowNumber: 33,
     thumbnail: 'atixx57x83cdpwb3.png',
+    category: 'Polityk',
   },
   {
     id: '48',
@@ -404,8 +404,8 @@ export const PeopleListRaw = [
     bornLocation: 61,
     diedLocation: 62,
     nationality: 'Austriak',
-    rowNumber: 34,
     thumbnail: 'atd31fbklwxva5ny.png',
+    category: 'Polityk',
   },
   {
     id: '49',
@@ -416,8 +416,8 @@ export const PeopleListRaw = [
     bornLocation: 63,
     diedLocation: 64,
     nationality: 'Gruzin',
-    rowNumber: 35,
     thumbnail: 'ateso0b81uyto5j2.png',
+    category: 'Polityk',
   },
   {
     id: '50',
@@ -428,8 +428,8 @@ export const PeopleListRaw = [
     bornLocation: 65,
     diedLocation: 66,
     nationality: 'rosjanin',
-    rowNumber: 36,
     thumbnail: 'at6dayf4jgeidgwq.png',
+    category: 'Polityk',
   },
   {
     id: '51',
@@ -440,8 +440,8 @@ export const PeopleListRaw = [
     bornLocation: 69,
     diedLocation: 102,
     nationality: 'Chińczyk',
-    rowNumber: 37,
     thumbnail: 'atmdgb7prdpk2h0t.png',
+    category: 'Polityk',
   },
   {
     id: '52',
@@ -452,8 +452,8 @@ export const PeopleListRaw = [
     bornLocation: 112,
     diedLocation: 112,
     nationality: 'Włoch',
-    rowNumber: 38,
     thumbnail: 'atxzim0epdekpdqm.png',
+    category: null,
   },
   {
     id: '53',
@@ -464,8 +464,8 @@ export const PeopleListRaw = [
     bornLocation: 101,
     diedLocation: 27,
     nationality: 'Rzymianin',
-    rowNumber: 39,
     thumbnail: 'atv9wwor7yb20hzq.png',
+    category: null,
   },
   {
     id: '54',
@@ -476,8 +476,8 @@ export const PeopleListRaw = [
     bornLocation: 88,
     diedLocation: 109,
     nationality: 'Grek',
-    rowNumber: 40,
     thumbnail: 'atq01ja9w95ymcdn.png',
+    category: null,
   },
   {
     id: '55',
@@ -488,8 +488,8 @@ export const PeopleListRaw = [
     bornLocation: 89,
     diedLocation: 106,
     nationality: 'Grek',
-    rowNumber: 41,
     thumbnail: 'atch4ii3ni5jc97r.png',
+    category: null,
   },
   {
     id: '56',
@@ -500,8 +500,8 @@ export const PeopleListRaw = [
     bornLocation: 109,
     diedLocation: 109,
     nationality: 'Grek',
-    rowNumber: 42,
     thumbnail: 'atanbfd9vtmtv0h9.png',
+    category: null,
   },
   {
     id: '57',
@@ -512,8 +512,8 @@ export const PeopleListRaw = [
     bornLocation: 109,
     diedLocation: 109,
     nationality: 'Grek',
-    rowNumber: 43,
     thumbnail: 'atsbnnspimatlaro.png',
+    category: null,
   },
   {
     id: '58',
@@ -524,8 +524,8 @@ export const PeopleListRaw = [
     bornLocation: 92,
     diedLocation: 109,
     nationality: 'Grek',
-    rowNumber: 44,
     thumbnail: 'at3kap58sp391h0f.png',
+    category: null,
   },
   {
     id: '59',
@@ -536,8 +536,8 @@ export const PeopleListRaw = [
     bornLocation: 93,
     diedLocation: 110,
     nationality: 'Grek',
-    rowNumber: 45,
     thumbnail: 'at4bfkq8r0z6ynem.png',
+    category: null,
   },
   {
     id: '60',
@@ -548,8 +548,8 @@ export const PeopleListRaw = [
     bornLocation: 94,
     diedLocation: 111,
     nationality: 'Włoch',
-    rowNumber: 46,
     thumbnail: 'atkwr1m9fuo29qrt.png',
+    category: 'Polityk',
   },
   {
     id: '61',
@@ -560,8 +560,8 @@ export const PeopleListRaw = [
     bornLocation: 95,
     diedLocation: 112,
     nationality: 'Włoch',
-    rowNumber: 47,
     thumbnail: 'atqt154ce31eby0k.png',
+    category: 'Polityk',
   },
   {
     id: '62',
@@ -572,8 +572,8 @@ export const PeopleListRaw = [
     bornLocation: 96,
     diedLocation: 113,
     nationality: 'Francuz',
-    rowNumber: 48,
     thumbnail: 'atwxnp1sjlgxyo2v.png',
+    category: null,
   },
   {
     id: '63',
@@ -584,8 +584,8 @@ export const PeopleListRaw = [
     bornLocation: 97,
     diedLocation: 114,
     nationality: 'Niemiec',
-    rowNumber: 49,
     thumbnail: 'at9g2d53n8dgzvwt.png',
+    category: 'Polityk',
   },
   {
     id: '64',
@@ -596,8 +596,8 @@ export const PeopleListRaw = [
     bornLocation: 98,
     diedLocation: 115,
     nationality: 'Francuz',
-    rowNumber: 50,
     thumbnail: 'atvywj4tpib3mkvf.png',
+    category: 'Polityk',
   },
   {
     id: '65',
@@ -608,8 +608,8 @@ export const PeopleListRaw = [
     bornLocation: 99,
     diedLocation: 116,
     nationality: 'Włoch',
-    rowNumber: 51,
     thumbnail: 'at1vkilloyyt9f0a.png',
+    category: null,
   },
   {
     id: '66',
@@ -620,8 +620,8 @@ export const PeopleListRaw = [
     bornLocation: 100,
     diedLocation: 62,
     nationality: 'Polak',
-    rowNumber: 52,
     thumbnail: 'atkw00cnz59jbnrl.png',
+    category: null,
   },
   {
     id: '67',
@@ -632,8 +632,8 @@ export const PeopleListRaw = [
     bornLocation: 101,
     diedLocation: 101,
     nationality: 'Włoch',
-    rowNumber: 53,
     thumbnail: 'at4jry7ya1o8qmdn.png',
+    category: null,
   },
   {
     id: '68',
@@ -644,8 +644,8 @@ export const PeopleListRaw = [
     bornLocation: 67,
     diedLocation: 68,
     nationality: 'Polak',
-    rowNumber: 54,
     thumbnail: 'atnbdi5uhtv7crq9.png',
+    category: 'Polityk',
   },
   {
     id: '70',
@@ -656,8 +656,8 @@ export const PeopleListRaw = [
     bornLocation: 119,
     diedLocation: 118,
     nationality: 'Tunezyjczyk',
-    rowNumber: 55,
     thumbnail: 'atw5y9udgjedhwd7.png',
+    category: null,
   },
   {
     id: '71',
@@ -668,8 +668,8 @@ export const PeopleListRaw = [
     bornLocation: 120,
     diedLocation: 120,
     nationality: 'Grek',
-    rowNumber: 56,
     thumbnail: 'atudpn2pq7h90ln3.png',
+    category: null,
   },
   {
     id: '73',
@@ -680,8 +680,8 @@ export const PeopleListRaw = [
     bornLocation: 120,
     diedLocation: null,
     nationality: 'Grek',
-    rowNumber: 57,
     thumbnail: 'atv4ibsg3vgki555.png',
+    category: null,
   },
   {
     id: '74',
@@ -692,8 +692,8 @@ export const PeopleListRaw = [
     bornLocation: 120,
     diedLocation: null,
     nationality: 'Grek',
-    rowNumber: 58,
     thumbnail: 'atzsu82y5l0x6wm4.png',
+    category: null,
   },
   {
     id: '75',
@@ -704,8 +704,8 @@ export const PeopleListRaw = [
     bornLocation: null,
     diedLocation: null,
     nationality: 'Grek',
-    rowNumber: 59,
     thumbnail: 'atvmz0drj5lm4271.png',
+    category: null,
   },
   {
     id: '77',
@@ -716,8 +716,8 @@ export const PeopleListRaw = [
     bornLocation: null,
     diedLocation: null,
     nationality: 'Grek',
-    rowNumber: 60,
     thumbnail: null,
+    category: null,
   },
   {
     id: '78',
@@ -728,8 +728,8 @@ export const PeopleListRaw = [
     bornLocation: null,
     diedLocation: null,
     nationality: 'Grek',
-    rowNumber: 61,
     thumbnail: 'att71ss5lvpnp6bp.png',
+    category: null,
   },
   {
     id: '79',
@@ -740,8 +740,8 @@ export const PeopleListRaw = [
     bornLocation: null,
     diedLocation: null,
     nationality: 'Grek',
-    rowNumber: 62,
     thumbnail: 'athf4rsp3vtfgjzi.png',
+    category: null,
   },
   {
     id: '80',
@@ -752,8 +752,8 @@ export const PeopleListRaw = [
     bornLocation: null,
     diedLocation: null,
     nationality: 'Grek',
-    rowNumber: 63,
     thumbnail: 'atfxf4t7b16jhvqi.png',
+    category: null,
   },
   {
     id: '81',
@@ -764,8 +764,8 @@ export const PeopleListRaw = [
     bornLocation: null,
     diedLocation: null,
     nationality: 'Grek',
-    rowNumber: 64,
     thumbnail: 'athvq8nwjjubrxzg.png',
+    category: null,
   },
   {
     id: '82',
@@ -776,8 +776,8 @@ export const PeopleListRaw = [
     bornLocation: null,
     diedLocation: null,
     nationality: 'Grek',
-    rowNumber: 65,
     thumbnail: 'ato3tcmku8q6m07f.png',
+    category: null,
   },
   {
     id: '83',
@@ -788,8 +788,8 @@ export const PeopleListRaw = [
     bornLocation: null,
     diedLocation: null,
     nationality: 'Grek',
-    rowNumber: 66,
     thumbnail: 'at6bhcuj3j37jkgo.png',
+    category: null,
   },
   {
     id: '85',
@@ -800,8 +800,8 @@ export const PeopleListRaw = [
     bornLocation: null,
     diedLocation: null,
     nationality: 'Grek',
-    rowNumber: 67,
     thumbnail: 'at89i71owlxp1ark.png',
+    category: null,
   },
   {
     id: '86',
@@ -812,8 +812,8 @@ export const PeopleListRaw = [
     bornLocation: 15,
     diedLocation: 15,
     nationality: 'Francuz',
-    rowNumber: 68,
     thumbnail: 'atdzzy6af6btcqh0.png',
+    category: null,
   },
   {
     id: '87',
@@ -824,8 +824,8 @@ export const PeopleListRaw = [
     bornLocation: 121,
     diedLocation: 131,
     nationality: 'Prusak',
-    rowNumber: 69,
     thumbnail: 'atr6z2rtx61pss93.png',
+    category: null,
   },
   {
     id: '88',
@@ -836,8 +836,8 @@ export const PeopleListRaw = [
     bornLocation: 124,
     diedLocation: 15,
     nationality: 'Rumun',
-    rowNumber: 70,
     thumbnail: 'at9iog2bpuxi07a1.png',
+    category: null,
   },
   {
     id: '89',
@@ -848,8 +848,8 @@ export const PeopleListRaw = [
     bornLocation: 129,
     diedLocation: 129,
     nationality: 'Niemiec',
-    rowNumber: 71,
     thumbnail: 'atbal5ynxe3d5sur.png',
+    category: null,
   },
   {
     id: '90',
@@ -859,8 +859,8 @@ export const PeopleListRaw = [
     bornLocation: 130,
     diedLocation: null,
     nationality: 'Brytyjczyk',
-    rowNumber: 72,
     thumbnail: 'atd5jyyz77imtnjt.png',
+    category: null,
   },
   {
     id: '91',
@@ -871,8 +871,8 @@ export const PeopleListRaw = [
     bornLocation: 125,
     diedLocation: 125,
     nationality: 'Norweg',
-    rowNumber: 73,
     thumbnail: 'athjfgxqo2z1932x.png',
+    category: null,
   },
   {
     id: '92',
@@ -883,8 +883,8 @@ export const PeopleListRaw = [
     bornLocation: 127,
     diedLocation: 133,
     nationality: 'Norweg',
-    rowNumber: 74,
     thumbnail: 'atw6s1i7r24uur6r.png',
+    category: null,
   },
   {
     id: '93',
@@ -894,8 +894,8 @@ export const PeopleListRaw = [
     bornLocation: 122,
     diedLocation: null,
     nationality: 'Południowoafrykańczyk',
-    rowNumber: 75,
     thumbnail: 'atac80rcelo47ny8.png',
+    category: null,
   },
   {
     id: '94',
@@ -906,8 +906,8 @@ export const PeopleListRaw = [
     bornLocation: 27,
     diedLocation: 27,
     nationality: 'Austriak',
-    rowNumber: 76,
     thumbnail: 'atrg6b0mankx155z.png',
+    category: null,
   },
   {
     id: '97',
@@ -918,8 +918,8 @@ export const PeopleListRaw = [
     bornLocation: null,
     diedLocation: null,
     nationality: 'Włoch',
-    rowNumber: 77,
     thumbnail: 'atakzwdhqsq03cpz.png',
+    category: 'Polityk',
   },
   {
     id: '98',
@@ -928,8 +928,8 @@ export const PeopleListRaw = [
     bornLocation: null,
     diedLocation: null,
     nationality: null,
-    rowNumber: 78,
     thumbnail: null,
+    category: null,
   },
   {
     id: '99',
@@ -938,8 +938,8 @@ export const PeopleListRaw = [
     bornLocation: null,
     diedLocation: null,
     nationality: null,
-    rowNumber: 79,
     thumbnail: null,
+    category: null,
   },
   {
     id: '100',
@@ -950,8 +950,8 @@ export const PeopleListRaw = [
     bornLocation: null,
     diedLocation: null,
     nationality: 'Czech',
-    rowNumber: 80,
     thumbnail: 'atqy9fxck3d70b07.png',
+    category: null,
   },
   {
     id: '102',
@@ -962,8 +962,8 @@ export const PeopleListRaw = [
     bornLocation: null,
     diedLocation: null,
     nationality: 'Grek',
-    rowNumber: 81,
     thumbnail: 'ato74feut829as8y.png',
+    category: null,
   },
   {
     id: '103',
@@ -974,8 +974,8 @@ export const PeopleListRaw = [
     bornLocation: null,
     diedLocation: null,
     nationality: 'Grek',
-    rowNumber: 82,
     thumbnail: null,
+    category: null,
   },
   {
     id: '104',
@@ -984,8 +984,8 @@ export const PeopleListRaw = [
     bornLocation: null,
     diedLocation: null,
     nationality: null,
-    rowNumber: 83,
     thumbnail: null,
+    category: null,
   },
   {
     id: '105',
@@ -994,8 +994,8 @@ export const PeopleListRaw = [
     bornLocation: null,
     diedLocation: null,
     nationality: null,
-    rowNumber: 84,
     thumbnail: null,
+    category: null,
   },
   {
     id: '106',
@@ -1006,8 +1006,8 @@ export const PeopleListRaw = [
     bornLocation: null,
     diedLocation: null,
     nationality: 'Grek',
-    rowNumber: 85,
     thumbnail: null,
+    category: null,
   },
   {
     id: '107',
@@ -1018,8 +1018,8 @@ export const PeopleListRaw = [
     bornLocation: null,
     diedLocation: null,
     nationality: 'Grek',
-    rowNumber: 86,
     thumbnail: null,
+    category: null,
   },
   {
     id: '108',
@@ -1030,8 +1030,8 @@ export const PeopleListRaw = [
     bornLocation: null,
     diedLocation: null,
     nationality: 'Grek',
-    rowNumber: 87,
     thumbnail: null,
+    category: null,
   },
   {
     id: '109',
@@ -1042,8 +1042,8 @@ export const PeopleListRaw = [
     bornLocation: null,
     diedLocation: null,
     nationality: 'Grek',
-    rowNumber: 88,
     thumbnail: null,
+    category: null,
   },
   {
     id: '110',
@@ -1052,8 +1052,8 @@ export const PeopleListRaw = [
     bornLocation: null,
     diedLocation: null,
     nationality: null,
-    rowNumber: 89,
     thumbnail: null,
+    category: null,
   },
   {
     id: '111',
@@ -1064,8 +1064,8 @@ export const PeopleListRaw = [
     bornLocation: null,
     diedLocation: null,
     nationality: 'Grek',
-    rowNumber: 90,
     thumbnail: null,
+    category: null,
   },
   {
     id: '112',
@@ -1074,8 +1074,8 @@ export const PeopleListRaw = [
     bornLocation: null,
     diedLocation: null,
     nationality: null,
-    rowNumber: 91,
     thumbnail: null,
+    category: null,
   },
   {
     id: '114',
@@ -1084,8 +1084,8 @@ export const PeopleListRaw = [
     bornLocation: null,
     diedLocation: null,
     nationality: null,
-    rowNumber: 92,
     thumbnail: null,
+    category: null,
   },
   {
     id: '116',
@@ -1096,8 +1096,8 @@ export const PeopleListRaw = [
     bornLocation: 135,
     diedLocation: 15,
     nationality: 'Francuz',
-    rowNumber: 93,
     thumbnail: 'at727lwsje2ydws5.png',
+    category: null,
   },
   {
     id: '117',
@@ -1108,8 +1108,8 @@ export const PeopleListRaw = [
     bornLocation: 136,
     diedLocation: 15,
     nationality: 'Francuz',
-    rowNumber: 94,
     thumbnail: 'atmw88nd53j99l7s.png',
+    category: null,
   },
   {
     id: '119',
@@ -1120,8 +1120,8 @@ export const PeopleListRaw = [
     bornLocation: 137,
     diedLocation: 15,
     nationality: 'Francuz',
-    rowNumber: 95,
     thumbnail: 'at1iuhn5ezwwofx3.png',
+    category: null,
   },
   {
     id: '120',
@@ -1132,8 +1132,8 @@ export const PeopleListRaw = [
     bornLocation: null,
     diedLocation: null,
     nationality: 'Żyd',
-    rowNumber: 96,
     thumbnail: 'atp4p4swjazjaodi.png',
+    category: null,
   },
   {
     id: '121',
@@ -1144,8 +1144,8 @@ export const PeopleListRaw = [
     bornLocation: null,
     diedLocation: null,
     nationality: 'Hindus',
-    rowNumber: 97,
     thumbnail: 'atcmlsyqzf1e19gt.png',
+    category: 'Polityk',
   },
   {
     id: '122',
@@ -1156,8 +1156,8 @@ export const PeopleListRaw = [
     bornLocation: null,
     diedLocation: null,
     nationality: 'Południowoafrykańczyk',
-    rowNumber: 98,
     thumbnail: 'atcon0bmi5bfn2eb.png',
+    category: 'Polityk',
   },
   {
     id: '123',
@@ -1168,8 +1168,8 @@ export const PeopleListRaw = [
     bornLocation: null,
     diedLocation: 62,
     nationality: 'Niemiec',
-    rowNumber: 99,
     thumbnail: 'at7n9x0tywjpwo7f.png',
+    category: null,
   },
   {
     id: '125',
@@ -1180,8 +1180,8 @@ export const PeopleListRaw = [
     bornLocation: 15,
     diedLocation: 15,
     nationality: 'Francuz',
-    rowNumber: 100,
     thumbnail: 'atd1kwswuv4ac6m4.png',
+    category: null,
   },
   {
     id: '127',
@@ -1192,8 +1192,8 @@ export const PeopleListRaw = [
     bornLocation: 131,
     diedLocation: null,
     nationality: 'Niemiec',
-    rowNumber: 101,
     thumbnail: 'at7ho0ps6wx1ftyc.png',
+    category: null,
   },
   {
     id: '129',
@@ -1204,8 +1204,8 @@ export const PeopleListRaw = [
     bornLocation: null,
     diedLocation: 15,
     nationality: 'Francuz',
-    rowNumber: 102,
     thumbnail: 'atoz1qichsmnot8h.png',
+    category: null,
   },
   {
     id: '131',
@@ -1216,8 +1216,8 @@ export const PeopleListRaw = [
     bornLocation: null,
     diedLocation: null,
     nationality: 'Szkot',
-    rowNumber: 103,
     thumbnail: 'at97ap2c7ue9kbwc.png',
+    category: null,
   },
   {
     id: '132',
@@ -1228,8 +1228,8 @@ export const PeopleListRaw = [
     bornLocation: null,
     diedLocation: null,
     nationality: 'Niemiec',
-    rowNumber: 104,
     thumbnail: 'atwkqp71jqg890qg.png',
+    category: null,
   },
   {
     id: '133',
@@ -1240,8 +1240,8 @@ export const PeopleListRaw = [
     bornLocation: null,
     diedLocation: null,
     nationality: 'Niemiec',
-    rowNumber: 105,
     thumbnail: 'atl9six8hj3d3thq.png',
+    category: null,
   },
   {
     id: '135',
@@ -1252,8 +1252,8 @@ export const PeopleListRaw = [
     bornLocation: null,
     diedLocation: null,
     nationality: 'Niemiec',
-    rowNumber: 106,
     thumbnail: 'atm4hwsbdneabnf9.png',
+    category: null,
   },
   {
     id: '137',
@@ -1264,7 +1264,7 @@ export const PeopleListRaw = [
     bornLocation: 138,
     diedLocation: 31,
     nationality: 'Anglik',
-    rowNumber: 107,
     thumbnail: 'atcfnf5akt3fo03j.png',
+    category: null,
   },
 ];
