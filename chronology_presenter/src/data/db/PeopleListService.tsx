@@ -1,10 +1,6 @@
 import Person from '../dto/Person';
 import { PeopleListRaw } from '../imported/PeopleListRaw';
 
-const PeopleListRows: number[] = [];
-let PeopleListFirstPersonBirth: number;
-let PeopleListLastPersonDeath: number;
-
 const PeopleList = PeopleListRaw.filter(
   (p) => p.born != undefined, // && p.died != undefined,
 )
@@ -23,30 +19,24 @@ const PeopleList = PeopleListRaw.filter(
         p.thumbnail,
       ),
   )
-  .sort((a, b) => a.born - b.born)
-  .map((p) => {
-    PeopleListFirstPersonBirth = PeopleListFirstPersonBirth
-      ? Math.min(PeopleListFirstPersonBirth, p.born * 1)
-      : p.born * 1;
-    PeopleListLastPersonDeath = PeopleListLastPersonDeath
-      ? Math.max(PeopleListLastPersonDeath, p.died * 1)
-      : p.died * 1;
-    for (let i = 0; i < PeopleListRows.length; i++) {
-      if (PeopleListRows[i] + 10 < p.born) {
-        PeopleListRows[i] = p.died;
-        return { ...p, rowNumber: i };
-      }
-    }
-
-    PeopleListRows.push(p.died);
-    return { ...p, rowNumber: PeopleListRows.length };
-  });
+  .sort((a, b) => a.born - b.born);
 
 const PeopleListService = {
   getAll: () => PeopleList,
-  getById: (id: string) => PeopleList.find((p) => p.id == id),
-  startingPoint: () => PeopleListFirstPersonBirth,
-  endPoint: () => PeopleListLastPersonDeath,
+  withRowNumbers: (people: Person[]) => {
+    const PeopleListRows: number[] = [];
+    return people.map((p) => {
+      for (let i = 0; i < PeopleListRows.length; i++) {
+        if (PeopleListRows[i] + 10 < p.born) {
+          PeopleListRows[i] = p.died;
+          return { ...p, rowNumber: i };
+        }
+      }
+
+      PeopleListRows.push(p.died);
+      return { ...p, rowNumber: PeopleListRows.length };
+    });
+  },
 };
 
 export default PeopleListService;

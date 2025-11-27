@@ -1,11 +1,14 @@
-import PersonReferenceListService from '../../data/db/PersonReferenceListService';
-import PeopleListService from '../../data/db/PeopleListService';
+import Person from '../../data/dto/Person';
+import PersonReference from '../../data/dto/PersonReference';
+
 import PersonReferenceNode, {
   PersonReferenceSettings,
 } from './PersonReferenceNode';
 
 class PersonReferencesListProps {
   constructor(
+    public peopleList: Person[],
+    public peopleReferenceList: PersonReference[],
     public isVisibleRange: (from: number, to: number) => boolean,
     public positionByYear: (year: number) => number,
     public rowPosition: (rowNumber: number) => number,
@@ -17,37 +20,41 @@ class PersonReferencesListProps {
 }
 
 const PersonReferencesList = (props: PersonReferencesListProps) =>
-  PersonReferenceListService.map((reference, i) => {
+  props.peopleReferenceList.map((reference, i) => {
+    const personFrom: Person | undefined = props.peopleList.find(
+      (p: Person) => p.id == reference.from,
+    );
+    const personTo: Person | undefined = props.peopleList.find(
+      (p: Person) => p.id == reference.to,
+    );
     if (
       reference.from &&
       reference.to &&
+      personFrom &&
+      personTo &&
       props.isVisibleRange(
-        Math.min(reference.from?.born, reference.to?.born),
-        Math.max(reference.from?.died, reference.to?.died),
+        Math.min(personFrom.born, personTo.born),
+        Math.max(personFrom.died, personTo.died),
       )
     ) {
-      const authorFrom = PeopleListService.getById(reference.from.id);
-      const authorTo = PeopleListService.getById(reference.to.id);
-      if (authorFrom && authorTo) {
-        return (
-          <PersonReferenceNode
-            key={'personref' + reference.id + i}
-            personReference={reference}
-            settings={props.personReferenceSettings}
-            authorFrom={authorFrom}
-            authorTo={authorTo}
-            positionStart={props.positionByYear(reference.from.born)}
-            positionEnd={props.positionByYear(reference.to.born)}
-            rowPositionFrom={props.rowPosition(authorFrom.rowNumber)}
-            rowPositionTo={props.rowPosition(authorTo.rowNumber)}
-            highlightsOn={props.highlightedAuthor != '0'}
-            isHighlighted={
-              props.highlightedAuthor == authorFrom.id ||
-              props.highlightedAuthor == authorTo.id
-            }
-          />
-        );
-      }
+      return (
+        <PersonReferenceNode
+          key={'personref' + reference.id + i}
+          personReference={reference}
+          settings={props.personReferenceSettings}
+          authorFrom={personFrom}
+          authorTo={personTo}
+          positionStart={props.positionByYear(personFrom.born)}
+          positionEnd={props.positionByYear(personTo.born)}
+          rowPositionFrom={props.rowPosition(personFrom.rowNumber)}
+          rowPositionTo={props.rowPosition(personTo.rowNumber)}
+          highlightsOn={props.highlightedAuthor != '0'}
+          isHighlighted={
+            props.highlightedAuthor == personFrom.id ||
+            props.highlightedAuthor == personTo.id
+          }
+        />
+      );
     }
   });
 

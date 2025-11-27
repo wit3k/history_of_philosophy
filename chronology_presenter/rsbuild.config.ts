@@ -7,4 +7,8 @@ export default defineConfig({
   server: {
     base: '/history_of_philosophy',
   },
+  html: {
+    title: 'History of philosophy',
+    favicon: './public/favicon.ico',
+  },
 });

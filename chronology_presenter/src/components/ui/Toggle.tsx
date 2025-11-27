@@ -1,11 +1,11 @@
-import { useId, type Dispatch, type SetStateAction } from 'react';
+import { useId } from 'react';
 import './Toggle.sass';
 
 class UIToggleProps<S> {
   constructor(
     public label: string,
     public state: S,
-    public useState: Dispatch<SetStateAction<S>>,
+    public useState: (checked: boolean) => void,
     public disabled?: boolean,
     public offMsg?: string,
   ) {}

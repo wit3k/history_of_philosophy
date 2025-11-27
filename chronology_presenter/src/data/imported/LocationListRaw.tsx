@@ -593,4 +593,10 @@ export const LocationListRaw = [
     coordinates: '49.892;2.299',
     thumbnail: 'atrjsnyrtegddguv.png',
   },
+  {
+    id: 138,
+    name: 'Aller',
+    coordinates: '51.0594440001;-2.857222',
+    thumbnail: 'at7hidj1xrbzzrpo.png',
+  },
 ];

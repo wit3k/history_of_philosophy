@@ -2,6 +2,8 @@ import './Chronology.css';
 import React from 'react';
 import ChronologyPad from './ChronologyPad';
 import ChronologyScale from './ChronologyScale';
+import Collection from '../../data/dto/Collection';
+import CollectionsListService from '../../data/db/CollectionsListService';
 import { PersonNodeSettings } from '../person/PersonNode';
 import { PublicationNodeSettings } from '../publication/PublicationNode';
 import PublicationsList from '../publication/PublicationsList';
@@ -21,6 +23,10 @@ import Location from '../../data/dto/Location';
 import LocationListService from '../../data/db/LocationListService';
 import PublicationsListService from '../../data/db/PublicationsListService';
 import PersonDetails from '../person/PersonDetails';
+import PersonReferenceListService from '../../data/db/PersonReferenceListService';
+import PublicationReferenceListService from '../../data/db/PublicationReferenceListService';
+import type PersonReference from '../../data/dto/PersonReference';
+import type PublicationReference from '../../data/dto/PublicationReference';
 
 class ChronologyProperies {
   constructor(
@@ -60,6 +66,78 @@ const Chronology = () => {
     rowHeight: 85,
   };
 
+  const [peopleList, setPeopleList] = React.useState<Person[]>(
+    PeopleListService.withRowNumbers(PeopleListService.getAll()),
+  );
+  const [locationsList, setLocationsList] = React.useState<Location[]>(
+    LocationListService.getAll(),
+  );
+  const [peopleReferenceList, setPeopleReferenceList] = React.useState<
+    PersonReference[]
+  >(PersonReferenceListService.getAll());
+  const [publicationsList, setPublicationsList] = React.useState<Publication[]>(
+    PublicationsListService.getAll(),
+  );
+  const [publicationReferenceList, setPublicationReferenceList] =
+    React.useState<PublicationReference[]>(
+      PublicationReferenceListService.getAll(),
+    );
+
+  const [collectionsState, setCollectionsState] = React.useState<Collection[]>(
+    CollectionsListService.getAll(),
+  );
+  interface HasId {
+    id: string;
+  }
+  const toggleCollectionsState = (collectionId: number, checked: boolean) => {
+    const newCollectionsState = collectionsState.map((c: Collection) =>
+      c.id == collectionId + '' ? { ...c, isActive: checked } : c,
+    );
+    function itemsFilter<S extends HasId>(
+      cmap: (collections: Collection) => number[],
+    ) {
+      const isWhiteList: boolean = !newCollectionsState.find(
+        (cs) => cs.id == '0',
+      )?.isActive;
+      const includedIds: string[] = newCollectionsState
+        .filter((c) => c.isActive == isWhiteList)
+        .flatMap(cmap)
+        .map((c) => c + '');
+      return (item: S, _: number) => {
+        return isWhiteList
+          ? includedIds.includes(item.id)
+          : !includedIds.includes(item.id);
+      };
+    }
+
+    setCollectionsState(newCollectionsState);
+    setPeopleList(
+      PeopleListService.withRowNumbers(
+        PeopleListService.getAll().filter(itemsFilter((c) => c.includedPeople)),
+      ),
+    );
+    setLocationsList(
+      LocationListService.getAll().filter(
+        itemsFilter((c) => c.includedLocations),
+      ),
+    );
+    setPublicationsList(
+      PublicationsListService.getAll().filter(
+        itemsFilter((c) => c.includedPublications),
+      ),
+    );
+    setPublicationReferenceList(
+      PublicationReferenceListService.getAll().filter(
+        itemsFilter((c) => c.includedReferences),
+      ),
+    );
+    setPeopleReferenceList(
+      PersonReferenceListService.getAll().filter(
+        itemsFilter((c) => c.includedPeopleRelations),
+      ),
+    );
+  };
+
   const [displayPublicationModal, setDisplayPublicationModal] =
     React.useState<boolean>(false);
   const [displayLocationModal, setDisplayLocationModal] =
@@ -88,14 +166,7 @@ const Chronology = () => {
   });
   const [highlightedAuthor, updateHighlightedAuthor] = React.useState('0');
   const [currentPublication, setCurrentPublication] = React.useState(
-    new Publication(
-      '',
-      '',
-      0,
-      new Location('', '', new Coordinates(0, 0), ''),
-      '',
-      '',
-    ),
+    new Publication('', '', 0, 0, '', ''),
   );
   const [currentAuthor, setCurrentAuthor] = React.useState(
     new Person('', '', 0, 0, true, '', '', '', 1, ''),
@@ -264,13 +335,6 @@ const Chronology = () => {
         height: prop.windowSize.y,
         overflow: 'hidden',
       }}
-      onMouseDown={(e) => startPageDrag(e.button, e.pageX, e.pageY)}
-      onTouchStart={(e) => multitouchStart(e.touches)}
-      onMouseUp={(_) => stopPageDrag()}
-      onTouchEnd={(_) => stopPageDrag()}
-      onMouseMove={(e) => executePageDrag(e.pageX, e.pageY)}
-      onTouchMove={(e) => multitouchMove(e.touches)}
-      onWheel={(e) => mouseWheel(e.deltaY)}
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -281,6 +345,13 @@ const Chronology = () => {
           height: prop.windowSize.y,
           cursor: drag.isDragged ? 'grabbing' : 'grab',
         }}
+        onMouseDown={(e) => startPageDrag(e.button, e.pageX, e.pageY)}
+        onTouchStart={(e) => multitouchStart(e.touches)}
+        onMouseUp={(_) => stopPageDrag()}
+        onTouchEnd={(_) => stopPageDrag()}
+        onMouseMove={(e) => executePageDrag(e.pageX, e.pageY)}
+        onTouchMove={(e) => multitouchMove(e.touches)}
+        onWheel={(e) => mouseWheel(e.deltaY)}
       >
         <ChronologyPad
           padSize={new Coordinates(prop.windowSize.x, prop.windowSize.y)}
@@ -295,6 +366,8 @@ const Chronology = () => {
 
         {displayAuthorRelations && displayAuthors && (
           <PersonReferencesList
+            peopleList={peopleList}
+            peopleReferenceList={peopleReferenceList}
             highlightedAuthor={highlightedAuthor}
             isVisibleRange={isVisibleRange}
             positionByYear={positionByYear}
@@ -305,6 +378,7 @@ const Chronology = () => {
 
         {displayAuthors && (
           <PeopleList
+            peopleList={peopleList}
             isVisibleRange={isVisibleRange}
             personNodesSettings={personNodesSettings}
             positionByYear={positionByYear}
@@ -313,7 +387,7 @@ const Chronology = () => {
             updateHighlightedAuthor={updateHighlightedAuthor}
             displayAuthorsTimeline={displayAuthorsTimeline}
             authorCallback={(id) => {
-              setCurrentAuthor(PeopleListService.getById(id)!);
+              setCurrentAuthor(peopleList.find((p) => p.id == id)!);
               setDisplayLocationModal(false);
               setDisplayPublicationModal(false);
               setDisplayPersonModal(true);
@@ -323,6 +397,9 @@ const Chronology = () => {
 
         {displayPublicationRelations && displayPublications && (
           <PublicationReferencesList
+            peopleList={peopleList}
+            publicationReferenceList={publicationReferenceList}
+            publicationsList={publicationsList}
             highlightedAuthor={highlightedAuthor}
             highlightedPublication={highlightedPublication}
             isVisibleRange={isVisibleRange}
@@ -334,6 +411,8 @@ const Chronology = () => {
 
         {displayPublications && (
           <PublicationsList
+            publicationsList={publicationsList}
+            peopleList={peopleList}
             isVisible={isVisible}
             positionByYear={positionByYear}
             publicationNodeSettings={publicationNodeSettings}
@@ -365,6 +444,8 @@ const Chronology = () => {
         setDisplayPublications={setDisplayPublications}
         displayPublicationRelations={displayPublicationRelations}
         setDisplayPublicationRelations={setDisplayPublicationRelations}
+        collectionsState={collectionsState}
+        toggleCollectionsState={toggleCollectionsState}
       />
 
       <PublicationDetails
@@ -379,7 +460,7 @@ const Chronology = () => {
           setDisplayPersonModal(false);
         }}
         authorCallback={(id) => {
-          setCurrentAuthor(PeopleListService.getById(id)!);
+          setCurrentAuthor(peopleList.find((p) => p.id == id)!);
           setDisplayLocationModal(false);
           setDisplayPublicationModal(false);
           setDisplayPersonModal(true);
@@ -391,13 +472,13 @@ const Chronology = () => {
         displayModal={displayLocationModal}
         setDisplayModal={setDisplayLocationModal}
         publicationCallback={(id) => {
-          setCurrentPublication(PublicationsListService.getById(id)!);
+          setCurrentPublication(publicationsList.find((p) => p.id == id)!);
           setDisplayPublicationModal(true);
           setDisplayLocationModal(false);
           setDisplayPersonModal(false);
         }}
         authorCallback={(id) => {
-          setCurrentAuthor(PeopleListService.getById(id)!);
+          setCurrentAuthor(peopleList.find((p) => p.id == id)!);
           setDisplayPersonModal(true);
           setDisplayLocationModal(false);
           setDisplayPublicationModal(false);
@@ -409,13 +490,13 @@ const Chronology = () => {
         displayModal={displayPersonModal}
         setDisplayModal={setDisplayPersonModal}
         locationCallback={(id) => {
-          setCurrentLocation(LocationListService.getById(id)!);
+          setCurrentLocation(locationsList.find((l) => l.id == id)!);
           setDisplayLocationModal(true);
           setDisplayPersonModal(false);
           setDisplayPublicationModal(false);
         }}
         publicationCallback={(id) => {
-          setCurrentPublication(PublicationsListService.getById(id)!);
+          setCurrentPublication(publicationsList.find((p) => p.id == id)!);
           setDisplayPublicationModal(true);
           setDisplayPersonModal(false);
           setDisplayLocationModal(false);

@@ -1,6 +1,8 @@
 import UIToggle from './Toggle';
 import React from 'react';
 import { type Dispatch, type SetStateAction } from 'react';
+import './Menu.sass';
+import Collection from '../../data/dto/Collection';
 
 class MenuProps {
   constructor(
@@ -14,23 +16,29 @@ class MenuProps {
     public setDisplayPublications: Dispatch<SetStateAction<boolean>>,
     public displayPublicationRelations: boolean,
     public setDisplayPublicationRelations: Dispatch<SetStateAction<boolean>>,
+    public collectionsState: Collection[],
+    public toggleCollectionsState: (
+      collectionId: number,
+      checked: boolean,
+    ) => void,
   ) {}
 }
 
 const Menu = (props: MenuProps) => {
-  const [isVisible, setIsVisible] = React.useState(false);
+  const [settingsVisible, setSettingsVisible] = React.useState(false);
+  const [filtersVisible, setFiltersVisible] = React.useState(false);
   return (
     <div>
       <div
         className={
           'sidebar fixed top-0 bottom-0 lg:left-0  p-2  ' +
-          (isVisible ? 'hidden' : '')
+          (settingsVisible || filtersVisible ? 'hidden' : '')
         }
       >
         <div className="text-gray-100 text-xl">
           <div
             className="p-2.5 mt-1 flex items-center rounded-md cursor-pointer"
-            onClick={() => setIsVisible(true)}
+            onClick={() => setSettingsVisible(true)}
           >
             <i
               className="bi bi-app-indicator px-2 py-1 bg-blue-600 rounded-md text-slate-900 hover:text-white"
@@ -54,17 +62,112 @@ const Menu = (props: MenuProps) => {
           </div>
         </div>
       </div>
-
       <div
         className={
-          'sidebar fixed top-0 bottom-0 lg:left-0 duration-1000 p-2 w-full md:w-[300px] shadow h-screen bg-gray-900/50 backdrop-blur-xs backdrop-brightness-200 border-r-20 border-pink-700 ' +
-          (isVisible ? '' : 'hidden')
+          'sidebar fixed top-0 bottom-0 lg:left-15  p-2  ' +
+          (settingsVisible || filtersVisible ? 'hidden' : '')
         }
       >
         <div className="text-gray-100 text-xl">
           <div
             className="p-2.5 mt-1 flex items-center rounded-md cursor-pointer"
-            onClick={() => setIsVisible(false)}
+            onClick={() => setFiltersVisible(true)}
+          >
+            <i
+              className="bi bi-app-indicator px-2 py-1 bg-blue-600 rounded-md text-slate-900 hover:text-white"
+              style={{ background: 'linear-gradient(90deg, #ff4f7e, #fe27be)' }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="size-6"
+              >
+                <path d="M10 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16Z" />
+                <path
+                  fillRule="evenodd"
+                  d="M21.707 21.707a1 1 0 0 1-1.414 0l-3.5-3.5a1 1 0 0 1 1.414-1.414l3.5 3.5a1 1 0 0 1 0 1.414Z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </i>
+          </div>
+        </div>
+      </div>
+
+      <div
+        className={
+          'sidebar fixed top-0 bottom-0 lg:left-0 duration-1000 p-2 w-full md:w-[300px] shadow h-screen bg-gray-900/50 backdrop-blur-xs backdrop-brightness-200 border-r-20 border-pink-700 ' +
+          (filtersVisible ? '' : 'hidden')
+        }
+      >
+        <div className="text-gray-100 text-xl h-full">
+          <div
+            className="p-2.5 mt-1 flex items-center rounded-md cursor-pointer"
+            onClick={() => setFiltersVisible(false)}
+          >
+            <i
+              className="bi bi-app-indicator px-2 py-1 bg-blue-600 rounded-md"
+              style={{ background: 'linear-gradient(90deg, #ff4f7e, #fe27be)' }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="size-6"
+              >
+                <path d="M10 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16Z" />
+                <path
+                  fillRule="evenodd"
+                  d="M21.707 21.707a1 1 0 0 1-1.414 0l-3.5-3.5a1 1 0 0 1 1.414-1.414l3.5 3.5a1 1 0 0 1 0 1.414Z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </i>
+
+            <h1 className="text-[15px]  ml-3 text-xl text-gray-200 font-bold">
+              Filtry
+            </h1>
+            {/* <i className="bi bi-x ml-20 cursor-pointer lg:hidden"></i> */}
+          </div>
+
+          <hr className="my-2 text-gray-600"></hr>
+
+          <div className="scrollable-area">
+            <h1 className="text-[15px]  ml-3 text-xl text-gray-200 font-bold">
+              Widoczne kolekcje
+            </h1>
+
+            {props.collectionsState.map((collection: Collection, i: number) => (
+              <UIToggle
+                key={'collection' + collection.id + i}
+                label={collection.name}
+                state={collection.isActive}
+                useState={(checked: boolean) =>
+                  props.toggleCollectionsState(collection.id, checked)
+                }
+                offMsg=""
+                disabled={false}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div
+        className={
+          'sidebar fixed top-0 bottom-0 lg:left-0 duration-1000 p-2 w-full md:w-[300px] shadow h-screen bg-gray-900/50 backdrop-blur-xs backdrop-brightness-200 border-r-20 border-pink-700 ' +
+          (settingsVisible ? '' : 'hidden')
+        }
+      >
+        <div className="text-gray-100 text-xl">
+          <div
+            className="p-2.5 mt-1 flex items-center rounded-md cursor-pointer"
+            onClick={() => setSettingsVisible(false)}
           >
             <i
               className="bi bi-app-indicator px-2 py-1 bg-blue-600 rounded-md"
@@ -89,7 +192,7 @@ const Menu = (props: MenuProps) => {
             <h1 className="text-[15px]  ml-3 text-xl text-gray-200 font-bold">
               Ustawienia
             </h1>
-            <i className="bi bi-x ml-20 cursor-pointer lg:hidden"></i>
+            {/* <i className="bi bi-x ml-20 cursor-pointer lg:hidden"></i> */}
           </div>
 
           <hr className="my-2 text-gray-600"></hr>

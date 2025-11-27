@@ -1,4 +1,3 @@
-// import type Person from '../dto/Person';
 import Coordinates from '../../geometry/Coordinates';
 import Location from '../dto/Location';
 import { LocationListRaw } from '../imported/LocationListRaw';

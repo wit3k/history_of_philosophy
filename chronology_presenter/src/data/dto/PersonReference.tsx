@@ -11,8 +11,8 @@ class PersonReference {
     public id: string,
     public name: string,
     public attitude: Attitude,
-    public from?: Person,
-    public to?: Person,
+    public from: string,
+    public to: string,
   ) {}
 }
 

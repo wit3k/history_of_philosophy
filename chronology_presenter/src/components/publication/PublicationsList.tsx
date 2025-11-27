@@ -1,10 +1,11 @@
-import PublicationsListService from '../../data/db/PublicationsListService';
 import type Person from '../../data/dto/Person';
 import type Publication from '../../data/dto/Publication';
 import PublicationNode, { PublicationNodeSettings } from './PublicationNode';
 
 class PublicationsListProps {
   constructor(
+    public publicationsList: Publication[],
+    public peopleList: Person[],
     public isVisible: (year: number) => boolean,
     public positionByYear: (year: number) => number,
     public rowPosition: (rowNumber: number) => number,
@@ -21,11 +22,11 @@ class PublicationsListProps {
 }
 
 const PublicationsList = (props: PublicationsListProps) =>
-  PublicationsListService.getAll()
+  props.publicationsList
     .filter((publication) => props.isVisible(publication.publicationDate))
     .map((publication, _) => ({
       publication,
-      author: PublicationsListService.getPublicationAuthor(publication),
+      author: props.peopleList.find((p) => p.id == publication.authorId),
     }))
     .map(({ publication, author }, i) => {
       if (author) {

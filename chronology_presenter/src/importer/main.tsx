@@ -10,8 +10,8 @@ let tabMap: any = {
   publications: { tableId: 'me77551rlyondy9', viewId: 'vwrik2hmo15eufg6' },
   quotes: { tableId: 'mljf7f47zgv9mgv', viewId: 'vwpdfjd6bln6nmu9' },
   locations: { tableId: 'my7pr4s2kwgoesx', viewId: 'vw1sg7plf8bnr46l' },
+  collections: { tableId: 'mqubv6pjfhgobsd', viewId: 'vwiqdleig055xc5b' },
 };
-
 let getTable = async (tableName: string) =>
   await axios
     .request({
@@ -219,7 +219,7 @@ let publications = (
     title: book['Tytuł'],
     publicationDate: book['Rok wydania'].slice(0, 4) * 1,
     publicationLocation:
-      book['Miejsce wydania'] != undefined ? book['Miejsce wydania'].Id : '',
+      book['Miejsce wydania'] != undefined ? book['Miejsce wydania'].Id : -1,
     authorId: author.Id + '',
     isbn: book['ISBN'],
     description: book['Opis'],
@@ -275,5 +275,43 @@ let locations = (await getTable('locations')).list
 fs.writeFileSync(
   './src/data/imported/LocationListRaw.tsx',
   'export const LocationListRaw = ' + JSON.stringify(locations),
+  'utf8',
+);
+
+let collections = (await getTable('collections')).list
+  .filter(
+    (collection: any) =>
+      collection['Pokaż w menu'] &&
+      collection['_nc_m2m_Kolekcje_Osobies'].length > 0,
+  )
+  .map((collection: any, i: number) => {
+    console.log(collection);
+    return {
+      id: collection['Id'],
+      name: collection['Title'],
+      includedPeople: collection['_nc_m2m_Kolekcje_Osobies'].map(
+        (o: any) => o['Osoby_id'],
+      ),
+      includedLocations: collection['_nc_m2m_Kolekcje_Lokacjes'].map(
+        (o: any) => o['Lokacje_id'],
+      ),
+      includedEvents: collection['_nc_m2m_Kolekcje_Wydarzenia'].map(
+        (o: any) => o['Wydarzenia_id'],
+      ),
+      includedPublications: collection['_nc_m2m_Kolekcje_Publikacjes'].map(
+        (o: any) => o['Publikacje_id'],
+      ),
+      includedReferences: collection['_nc_m2m_Kolekcje_Odniesienia'].map(
+        (o: any) => o['Odniesienia_id'],
+      ),
+      includedPeopleRelations: collection[
+        '_nc_m2m_Kolekcje_Relacje międzyls'
+      ].map((o: any) => o['Relacje międzyludzkie_id']),
+    };
+  });
+
+fs.writeFileSync(
+  './src/data/imported/CollectionsListRaw.tsx',
+  'export const CollectionsListRaw = ' + JSON.stringify(collections),
   'utf8',
 );

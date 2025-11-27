@@ -1,11 +1,16 @@
-import PublicationReferenceListService from '../../data/db/PublicationReferenceListService';
-import PublicationsListService from '../../data/db/PublicationsListService';
+import type Person from '../../data/dto/Person';
+import type Publication from '../../data/dto/Publication';
+import type PublicationReference from '../../data/dto/PublicationReference';
 import PublicationReferenceNode, {
   PublicationReferenceSettings,
 } from './PublicationReferenceNode';
 
 class PublicationReferencesListProps {
   constructor(
+    public publicationReferenceList: PublicationReference[],
+    public peopleList: Person[],
+    public publicationsList: Publication[],
+
     public isVisibleRange: (from: number, to: number) => boolean,
     public positionByYear: (year: number) => number,
     public rowPosition: (rowNumber: number) => number,
@@ -18,48 +23,56 @@ class PublicationReferencesListProps {
 }
 
 const PublicationReferencesList = (props: PublicationReferencesListProps) =>
-  PublicationReferenceListService.map((reference, i) => {
+  props.publicationReferenceList.map((reference, i) => {
+    const publicationFrom: Publication = props.publicationsList.find(
+      (p) => p.id == reference.from + '',
+    )!;
+    const publicationTo: Publication = props.publicationsList.find(
+      (p) => p.id == reference.to + '',
+    )!;
+    const authorFrom: Person = props.peopleList.find(
+      (a) => a.id == publicationFrom?.authorId,
+    )!;
+    const authorTo: Person = props.peopleList.find(
+      (a) => a.id == publicationTo?.authorId,
+    )!;
     if (
       reference.from &&
       reference.to &&
+      publicationFrom &&
+      publicationTo &&
       props.isVisibleRange(
         Math.min(
-          reference.from?.publicationDate,
-          reference.to?.publicationDate,
+          publicationFrom.publicationDate,
+          publicationTo.publicationDate,
         ),
         Math.max(
-          reference.from?.publicationDate,
-          reference.to?.publicationDate,
+          publicationFrom.publicationDate,
+          publicationTo.publicationDate,
         ),
-      )
+      ) &&
+      authorFrom != undefined &&
+      authorTo != undefined
     ) {
-      const authorFrom = PublicationsListService.getPublicationAuthor(
-        reference.from,
+      return (
+        <PublicationReferenceNode
+          key={'pubref' + reference.id + i}
+          publicationReference={reference}
+          settings={props.publicationReferenceSettings}
+          authorFrom={authorFrom}
+          authorTo={authorTo}
+          positionStart={props.positionByYear(publicationFrom.publicationDate)}
+          positionEnd={props.positionByYear(publicationTo.publicationDate)}
+          rowPositionFrom={props.rowPosition(authorFrom.rowNumber)}
+          rowPositionTo={props.rowPosition(authorTo.rowNumber)}
+          isHighlighted={
+            props.highlightedAuthor == authorFrom.id ||
+            props.highlightedAuthor == authorTo.id ||
+            props.highlightedPublication == publicationFrom.id ||
+            props.highlightedPublication == publicationTo.id
+          }
+        />
       );
-      const authorTo = PublicationsListService.getPublicationAuthor(
-        reference.to,
-      );
-      if (authorFrom && authorTo) {
-        return (
-          <PublicationReferenceNode
-            key={'pubref' + reference.id + i}
-            publicationReference={reference}
-            settings={props.publicationReferenceSettings}
-            authorFrom={authorFrom}
-            authorTo={authorTo}
-            positionStart={props.positionByYear(reference.from.publicationDate)}
-            positionEnd={props.positionByYear(reference.to.publicationDate)}
-            rowPositionFrom={props.rowPosition(authorFrom.rowNumber)}
-            rowPositionTo={props.rowPosition(authorTo.rowNumber)}
-            isHighlighted={
-              props.highlightedAuthor == authorFrom.id ||
-              props.highlightedAuthor == authorTo.id ||
-              props.highlightedPublication == reference.from.id ||
-              props.highlightedPublication == reference.to.id
-            }
-          />
-        );
-      }
     }
   });
 

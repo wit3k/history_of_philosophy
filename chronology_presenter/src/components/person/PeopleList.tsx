@@ -1,9 +1,10 @@
-import PeopleListService from '../../data/db/PeopleListService';
+import Person from '../../data/dto/Person';
 import PersonNode from './PersonNode';
 import type { PersonNodeSettings } from './PersonNode';
 
 class PeopleListProps {
   constructor(
+    public peopleList: Person[],
     public isVisibleRange: (from: number, to: number) => boolean,
     public positionByYear: (year: number) => number,
     public rowPosition: (year: number) => number,
@@ -18,7 +19,7 @@ class PeopleListProps {
 }
 
 const PeopleList = (props: PeopleListProps) =>
-  PeopleListService.getAll()
+  props.peopleList
     .filter((person) => props.isVisibleRange(person.born, person.died))
     .map((person, i) => (
       <PersonNode

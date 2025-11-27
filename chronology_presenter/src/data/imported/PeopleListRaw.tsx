@@ -1255,4 +1255,16 @@ export const PeopleListRaw = [
     rowNumber: 106,
     thumbnail: 'atm4hwsbdneabnf9.png',
   },
+  {
+    id: '137',
+    name: 'Ralph Cudworth',
+    born: 1616,
+    stillAlive: false,
+    died: 1688,
+    bornLocation: 138,
+    diedLocation: 31,
+    nationality: 'Anglik',
+    rowNumber: 107,
+    thumbnail: 'atcfnf5akt3fo03j.png',
+  },
 ];

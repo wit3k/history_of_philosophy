@@ -1,10 +1,9 @@
-import Location from './Location';
 class Publication {
   constructor(
     public id: string,
     public title: string,
     public publicationDate: number,
-    public publicationLocation: Location,
+    public publicationLocation: number,
     public authorId: string,
     public isbn?: string,
     public description?: string,

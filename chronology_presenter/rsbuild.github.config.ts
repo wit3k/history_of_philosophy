@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [pluginReact(), pluginSass()],
   html: {
     title: 'History of philosophy',
+    favicon: './public/favicon.ico',
   },
   output: {
     target: 'web',
