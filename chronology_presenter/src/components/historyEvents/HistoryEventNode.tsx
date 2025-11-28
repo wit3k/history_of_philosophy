@@ -8,6 +8,7 @@ class HistoryEventNodeProps {
     public positionEnd: number,
     public settings: HistoryEventNodeSettings,
     public rowPosition: number,
+    public darkMode: boolean,
   ) {}
 }
 
@@ -21,7 +22,9 @@ export class HistoryEventNodeSettings {
 const HistoryEventNode = (props: HistoryEventNodeProps) => {
   const tamedColor = ColorsService.getTamedColor(props.event.rowNumber)
   const fixedColor = ColorsService.getFixedColor(props.event.rowNumber)
-  const pseudoTransparentColor = ColorsService.convertToGray(tamedColor)
+  const pseudoTransparentColor = props.darkMode
+    ? ColorsService.convertToGray(tamedColor)
+    : ColorsService.convertToPale(tamedColor)
   return (
     <g>
       <rect

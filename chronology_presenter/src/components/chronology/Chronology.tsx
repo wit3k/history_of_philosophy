@@ -127,6 +127,7 @@ const Chronology = () => {
   const [displayPublications, setDisplayPublications] = React.useState(true)
   const [displayPublicationRelations, setDisplayPublicationRelations] = React.useState(true)
   const [displayHistoryEvents, setDisplayHistoryEvents] = React.useState(true)
+  const [darkMode, setDarkMode] = React.useState(true)
 
   const [zoom, setZoom] = React.useState(10)
   const [pinchDelta, setPinchDelta] = React.useState(0)
@@ -283,7 +284,7 @@ const Chronology = () => {
   return (
     <div
       style={{
-        background: 'rgb(43, 44, 45)',
+        background: darkMode ? 'rgb(43, 44, 45)' : 'white',
         width: prop.windowSize.x,
         height: prop.windowSize.y,
         overflow: 'hidden',
@@ -313,6 +314,7 @@ const Chronology = () => {
             positionByYear={positionByYear}
             rowPosition={historyEventRowPosition}
             historyEventNodeSettings={historyEventNodeSettings}
+            darkMode={darkMode}
           />
         )}
 
@@ -409,6 +411,8 @@ const Chronology = () => {
         setDisplayPublicationRelations={setDisplayPublicationRelations}
         displayHistoryEvents={displayHistoryEvents}
         setDisplayHistoryEvents={setDisplayHistoryEvents}
+        darkMode={darkMode}
+        setDarkMode={setDarkMode}
         collectionsState={collectionsState}
         toggleCollectionsState={toggleCollectionsState}
       />

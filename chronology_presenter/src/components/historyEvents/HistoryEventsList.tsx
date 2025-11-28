@@ -8,6 +8,7 @@ class HistoryEventsListProps {
     public positionByYear: (year: number) => number,
     public rowPosition: (year: number) => number,
     public historyEventNodeSettings: HistoryEventNodeSettings,
+    public darkMode: boolean,
   ) {}
 }
 
@@ -22,6 +23,7 @@ const HistoryEventsList = (props: HistoryEventsListProps) =>
         positionEnd={props.positionByYear(event.yearTo)}
         rowPosition={props.rowPosition(event.rowNumber)}
         settings={props.historyEventNodeSettings}
+        darkMode={props.darkMode}
       />
     ))
 

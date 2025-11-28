@@ -18,6 +18,8 @@ class MenuProps {
     public setDisplayPublicationRelations: Dispatch<SetStateAction<boolean>>,
     public displayHistoryEvents: boolean,
     public setDisplayHistoryEvents: Dispatch<SetStateAction<boolean>>,
+    public darkMode: boolean,
+    public setDarkMode: Dispatch<SetStateAction<boolean>>,
     public collectionsState: Collection[],
     public toggleCollectionsState: (collectionId: string, checked: boolean) => void,
   ) {}
@@ -230,6 +232,9 @@ const Menu = (props: MenuProps) => {
             useState={props.setDisplayHistoryEvents}
             offMsg=""
           />
+        </div>
+        <div className="sm:col-span-4">
+          <UIToggle label="Tryb ciemny" state={props.darkMode} useState={props.setDarkMode} offMsg="" />
         </div>
       </div>
     </div>
