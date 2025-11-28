@@ -27,6 +27,10 @@ import PersonReferenceListService from '../../data/db/PersonReferenceListService
 import PublicationReferenceListService from '../../data/db/PublicationReferenceListService';
 import type PersonReference from '../../data/dto/PersonReference';
 import type PublicationReference from '../../data/dto/PublicationReference';
+import HistoryEventsListService from '../../data/db/HistoryEventsListService';
+import HistoryEvent from '../../data/dto/HistoryEvent';
+import HistoryEventsList from '../historyEvents/HistoryEventsList';
+import type { HistoryEventNodeSettings } from '../historyEvents/HistoryEventNode';
 
 class ChronologyProperies {
   constructor(
@@ -72,6 +76,9 @@ const Chronology = () => {
   const [locationsList, setLocationsList] = React.useState<Location[]>(
     LocationListService.getAll(),
   );
+  const [historyEvents, setHistoryEvents] = React.useState<HistoryEvent[]>(
+    HistoryEventsListService.getAll(),
+  );
   const [peopleReferenceList, setPeopleReferenceList] = React.useState<
     PersonReference[]
   >(PersonReferenceListService.getAll());
@@ -88,9 +95,9 @@ const Chronology = () => {
   interface HasId {
     id: string;
   }
-  const toggleCollectionsState = (collectionId: number, checked: boolean) => {
+  const toggleCollectionsState = (collectionId: string, checked: boolean) => {
     const newCollectionsState = collectionsState.map((c: Collection) =>
-      c.id == collectionId + '' ? { ...c, isActive: checked } : c,
+      c.id == collectionId ? { ...c, isActive: checked } : c,
     );
 
     function itemsFilter<S extends HasId>(
@@ -123,6 +130,11 @@ const Chronology = () => {
     setLocationsList(
       LocationListService.getAll().filter(
         itemsFilter((c) => c.includedLocations),
+      ),
+    );
+    setHistoryEvents(
+      HistoryEventsListService.getAll().filter(
+        itemsFilter((c) => c.includedEvents),
       ),
     );
     setPublicationsList(
@@ -160,6 +172,7 @@ const Chronology = () => {
   const [displayPublications, setDisplayPublications] = React.useState(true);
   const [displayPublicationRelations, setDisplayPublicationRelations] =
     React.useState(true);
+  const [displayHistoryEvents, setDisplayHistoryEvents] = React.useState(true);
 
   const [zoom, setZoom] = React.useState(10);
   const [pinchDelta, setPinchDelta] = React.useState(0);
@@ -173,7 +186,7 @@ const Chronology = () => {
     new Publication('', '', 0, 0, '', ''),
   );
   const [currentAuthor, setCurrentAuthor] = React.useState(
-    new Person('', '', 0, 0, true, '', '', '', 1, ''),
+    new Person('', '', 0, 0, true, '', '', '', 1, '', ''),
   );
   const [highlightedPublication, updateHighlightedPublication] =
     React.useState('0');
@@ -186,6 +199,11 @@ const Chronology = () => {
     to: 2101,
     stepSize: 100,
   });
+
+  const historyEventNodeSettings: HistoryEventNodeSettings = {
+    boxSize: 20,
+    rowHeight: 21,
+  };
 
   const personNodesSettings: PersonNodeSettings = {
     boxSize: 50,
@@ -224,6 +242,8 @@ const Chronology = () => {
     positionByYear(from) - prop.rowHeight < prop.windowSize.x;
   let rowPosition = (rowNumber: number) =>
     prop.rowHeight * rowNumber + viewPosition.y;
+  let historyEventRowPosition = (rowNumber: number) =>
+    -historyEventNodeSettings.rowHeight * rowNumber + viewPosition.y;
 
   let startPageDrag = (button: number, pageX: number, pageY: number) => {
     if (button == 0) {
@@ -358,6 +378,16 @@ const Chronology = () => {
         onTouchMove={(e) => multitouchMove(e.touches)}
         onWheel={(e) => mouseWheel(e.deltaY)}
       >
+        {displayHistoryEvents && (
+          <HistoryEventsList
+            historyEvents={historyEvents}
+            isVisibleRange={isVisibleRange}
+            positionByYear={positionByYear}
+            rowPosition={historyEventRowPosition}
+            historyEventNodeSettings={historyEventNodeSettings}
+          />
+        )}
+
         <ChronologyPad
           padSize={new Coordinates(prop.windowSize.x, prop.windowSize.y)}
           isVisible={isVisible}
@@ -449,6 +479,8 @@ const Chronology = () => {
         setDisplayPublications={setDisplayPublications}
         displayPublicationRelations={displayPublicationRelations}
         setDisplayPublicationRelations={setDisplayPublicationRelations}
+        displayHistoryEvents={displayHistoryEvents}
+        setDisplayHistoryEvents={setDisplayHistoryEvents}
         collectionsState={collectionsState}
         toggleCollectionsState={toggleCollectionsState}
       />

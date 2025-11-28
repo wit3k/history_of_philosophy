@@ -1,3 +1,18 @@
+const tamedPalette = [
+  '#0f3c1fff',
+  '#422052ff',
+  '#11083dff',
+  '#32120dff',
+  '#293720ff',
+  '#123c2dff',
+  '#402210ff',
+  '#3e1f0cff',
+  '#3c0d33ff',
+  '#173c47ff',
+];
+export const getTamedColor = (number: number) => {
+  return tamedPalette[number % tamedPalette.length];
+};
 const palette = [
   '#2CAA58',
   '#b159ddff',
@@ -10,6 +25,9 @@ const palette = [
   '#962281ff',
   '#3f9db9ff',
 ];
+export const getFixedColor = (number: number) => {
+  return palette[number % tamedPalette.length];
+};
 export const getAccentColor = (name: string | null) => {
   if (name == null) {
     return '#0f0';

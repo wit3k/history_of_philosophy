@@ -11,6 +11,7 @@ let tabMap: any = {
   quotes: { tableId: 'mljf7f47zgv9mgv', viewId: 'vwpdfjd6bln6nmu9' },
   locations: { tableId: 'my7pr4s2kwgoesx', viewId: 'vw1sg7plf8bnr46l' },
   collections: { tableId: 'mqubv6pjfhgobsd', viewId: 'vwiqdleig055xc5b' },
+  historyEvents: { tableId: 'm78tbyteswhe0sq', viewId: 'vwqfiq3o3f3kgeuk' },
 };
 let getTable = async (tableName: string) =>
   await axios
@@ -313,5 +314,35 @@ let collections = (await getTable('collections')).list
 fs.writeFileSync(
   './src/data/imported/CollectionsListRaw.tsx',
   'export const CollectionsListRaw = ' + JSON.stringify(collections),
+  'utf8',
+);
+
+let historyEvents = (await getTable('historyEvents')).list
+  .filter(
+    (event: any) =>
+      event['Rodzaj wydarzenia'] == 'Historia świata' &&
+      event['Data od'] != undefined &&
+      event['Data do'] != undefined,
+  )
+  .map((event: any, i: number) => ({
+    id: event.Id,
+    name: event['Tytuł'],
+    yearFrom: event['Data od']
+      ? (event['Data od']?.slice(0, 1) == '3'
+          ? event['Data od']?.slice(2, 4)
+          : event['Data od']?.slice(0, 4)) *
+        (event['Data od Era'] == 'N.E.' ? 1 : -1)
+      : undefined,
+    yearTo: event['Data do']
+      ? (event['Data do']?.slice(0, 1) == '3'
+          ? event['Data do']?.slice(2, 4)
+          : event['Data do']?.slice(0, 4)) *
+        (event['Data do Era'] == 'N.E.' ? 1 : -1)
+      : undefined,
+  }));
+
+fs.writeFileSync(
+  './src/data/imported/HistoryEventsListRaw.tsx',
+  'export const HistoryEventsListRaw = ' + JSON.stringify(historyEvents),
   'utf8',
 );

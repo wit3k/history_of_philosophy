@@ -1,6 +1,5 @@
 import Person from '../../data/dto/Person';
 import getAccentColor from '../../services/Colors';
-// import nietzsche from '../../static/nietzsche.png';
 
 class PersonNodeProps {
   constructor(

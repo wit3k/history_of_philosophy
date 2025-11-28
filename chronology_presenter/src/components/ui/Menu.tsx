@@ -16,9 +16,11 @@ class MenuProps {
     public setDisplayPublications: Dispatch<SetStateAction<boolean>>,
     public displayPublicationRelations: boolean,
     public setDisplayPublicationRelations: Dispatch<SetStateAction<boolean>>,
+    public displayHistoryEvents: boolean,
+    public setDisplayHistoryEvents: Dispatch<SetStateAction<boolean>>,
     public collectionsState: Collection[],
     public toggleCollectionsState: (
-      collectionId: number,
+      collectionId: string,
       checked: boolean,
     ) => void,
   ) {}
@@ -237,6 +239,14 @@ const Menu = (props: MenuProps) => {
             useState={props.setDisplayPublicationRelations}
             offMsg=""
             disabled={!props.displayPublications}
+          />
+        </div>
+        <div className="sm:col-span-4">
+          <UIToggle
+            label="Wydarzenia historyczne"
+            state={props.displayHistoryEvents}
+            useState={props.setDisplayHistoryEvents}
+            offMsg=""
           />
         </div>
       </div>
