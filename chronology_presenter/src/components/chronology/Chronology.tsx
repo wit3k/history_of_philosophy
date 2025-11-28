@@ -127,7 +127,9 @@ const Chronology = () => {
   const [displayPublications, setDisplayPublications] = React.useState(true)
   const [displayPublicationRelations, setDisplayPublicationRelations] = React.useState(true)
   const [displayHistoryEvents, setDisplayHistoryEvents] = React.useState(true)
-  const [darkMode, setDarkMode] = React.useState(true)
+  const [darkMode, setDarkMode] = React.useState(
+    window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches,
+  )
 
   const [zoom, setZoom] = React.useState(10)
   const [pinchDelta, setPinchDelta] = React.useState(0)
@@ -278,6 +280,16 @@ const Chronology = () => {
     document.addEventListener('keydown', handleKeyDown)
     return () => {
       document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [])
+  React.useEffect(() => {
+    const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    const darkModeEventHandler = (event: any) => {
+      setDarkMode(event.matches)
+    }
+    darkModeMediaQuery.addEventListener('change', darkModeEventHandler)
+    return () => {
+      darkModeMediaQuery.removeEventListener('change', darkModeEventHandler)
     }
   }, [])
 
