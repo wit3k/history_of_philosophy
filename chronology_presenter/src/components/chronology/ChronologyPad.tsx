@@ -11,6 +11,7 @@ class ChronologyPadProps {
 }
 
 const ChronologyPad = (props: ChronologyPadProps) => {
+  const currentYear = new Date().getFullYear();
   return (
     <g>
       <rect
@@ -36,6 +37,12 @@ const ChronologyPad = (props: ChronologyPadProps) => {
           key={`yearLine` + year + i}
         />
       ))}
+      <ChronologyScaleLine
+        year={currentYear}
+        height={props.padSize.y}
+        position={props.positionByYear(currentYear)}
+        key={`yearLineL` + currentYear}
+      />
     </g>
   );
 };
