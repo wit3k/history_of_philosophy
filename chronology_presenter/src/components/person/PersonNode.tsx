@@ -28,7 +28,7 @@ const PersonNode = (props: PersonNodeProps) => {
       (
       {props.displayAuthorsTimeline && (
         <g>
-          <rect
+          {/* <rect
             x={props.positionStart + props.settings.boxSize + 5}
             y={props.rowPosition}
             rx="10"
@@ -42,14 +42,14 @@ const PersonNode = (props: PersonNodeProps) => {
               fillOpacity: '0.1',
               strokeOpacity: '1',
             }}
-          />
+          /> */}
           <line
             x1={props.positionStart + props.settings.boxSize}
             y1={props.rowPosition + props.settings.boxSize / 2}
             x2={props.positionEnd}
             y2={props.rowPosition + props.settings.boxSize / 2}
             stroke={dominantColor}
-            strokeWidth="4"
+            strokeWidth="6"
             opacity={props.highlightedAuthor == '0' || props.highlightedAuthor == props.person.id ? '1' : '0.3'}
           />
         </g>
@@ -60,8 +60,8 @@ const PersonNode = (props: PersonNodeProps) => {
           href={appBasePath + '/assets/person/' + props.person.thumbnail}
           x={props.positionStart}
           y={props.rowPosition}
-          rx={props.settings.boxSize}
-          ry={props.settings.boxSize}
+          rx={10}
+          ry={10}
           opacity={props.highlightedAuthor == '0' || props.highlightedAuthor == props.person.id ? '1' : '0.3'}
           width={props.settings.boxSize}
           height={props.settings.boxSize}
@@ -76,14 +76,14 @@ const PersonNode = (props: PersonNodeProps) => {
       <rect
         x={props.positionStart}
         y={props.rowPosition}
-        rx={props.settings.boxSize}
-        ry={props.settings.boxSize}
+        rx={5}
+        ry={5}
         width={props.settings.boxSize + 1}
         height={props.settings.boxSize + 1}
         style={{
           fill: dominantColor,
           stroke: dominantColor,
-          strokeWidth: '4',
+          strokeWidth: '1',
           fillOpacity: '0',
           strokeOpacity: props.highlightedAuthor == '0' || props.highlightedAuthor == props.person.id ? '1' : '0.3',
         }}
@@ -97,15 +97,15 @@ const PersonNode = (props: PersonNodeProps) => {
       <rect
         x={props.positionStart - 1}
         y={props.rowPosition + props.settings.boxSize + 3}
-        rx="5"
-        ry="5"
+        rx="2"
+        ry="2"
         width={Math.min(props.person.name.length * 10, props.positionEnd - props.positionStart)}
         height={22}
         style={{
           fill: dominantColor,
           stroke: dominantColor,
           strokeWidth: '0',
-          fillOpacity: props.highlightedAuthor == '0' || props.highlightedAuthor == props.person.id ? '0.3' : '0.1',
+          fillOpacity: props.highlightedAuthor == '0' || props.highlightedAuthor == props.person.id ? '1' : '0.1',
           strokeOpacity: '0',
         }}
         className="cursor-pointer"
@@ -118,7 +118,7 @@ const PersonNode = (props: PersonNodeProps) => {
         textAnchor="start"
         height="30"
         fontSize="14"
-        fill="white"
+        fill="black"
         className="cursor-pointer font-mono"
         opacity={props.highlightedAuthor == '0' || props.highlightedAuthor == props.person.id ? '1' : '0.3'}
       >

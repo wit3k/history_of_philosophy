@@ -19,7 +19,6 @@ export class HistoryEventNodeSettings {
 }
 
 const HistoryEventNode = (props: HistoryEventNodeProps) => {
-  // const appBasePath = '/history_of_philosophy';
   const tamedColor = getTamedColor(props.event.rowNumber)
   const fixedColor = getFixedColor(props.event.rowNumber)
 
@@ -28,13 +27,13 @@ const HistoryEventNode = (props: HistoryEventNodeProps) => {
       <rect
         x={props.positionStart}
         y={props.rowPosition - props.event.name.length * 8 - 20}
-        rx="2"
-        ry="2"
+        rx="4"
+        ry="4"
         width={props.positionEnd - props.positionStart + 5}
         height={20000}
         style={{
           fill: tamedColor,
-          strokeWidth: '1',
+          strokeWidth: '0',
           stroke: fixedColor,
           fillOpacity: 1.0 / (props.event.rowNumber + 1),
         }}
@@ -43,8 +42,8 @@ const HistoryEventNode = (props: HistoryEventNodeProps) => {
       <rect
         x={props.positionStart}
         y={props.rowPosition}
-        rx="2"
-        ry="2"
+        rx="0"
+        ry="0"
         width={props.positionEnd - props.positionStart + 5}
         height={props.settings.boxSize}
         style={{

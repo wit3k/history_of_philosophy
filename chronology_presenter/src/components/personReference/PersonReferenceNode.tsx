@@ -69,8 +69,8 @@ const PersonReferenceNode = (props: PersonReferenceNodeProps) => {
       <path
         d={roundPathCorners(pathPoints, 15, false)}
         stroke={colorFrom}
-        strokeOpacity={props.isHighlighted ? 0.8 : 0.4}
-        strokeWidth="1"
+        strokeOpacity={props.isHighlighted ? 1 : 1}
+        strokeWidth="2"
         fill="none"
         className={props.isHighlighted ? 'animated-bigdash' : props.highlightsOn ? 'bigdash-highlights-on' : ''}
       />

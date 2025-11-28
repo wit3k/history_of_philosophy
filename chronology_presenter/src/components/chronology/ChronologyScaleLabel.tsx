@@ -16,7 +16,7 @@ const ChronologyScaleLabel = (props: TimeScaleLabelProps) => {
         ry="5"
         width={props.yearLabelWidth}
         height="40"
-        fill={props.year % 100 ? 'rgba(11, 49, 49, 1)' : '#c58eb0ff'}
+        fill={props.year % 100 ? 'rgba(11, 49, 49, 0.5)' : 'rgba(193, 236, 236, 0.85)'}
       />
       <text
         x={props.position}

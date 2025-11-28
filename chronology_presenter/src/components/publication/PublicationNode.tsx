@@ -83,7 +83,7 @@ const PublicationNode = (props: PublicationNodeProps) => {
 
       <rect
         x={props.position - props.settings.dotSize}
-        y={props.rowPosition - props.settings.dotSize / 2}
+        y={props.rowPosition}
         rx="2"
         ry="2"
         width={props.settings.dotSize * 2}

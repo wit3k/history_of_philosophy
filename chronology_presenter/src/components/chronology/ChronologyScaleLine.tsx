@@ -14,7 +14,9 @@ const ChronologyScaleLine = (props: TimeScaleLineProps) => {
       y1="0"
       x2={props.position}
       y2={props.height}
-      stroke={props.year == currentYear ? 'white' : props.year % 100 ? 'rgba(61, 224, 224, 0.2)' : '#c58eb0ff'}
+      stroke={
+        props.year == currentYear ? 'white' : props.year % 100 ? 'rgba(61, 224, 224, 0.2)' : 'rgba(193, 236, 236, 0.85)'
+      }
       strokeWidth={props.year == currentYear ? '3' : '1'}
       strokeDasharray={props.year == currentYear ? '4 1 1 6 1 1' : ''}
     />
