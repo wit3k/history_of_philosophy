@@ -99,7 +99,7 @@ const PersonNode = (props: PersonNodeProps) => {
         y={props.rowPosition + props.settings.boxSize + 3}
         rx="5"
         ry="5"
-        width={props.person.name.length * 10}
+        width={Math.min(props.person.name.length * 10, props.positionEnd - props.positionStart)}
         height={22}
         style={{
           fill: dominantColor,
@@ -122,7 +122,9 @@ const PersonNode = (props: PersonNodeProps) => {
         className="cursor-pointer font-mono"
         opacity={props.highlightedAuthor == '0' || props.highlightedAuthor == props.person.id ? '1' : '0.3'}
       >
-        {props.person.name}
+        {props.person.name.length * 8 < props.positionEnd - props.positionStart
+          ? props.person.name
+          : props.person.name.slice(0, (props.positionEnd - props.positionStart) / 8 - 4) + '...'}
       </text>
     </g>
   )

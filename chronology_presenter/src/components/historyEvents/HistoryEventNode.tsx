@@ -27,14 +27,15 @@ const HistoryEventNode = (props: HistoryEventNodeProps) => {
     <g>
       <rect
         x={props.positionStart}
-        y={props.rowPosition - props.event.name.length * 8 - 10}
+        y={props.rowPosition - props.event.name.length * 8 - 20}
         rx="2"
         ry="2"
         width={props.positionEnd - props.positionStart + 5}
         height={20000}
         style={{
           fill: tamedColor,
-          strokeWidth: '0',
+          strokeWidth: '1',
+          stroke: fixedColor,
           fillOpacity: 1.0 / (props.event.rowNumber + 1),
         }}
       />
