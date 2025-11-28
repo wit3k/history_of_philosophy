@@ -1,8 +1,8 @@
-import axios from 'axios';
-import sharp from 'sharp';
-import * as fs from 'fs';
-import { Attitude } from '../data/dto/PersonReference';
-import Coordinates from '../geometry/Coordinates';
+import axios from 'axios'
+import sharp from 'sharp'
+import * as fs from 'fs'
+import { Attitude } from '../data/dto/PersonReference'
+import Coordinates from '../geometry/Coordinates'
 
 let tabMap: any = {
   people: { tableId: 'mx6pwcyvc2oab8l', viewId: 'vw5tn6tu17x018ii' },
@@ -12,16 +12,12 @@ let tabMap: any = {
   locations: { tableId: 'my7pr4s2kwgoesx', viewId: 'vw1sg7plf8bnr46l' },
   collections: { tableId: 'mqubv6pjfhgobsd', viewId: 'vwiqdleig055xc5b' },
   historyEvents: { tableId: 'm78tbyteswhe0sq', viewId: 'vwqfiq3o3f3kgeuk' },
-};
+}
 let getTable = async (tableName: string) =>
   await axios
     .request({
       method: 'GET',
-      url:
-        process.env.NOCO_URL +
-        '/api/v2/tables/' +
-        tabMap[tableName].tableId +
-        '/records',
+      url: process.env.NOCO_URL + '/api/v2/tables/' + tabMap[tableName].tableId + '/records',
       params: {
         offset: '0',
         limit: '1000',
@@ -32,14 +28,10 @@ let getTable = async (tableName: string) =>
         'xc-token': process.env.NOCO_TOKEN,
       },
     })
-    .then((res) => res.data)
-    .catch((err) => console.error(err));
+    .then(res => res.data)
+    .catch(err => console.error(err))
 
-let getLinkedRecords = async (
-  tableName: string,
-  link: string,
-  recordId: string,
-) =>
+let getLinkedRecords = async (tableName: string, link: string, recordId: string) =>
   await axios
     .request({
       method: 'GET',
@@ -61,19 +53,15 @@ let getLinkedRecords = async (
         'xc-token': process.env.NOCO_TOKEN,
       },
     })
-    .then((res) => res.data)
-    .catch((err) => console.error(err));
+    .then(res => res.data)
+    .catch(err => console.error(err))
 
-let downloadAndProcessImage = async (
-  imageUrl: string,
-  outputPath: string,
-  size: Coordinates,
-): Promise<void> => {
+let downloadAndProcessImage = async (imageUrl: string, outputPath: string, size: Coordinates): Promise<void> => {
   try {
     const response = await axios.get(imageUrl, {
       responseType: 'arraybuffer',
-    });
-    const imageBuffer = Buffer.from(response.data);
+    })
+    const imageBuffer = Buffer.from(response.data)
     const roundedCornerMask = Buffer.from(
       '<svg width="' +
         size.x +
@@ -84,7 +72,7 @@ let downloadAndProcessImage = async (
         '" height="' +
         size.y +
         '" rx="10" ry="10" fill="white"/></svg>',
-    );
+    )
 
     await sharp(imageBuffer)
       .resize(size.x, size.y, {
@@ -99,13 +87,13 @@ let downloadAndProcessImage = async (
       ])
       .ensureAlpha()
       .png()
-      .toFile(outputPath);
+      .toFile(outputPath)
 
-    console.log(`Image saved to: ${outputPath}`);
+    console.log(`Image saved to: ${outputPath}`)
   } catch (error) {
-    throw error;
+    throw error
   }
-};
+}
 
 let people = (await getTable('people')).list
   .filter((person: any) => person['Imię i nazwisko'])
@@ -115,48 +103,39 @@ let people = (await getTable('people')).list
         process.env.NOCO_URL + '/' + person['Zdjęcie'][0].path,
         './public/assets/person/' + person['Zdjęcie'][0].id + '.png',
         new Coordinates(50, 50),
-      );
+      )
       downloadAndProcessImage(
         process.env.NOCO_URL + '/' + person['Zdjęcie'][0].path,
         './public/assets/person_big/' + person['Zdjęcie'][0].id + '.png',
         new Coordinates(200, 300),
-      );
+      )
     }
     return {
       id: person.Id + '',
       name: person['Imię i nazwisko'],
       born: person['Urodzony']
-        ? (person['Urodzony']?.slice(0, 1) == '3'
-            ? person['Urodzony']?.slice(2, 4)
-            : person['Urodzony']?.slice(0, 4)) *
+        ? (person['Urodzony']?.slice(0, 1) == '3' ? person['Urodzony']?.slice(2, 4) : person['Urodzony']?.slice(0, 4)) *
           (person['Urodzony Era'] == 'N.E.' ? 1 : -1)
         : undefined,
       stillAlive: person['Nadal żyje'],
       died: person['Zmarł']
-        ? (person['Zmarł']?.slice(0, 1) == '3'
-            ? person['Zmarł']?.slice(2, 4)
-            : person['Zmarł']?.slice(0, 4)) *
+        ? (person['Zmarł']?.slice(0, 1) == '3' ? person['Zmarł']?.slice(2, 4) : person['Zmarł']?.slice(0, 4)) *
           (person['Zmarł Era'] == 'N.E.' ? 1 : -1)
         : undefined,
       bornLocation: person['Urodzony w'] ? person['Urodzony w'].Id : null,
       diedLocation: person['Zmarł w'] ? person['Zmarł w'].Id : null,
-      nationality: person['Narodowości']
-        ? person['Narodowości'].split(',')[0]
-        : null,
+      nationality: person['Narodowości'] ? person['Narodowości'].split(',')[0] : null,
       // rowNumber: person['Wiersz'] ? person['Wiersz'] * 1 : i + 1,
-      thumbnail:
-        person['Zdjęcie'] != null && person['Zdjęcie'][0] != null
-          ? person['Zdjęcie'][0].id + '.png'
-          : null,
+      thumbnail: person['Zdjęcie'] != null && person['Zdjęcie'][0] != null ? person['Zdjęcie'][0].id + '.png' : null,
       category: person['Kategoria'],
-    };
-  });
+    }
+  })
 
 fs.writeFileSync(
   './src/data/imported/PeopleListRaw.tsx',
   'export const PeopleListRaw = ' + JSON.stringify(people),
   'utf8',
-);
+)
 
 let peopleReference = (
   await Promise.all(
@@ -166,11 +145,7 @@ let peopleReference = (
       .filter((pr: any) => pr['Słowny opis'])
       .map(
         async (sideA: any, i: number) =>
-          await getLinkedRecords(
-            'peopleReference',
-            'c5chrrav0rvti4l',
-            sideA.Id,
-          ).then((sideB) => ({ sideA, sideB })),
+          await getLinkedRecords('peopleReference', 'c5chrrav0rvti4l', sideA.Id).then(sideB => ({ sideA, sideB })),
       ),
   )
 ).flatMap(({ sideA, sideB }) =>
@@ -186,13 +161,13 @@ let peopleReference = (
     from: sideA['Osoba A'].Id + '',
     to: sB.Id + '',
   })),
-);
+)
 
 fs.writeFileSync(
   './src/data/imported/PersonReferenceListRaw.tsx',
   'export const PersonReferenceListRaw = ' + JSON.stringify(peopleReference),
   'utf8',
-);
+)
 
 let publications = (
   await Promise.all(
@@ -206,13 +181,9 @@ let publications = (
             process.env.NOCO_URL + '/' + book['Okładka'][0].path,
             './public/assets/publication/' + book['Okładka'][0].id + '.png',
             new Coordinates(500, 700),
-          );
+          )
         }
-        return await getLinkedRecords(
-          'publications',
-          'c5yt6jo8jpe04bk',
-          book.Id,
-        ).then((authors) => ({ book, authors }));
+        return await getLinkedRecords('publications', 'c5yt6jo8jpe04bk', book.Id).then(authors => ({ book, authors }))
       }),
   )
 ).flatMap(({ book, authors }) =>
@@ -220,38 +191,34 @@ let publications = (
     id: book.Id + '',
     title: book['Tytuł'],
     publicationDate: book['Rok wydania'].slice(0, 4) * 1,
-    publicationLocation:
-      book['Miejsce wydania'] != undefined ? book['Miejsce wydania'].Id : -1,
+    publicationLocation: book['Miejsce wydania'] != undefined ? book['Miejsce wydania'].Id : -1,
     authorId: author.Id + '',
     isbn: book['ISBN'],
     description: book['Opis'],
-    thumbnail:
-      book['Okładka'] != undefined ? book['Okładka'][0].id + '.png' : '',
+    thumbnail: book['Okładka'] != undefined ? book['Okładka'][0].id + '.png' : '',
   })),
-);
+)
 
 fs.writeFileSync(
   './src/data/imported/PublicationsListRaw.tsx',
   'export const PublicationsListRaw = ' + JSON.stringify(publications),
   'utf8',
-);
+)
 
 let quotes = (await getTable('quotes')).list
-  .filter(
-    (quote: any) => quote['Nagłówek'] && quote['Nawiązanie do publikacji'],
-  )
+  .filter((quote: any) => quote['Nagłówek'] && quote['Nawiązanie do publikacji'])
   .map((quote: any, i: number) => ({
     id: quote.Id,
     name: quote['Nagłówek'],
     from: quote['Publikacja'].Id,
     to: quote['Nawiązanie do publikacji'].Id,
-  }));
+  }))
 
 fs.writeFileSync(
   './src/data/imported/PublicationReferenceListRaw.tsx',
   'export const PublicationReferenceListRaw = ' + JSON.stringify(quotes),
   'utf8',
-);
+)
 
 let locations = (await getTable('locations')).list
   .filter((location: any) => location['Nazwa'] && location['Koordynaty'])
@@ -261,88 +228,65 @@ let locations = (await getTable('locations')).list
         process.env.NOCO_URL + '/' + location['Zdjęcie'][0].path,
         './public/assets/location/' + location['Zdjęcie'][0].id + '.png',
         new Coordinates(480, 200),
-      );
+      )
     }
     return {
       id: location.Id,
       name: location['Nazwa'],
       coordinates: location['Koordynaty'],
-      thumbnail:
-        location['Zdjęcie'] != undefined
-          ? location['Zdjęcie'][0].id + '.png'
-          : '',
-    };
-  });
+      thumbnail: location['Zdjęcie'] != undefined ? location['Zdjęcie'][0].id + '.png' : '',
+    }
+  })
 
 fs.writeFileSync(
   './src/data/imported/LocationListRaw.tsx',
   'export const LocationListRaw = ' + JSON.stringify(locations),
   'utf8',
-);
+)
 
 let collections = (await getTable('collections')).list
-  .filter(
-    (collection: any) =>
-      collection['Pokaż w menu'] &&
-      collection['_nc_m2m_Kolekcje_Osobies'].length > 0,
-  )
+  .filter((collection: any) => collection['Pokaż w menu'] && collection['_nc_m2m_Kolekcje_Osobies'].length > 0)
   .map((collection: any, i: number) => {
     return {
       id: collection['Id'],
       name: collection['Title'],
-      includedPeople: collection['_nc_m2m_Kolekcje_Osobies'].map(
-        (o: any) => o['Osoby_id'],
+      includedPeople: collection['_nc_m2m_Kolekcje_Osobies'].map((o: any) => o['Osoby_id']),
+      includedLocations: collection['_nc_m2m_Kolekcje_Lokacjes'].map((o: any) => o['Lokacje_id']),
+      includedEvents: collection['_nc_m2m_Kolekcje_Wydarzenia'].map((o: any) => o['Wydarzenia_id']),
+      includedPublications: collection['_nc_m2m_Kolekcje_Publikacjes'].map((o: any) => o['Publikacje_id']),
+      includedReferences: collection['_nc_m2m_Kolekcje_Odniesienia'].map((o: any) => o['Odniesienia_id']),
+      includedPeopleRelations: collection['_nc_m2m_Kolekcje_Relacje międzyls'].map(
+        (o: any) => o['Relacje międzyludzkie_id'],
       ),
-      includedLocations: collection['_nc_m2m_Kolekcje_Lokacjes'].map(
-        (o: any) => o['Lokacje_id'],
-      ),
-      includedEvents: collection['_nc_m2m_Kolekcje_Wydarzenia'].map(
-        (o: any) => o['Wydarzenia_id'],
-      ),
-      includedPublications: collection['_nc_m2m_Kolekcje_Publikacjes'].map(
-        (o: any) => o['Publikacje_id'],
-      ),
-      includedReferences: collection['_nc_m2m_Kolekcje_Odniesienia'].map(
-        (o: any) => o['Odniesienia_id'],
-      ),
-      includedPeopleRelations: collection[
-        '_nc_m2m_Kolekcje_Relacje międzyls'
-      ].map((o: any) => o['Relacje międzyludzkie_id']),
-    };
-  });
+    }
+  })
 
 fs.writeFileSync(
   './src/data/imported/CollectionsListRaw.tsx',
   'export const CollectionsListRaw = ' + JSON.stringify(collections),
   'utf8',
-);
+)
 
 let historyEvents = (await getTable('historyEvents')).list
   .filter(
     (event: any) =>
-      event['Rodzaj wydarzenia'] == 'Historia świata' &&
-      event['Data od'] != undefined &&
-      event['Data do'] != undefined,
+      event['Rodzaj wydarzenia'] == 'Historia świata' && event['Data od'] != undefined && event['Data do'] != undefined,
   )
   .map((event: any, i: number) => ({
     id: event.Id,
     name: event['Tytuł'],
     yearFrom: event['Data od']
-      ? (event['Data od']?.slice(0, 1) == '3'
-          ? event['Data od']?.slice(2, 4)
-          : event['Data od']?.slice(0, 4)) *
+      ? (event['Data od']?.slice(0, 1) == '3' ? event['Data od']?.slice(2, 4) : event['Data od']?.slice(0, 4)) *
         (event['Data od Era'] == 'N.E.' ? 1 : -1)
       : undefined,
     yearTo: event['Data do']
-      ? (event['Data do']?.slice(0, 1) == '3'
-          ? event['Data do']?.slice(2, 4)
-          : event['Data do']?.slice(0, 4)) *
+      ? (event['Data do']?.slice(0, 1) == '3' ? event['Data do']?.slice(2, 4) : event['Data do']?.slice(0, 4)) *
         (event['Data do Era'] == 'N.E.' ? 1 : -1)
       : undefined,
-  }));
+  }))
 
 fs.writeFileSync(
   './src/data/imported/HistoryEventsListRaw.tsx',
   'export const HistoryEventsListRaw = ' + JSON.stringify(historyEvents),
   'utf8',
-);
+)

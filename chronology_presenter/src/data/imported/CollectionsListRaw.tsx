@@ -69,4 +69,4 @@ export const CollectionsListRaw = [
     includedReferences: [],
     includedPeopleRelations: [],
   },
-];
+]

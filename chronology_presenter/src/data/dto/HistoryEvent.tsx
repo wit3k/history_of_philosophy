@@ -8,4 +8,4 @@ class HistoryEvent {
   ) {}
 }
 
-export default HistoryEvent;
+export default HistoryEvent

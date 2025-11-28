@@ -1,5 +1,5 @@
-import type HistoryEvent from '../../data/dto/HistoryEvent';
-import { getTamedColor, getFixedColor } from '../../services/Colors';
+import type HistoryEvent from '../../data/dto/HistoryEvent'
+import { getTamedColor, getFixedColor } from '../../services/Colors'
 
 class HistoryEventNodeProps {
   constructor(
@@ -20,8 +20,8 @@ export class HistoryEventNodeSettings {
 
 const HistoryEventNode = (props: HistoryEventNodeProps) => {
   // const appBasePath = '/history_of_philosophy';
-  const tamedColor = getTamedColor(props.event.rowNumber);
-  const fixedColor = getFixedColor(props.event.rowNumber);
+  const tamedColor = getTamedColor(props.event.rowNumber)
+  const fixedColor = getFixedColor(props.event.rowNumber)
 
   return (
     <g>
@@ -71,7 +71,7 @@ const HistoryEventNode = (props: HistoryEventNodeProps) => {
         {props.event.name}
       </text>
     </g>
-  );
-};
+  )
+}
 
-export default HistoryEventNode;
+export default HistoryEventNode

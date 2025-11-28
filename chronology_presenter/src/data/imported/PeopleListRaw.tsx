@@ -1267,4 +1267,4 @@ export const PeopleListRaw = [
     thumbnail: 'atcfnf5akt3fo03j.png',
     category: null,
   },
-];
+]

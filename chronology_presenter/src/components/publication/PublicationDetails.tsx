@@ -1,8 +1,8 @@
-import type Publication from '../../data/dto/Publication';
-import type Person from '../../data/dto/Person';
-import Modal from '../ui/Modal';
-import React from 'react';
-import type Location from '../../data/dto/Location';
+import type Publication from '../../data/dto/Publication'
+import type Person from '../../data/dto/Person'
+import Modal from '../ui/Modal'
+import React from 'react'
+import type Location from '../../data/dto/Location'
 
 class PublicationDetailsProps {
   constructor(
@@ -17,20 +17,13 @@ class PublicationDetailsProps {
 }
 
 const PublicationDetails = (props: PublicationDetailsProps) => {
-  const appBasePath = '/history_of_philosophy/';
-  const locations = props.locationsList.find(
-    (l) => l.id == props.currentPublication.publicationLocation + '',
-  );
+  const appBasePath = '/history_of_philosophy/'
+  const locations = props.locationsList.find(l => l.id == props.currentPublication.publicationLocation + '')
 
   return (
-    <Modal
-      displayModal={props.displayModal}
-      setDisplayModal={props.setDisplayModal}
-    >
+    <Modal displayModal={props.displayModal} setDisplayModal={props.setDisplayModal}>
       <div>
-        <div className="text-3xl text-white italic p-5">
-          &bdquo;{props.currentPublication.title}&rdquo;
-        </div>
+        <div className="text-3xl text-white italic p-5">&bdquo;{props.currentPublication.title}&rdquo;</div>
         <div className="p-5">
           <span
             onClick={() => props.authorCallback(props.currentAuthor.id)}
@@ -44,26 +37,17 @@ const PublicationDetails = (props: PublicationDetailsProps) => {
               ,
               <span
                 className="text-pink-700 underline cursor-pointer"
-                onClick={() =>
-                  props.locationCallback(
-                    props.currentPublication.publicationLocation + '',
-                  )
-                }
+                onClick={() => props.locationCallback(props.currentPublication.publicationLocation + '')}
               >
                 {locations?.name}
               </span>
             </span>
           )}
-          {props.currentPublication.isbn &&
-            ', ' + props.currentPublication.isbn}
+          {props.currentPublication.isbn && ', ' + props.currentPublication.isbn}
         </div>
         {props.currentPublication.thumbnail && (
           <img
-            src={
-              appBasePath +
-              '/assets/publication/' +
-              props.currentPublication.thumbnail
-            }
+            src={appBasePath + '/assets/publication/' + props.currentPublication.thumbnail}
             width={500}
             height={700}
             className="pt-5"
@@ -71,7 +55,7 @@ const PublicationDetails = (props: PublicationDetailsProps) => {
         )}
       </div>
     </Modal>
-  );
-};
+  )
+}
 
-export default PublicationDetails;
+export default PublicationDetails

@@ -1,8 +1,8 @@
-import Collection from '../dto/Collection';
-import { CollectionsListRaw } from '../imported/CollectionsListRaw';
+import Collection from '../dto/Collection'
+import { CollectionsListRaw } from '../imported/CollectionsListRaw'
 
 const CollectionsList = CollectionsListRaw.map(
-  (c) =>
+  c =>
     new Collection(
       c.id + '',
       c.name,
@@ -14,13 +14,10 @@ const CollectionsList = CollectionsListRaw.map(
       c.includedPeopleRelations,
       true,
     ),
-).sort((p1, p2) => p1.name.localeCompare(p2.name));
+).sort((p1, p2) => p1.name.localeCompare(p2.name))
 
 const CollectionsListService = {
-  getAll: () =>
-    [
-      new Collection('0', ':: Nieprzypisane ::', [], [], [], [], [], [], true),
-    ].concat(CollectionsList),
-};
+  getAll: () => [new Collection('0', ':: Nieprzypisane ::', [], [], [], [], [], [], true)].concat(CollectionsList),
+}
 
-export default CollectionsListService;
+export default CollectionsListService

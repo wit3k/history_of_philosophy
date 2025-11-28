@@ -1,8 +1,8 @@
-import Modal from '../ui/Modal';
-import Location from '../../data/dto/Location';
-import PublicationsListService from '../../data/db/PublicationsListService';
-import PeopleListService from '../../data/db/PeopleListService';
-import Person from '../../data/dto/Person';
+import Modal from '../ui/Modal'
+import Location from '../../data/dto/Location'
+import PublicationsListService from '../../data/db/PublicationsListService'
+import PeopleListService from '../../data/db/PeopleListService'
+import Person from '../../data/dto/Person'
 
 class LocationDetailsProps {
   constructor(
@@ -16,44 +16,37 @@ class LocationDetailsProps {
 }
 
 const LocationDetails = (props: LocationDetailsProps) => {
-  const appBasePath = '/history_of_philosophy/';
+  const appBasePath = '/history_of_philosophy/'
 
-  const allPublications = PublicationsListService.getAllByLocationId(
-    props.currentLocation.id,
-  ).map((p) => ({
+  const allPublications = PublicationsListService.getAllByLocationId(props.currentLocation.id).map(p => ({
     date: p.publicationDate,
     publication: p,
     personBorn: undefined,
     personDied: undefined,
-  }));
+  }))
 
-  const allPeople = PeopleListService.getAll();
+  const allPeople = PeopleListService.getAll()
   const allBirths = allPeople
-    .filter((p) => p.bornLocation == props.currentLocation.id)
-    .map((person) => ({
+    .filter(p => p.bornLocation == props.currentLocation.id)
+    .map(person => ({
       date: person.born,
       publication: undefined,
       personBorn: person,
       personDied: undefined,
-    }));
+    }))
   const allDeaths = allPeople
-    .filter((p) => p.diedLocation == props.currentLocation.id)
-    .map((person) => ({
+    .filter(p => p.diedLocation == props.currentLocation.id)
+    .map(person => ({
       date: person.died,
       publication: undefined,
       personBorn: undefined,
       personDied: person,
-    }));
+    }))
 
-  const historyComplete = [...allPublications, ...allBirths, ...allDeaths].sort(
-    (p1, p2) => p1.date - p2.date,
-  );
+  const historyComplete = [...allPublications, ...allBirths, ...allDeaths].sort((p1, p2) => p1.date - p2.date)
 
   return (
-    <Modal
-      displayModal={props.displayModal}
-      setDisplayModal={props.setDisplayModal}
-    >
+    <Modal displayModal={props.displayModal} setDisplayModal={props.setDisplayModal}>
       <div>
         <div className="text-3xl text-white p-5 ">
           <a
@@ -89,11 +82,7 @@ const LocationDetails = (props: LocationDetailsProps) => {
         <div className="p-5 pt-0 italic">
           {props.currentLocation.picture && (
             <img
-              src={
-                appBasePath +
-                '/assets/location/' +
-                props.currentLocation.picture
-              }
+              src={appBasePath + '/assets/location/' + props.currentLocation.picture}
               width={480}
               height={200}
               className="pr-5 float-left"
@@ -102,8 +91,8 @@ const LocationDetails = (props: LocationDetailsProps) => {
         </div>
         <div className="flex w-full flex-col items-start p-5 pt-10 pb-0">
           {historyComplete.map((historyItem, i) => {
-            let icon = null;
-            let content = null;
+            let icon = null
+            let content = null
 
             if (historyItem.publication) {
               icon = (
@@ -123,20 +112,13 @@ const LocationDetails = (props: LocationDetailsProps) => {
                     />
                   </svg>
                 </span>
-              );
-              let author = props.peopleList.find(
-                (p) => p.id == historyItem.publication.authorId,
-              );
+              )
+              let author = props.peopleList.find(p => p.id == historyItem.publication.authorId)
               content = (
                 <small className="mt-2 font-sans text-sm text-slate-300 antialiased">
-                  <span className="text-slate-100 -ml-3">
-                    {historyItem.date}
-                  </span>{' '}
-                  -{' '}
+                  <span className="text-slate-100 -ml-3">{historyItem.date}</span> -{' '}
                   <span
-                    onClick={() =>
-                      props.publicationCallback(historyItem.publication.id)
-                    }
+                    onClick={() => props.publicationCallback(historyItem.publication.id)}
                     className="italic hover:text-pink-700 underline cursor-pointer"
                   >
                     &bdquo;{historyItem.publication.title}&rdquo;
@@ -147,10 +129,9 @@ const LocationDetails = (props: LocationDetailsProps) => {
                   >
                     {author?.name}
                   </span>
-                  {historyItem.publication.isbn &&
-                    ' / ' + historyItem.publication.isbn}
+                  {historyItem.publication.isbn && ' / ' + historyItem.publication.isbn}
                 </small>
-              );
+              )
             } else if (historyItem.personBorn) {
               icon = (
                 <span className="relative z-10 grid h-8 w-8 place-items-center rounded-full bg-slate-400 text-green-800">
@@ -171,23 +152,18 @@ const LocationDetails = (props: LocationDetailsProps) => {
                     />
                   </svg>
                 </span>
-              );
+              )
               content = (
                 <small className="mt-2 font-sans text-sm text-slate-300 antialiased">
-                  <span className="text-slate-100 -ml-3">
-                    {historyItem.date}
-                  </span>{' '}
-                  - Urodził się:{' '}
+                  <span className="text-slate-100 -ml-3">{historyItem.date}</span> - Urodził się:{' '}
                   <span
                     className="font-black hover:text-pink-700 hover:underline cursor-pointer"
-                    onClick={() =>
-                      props.authorCallback(historyItem.personBorn.id)
-                    }
+                    onClick={() => props.authorCallback(historyItem.personBorn.id)}
                   >
                     {historyItem.personBorn.name}
                   </span>{' '}
                 </small>
-              );
+              )
             } else if (historyItem.personDied) {
               icon = (
                 <span className="relative z-10 grid h-8 w-8 place-items-center rounded-full bg-slate-400 text-red-800">
@@ -208,26 +184,21 @@ const LocationDetails = (props: LocationDetailsProps) => {
                     />
                   </svg>
                 </span>
-              );
+              )
               content = (
                 <small className="mt-2 font-sans text-sm text-slate-300 antialiased">
-                  <span className="text-slate-100 -ml-3">
-                    {historyItem.date}
-                  </span>{' '}
-                  - Zmarł:{' '}
+                  <span className="text-slate-100 -ml-3">{historyItem.date}</span> - Zmarł:{' '}
                   <span
                     className="font-black hover:text-pink-700 hover:underline cursor-pointer"
-                    onClick={() =>
-                      props.authorCallback(historyItem.personDied.id)
-                    }
+                    onClick={() => props.authorCallback(historyItem.personDied.id)}
                   >
                     {historyItem.personDied.name}
                   </span>
                 </small>
-              );
+              )
             }
 
-            if (!icon || !content) return null;
+            if (!icon || !content) return null
 
             return (
               <div className="group flex gap-x-6" key={i}>
@@ -239,12 +210,12 @@ const LocationDetails = (props: LocationDetailsProps) => {
                 </div>
                 <div className="translate-y-0.5 pb-8 ">{content}</div>
               </div>
-            );
+            )
           })}
         </div>
       </div>
     </Modal>
-  );
-};
+  )
+}
 
-export default LocationDetails;
+export default LocationDetails

@@ -1,4 +1,4 @@
-import type Coordinates from '../../geometry/Coordinates';
+import type Coordinates from '../../geometry/Coordinates'
 
 class Location {
   constructor(
@@ -9,4 +9,4 @@ class Location {
   ) {}
 }
 
-export default Location;
+export default Location

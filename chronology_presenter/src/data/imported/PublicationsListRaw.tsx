@@ -31,8 +31,7 @@ export const PublicationsListRaw = [
   },
   {
     id: '12',
-    title:
-      'Disquisitio metaphysica. seu, Dubitationes et instantiæ adversus Renati Cartesii Metaphysicam, & responsa',
+    title: 'Disquisitio metaphysica. seu, Dubitationes et instantiæ adversus Renati Cartesii Metaphysicam, & responsa',
     publicationDate: 1644,
     publicationLocation: 10,
     authorId: '20',
@@ -110,4 +109,4 @@ export const PublicationsListRaw = [
     description: null,
     thumbnail: 'atd0g01ylju16r2c.png',
   },
-];
+]

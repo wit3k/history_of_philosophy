@@ -1,5 +1,5 @@
-import type Coordinates from '../../geometry/Coordinates';
-import ChronologyScaleLine from './ChronologyScaleLine';
+import type Coordinates from '../../geometry/Coordinates'
+import ChronologyScaleLine from './ChronologyScaleLine'
 class ChronologyPadProps {
   constructor(
     public padSize: Coordinates,
@@ -11,7 +11,7 @@ class ChronologyPadProps {
 }
 
 const ChronologyPad = (props: ChronologyPadProps) => {
-  const currentYear = new Date().getFullYear();
+  const currentYear = new Date().getFullYear()
   return (
     <g>
       <rect
@@ -44,7 +44,7 @@ const ChronologyPad = (props: ChronologyPadProps) => {
         key={`yearLineL` + currentYear}
       />
     </g>
-  );
-};
+  )
+}
 
-export default ChronologyPad;
+export default ChronologyPad

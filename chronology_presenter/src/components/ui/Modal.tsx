@@ -1,4 +1,4 @@
-import type { JSX } from 'react';
+import type { JSX } from 'react'
 
 class ModalProps {
   constructor(
@@ -12,8 +12,7 @@ const Modal: React.FC<ModalProps> = (props: ModalProps) => (
   <div
     onClick={() => props.setDisplayModal(false)}
     className={
-      'fixed inset-0 bg-gray-900/50 backdrop-blur-xs backdrop-brightness-200 ' +
-      (props.displayModal ? '' : ' hidden')
+      'fixed inset-0 bg-gray-900/50 backdrop-blur-xs backdrop-brightness-200 ' + (props.displayModal ? '' : ' hidden')
     }
   >
     <div className="flex items-center  justify-center h-screen overflow-y-scroll">
@@ -22,8 +21,8 @@ const Modal: React.FC<ModalProps> = (props: ModalProps) => (
           background: 'rgba(8, 8, 11, 1)',
         }}
         className="drop-shadow-xl drop-shadow-cyan-500/50 rounded-lg w-[500px] border-r-20 border-pink-700 h-fit m-auto"
-        onClick={(e) => {
-          e.stopPropagation();
+        onClick={e => {
+          e.stopPropagation()
         }}
       >
         <button
@@ -38,6 +37,6 @@ const Modal: React.FC<ModalProps> = (props: ModalProps) => (
       </div>
     </div>
   </div>
-);
+)
 
-export default Modal;
+export default Modal

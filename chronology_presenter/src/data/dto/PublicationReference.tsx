@@ -7,4 +7,4 @@ class PublicationReference {
   ) {}
 }
 
-export default PublicationReference;
+export default PublicationReference

@@ -33,7 +33,7 @@ const ChronologyScaleLabel = (props: TimeScaleLabelProps) => {
         {props.year}
       </text>
     </g>
-  );
-};
+  )
+}
 
-export default ChronologyScaleLabel;
+export default ChronologyScaleLabel

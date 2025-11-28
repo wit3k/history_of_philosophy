@@ -1,8 +1,8 @@
-import type Person from '../../data/dto/Person';
-import Modal from '../ui/Modal';
-import React from 'react';
-import PublicationsListService from '../../data/db/PublicationsListService';
-import LocationListService from '../../data/db/LocationListService';
+import type Person from '../../data/dto/Person'
+import Modal from '../ui/Modal'
+import React from 'react'
+import PublicationsListService from '../../data/db/PublicationsListService'
+import LocationListService from '../../data/db/LocationListService'
 
 class PersonDetailsProps {
   constructor(
@@ -15,36 +15,23 @@ class PersonDetailsProps {
 }
 
 const PersonDetails = (props: PersonDetailsProps) => {
-  const appBasePath = '/history_of_philosophy/';
+  const appBasePath = '/history_of_philosophy/'
 
-  const allPublications = PublicationsListService.getAllByAuthor(
-    props.currentPerson.id,
-  ).map((p) => ({
+  const allPublications = PublicationsListService.getAllByAuthor(props.currentPerson.id).map(p => ({
     date: p.publicationDate,
     publication: p,
-  }));
+  }))
 
-  const historyComplete = [...allPublications].sort(
-    (p1, p2) => p1.date - p2.date,
-  );
+  const historyComplete = [...allPublications].sort((p1, p2) => p1.date - p2.date)
 
   return (
-    <Modal
-      displayModal={props.displayModal}
-      setDisplayModal={props.setDisplayModal}
-    >
+    <Modal displayModal={props.displayModal} setDisplayModal={props.setDisplayModal}>
       <div>
-        <div className="text-3xl text-white italic p-5 pb-0">
-          {props.currentPerson.name}
-        </div>
+        <div className="text-3xl text-white italic p-5 pb-0">{props.currentPerson.name}</div>
         <div className="p-5">
           {props.currentPerson.thumbnail && (
             <img
-              src={
-                appBasePath +
-                '/assets/person_big/' +
-                props.currentPerson.thumbnail
-              }
+              src={appBasePath + '/assets/person_big/' + props.currentPerson.thumbnail}
               width={200}
               height={300}
               className="pr-5 pt-0 float-left"
@@ -53,14 +40,9 @@ const PersonDetails = (props: PersonDetailsProps) => {
           Urodzony: {props.currentPerson.born} -{' '}
           <span
             className="hover:text-pink-700 underline cursor-pointer"
-            onClick={() =>
-              props.locationCallback(props.currentPerson.bornLocation)
-            }
+            onClick={() => props.locationCallback(props.currentPerson.bornLocation)}
           >
-            {
-              LocationListService.getById(props.currentPerson.bornLocation)
-                ?.name
-            }
+            {LocationListService.getById(props.currentPerson.bornLocation)?.name}
           </span>{' '}
           <br />
           {props.currentPerson.stillAlive ? (
@@ -70,14 +52,9 @@ const PersonDetails = (props: PersonDetailsProps) => {
               Zmarł: {props.currentPerson.died} -{' '}
               <span
                 className="hover:text-pink-700 underline cursor-pointer"
-                onClick={() =>
-                  props.locationCallback(props.currentPerson.diedLocation)
-                }
+                onClick={() => props.locationCallback(props.currentPerson.diedLocation)}
               >
-                {
-                  LocationListService.getById(props.currentPerson.diedLocation)
-                    ?.name
-                }
+                {LocationListService.getById(props.currentPerson.diedLocation)?.name}
               </span>
             </span>
           )}
@@ -88,8 +65,8 @@ const PersonDetails = (props: PersonDetailsProps) => {
         </div>
         <div className="flex w-full flex-col items-start p-5 pt-10 pb-0">
           {historyComplete.map((historyItem, i) => {
-            let icon = null;
-            let content = null;
+            let icon = null
+            let content = null
 
             if (historyItem.publication) {
               icon = (
@@ -109,17 +86,12 @@ const PersonDetails = (props: PersonDetailsProps) => {
                     />
                   </svg>
                 </span>
-              );
+              )
               content = (
                 <small className="mt-2 font-sans text-sm text-slate-300 antialiased">
-                  <span className="text-slate-100 -ml-3">
-                    {historyItem.date}
-                  </span>{' '}
-                  -{' '}
+                  <span className="text-slate-100 -ml-3">{historyItem.date}</span> -{' '}
                   <span
-                    onClick={() =>
-                      props.publicationCallback(historyItem.publication.id)
-                    }
+                    onClick={() => props.publicationCallback(historyItem.publication.id)}
                     className="italic hover:text-pink-700 underline cursor-pointer"
                   >
                     &bdquo;{historyItem.publication.title}&rdquo;
@@ -127,23 +99,18 @@ const PersonDetails = (props: PersonDetailsProps) => {
                   {' / '}
                   {historyItem.publication?.publicationLocation && (
                     <span
-                      onClick={() =>
-                        props.locationCallback(
-                          historyItem.publication.publicationLocation!.id,
-                        )
-                      }
+                      onClick={() => props.locationCallback(historyItem.publication.publicationLocation!.id)}
                       className="text-slate-100 hover:text-pink-700 underline cursor-pointer"
                     >
                       {historyItem.publication?.publicationLocation.name}
                     </span>
                   )}
-                  {historyItem.publication.isbn &&
-                    ' / ' + historyItem.publication.isbn}
+                  {historyItem.publication.isbn && ' / ' + historyItem.publication.isbn}
                 </small>
-              );
+              )
             }
 
-            if (!icon || !content) return null;
+            if (!icon || !content) return null
 
             return (
               <div className="group flex gap-x-6" key={i}>
@@ -155,12 +122,12 @@ const PersonDetails = (props: PersonDetailsProps) => {
                 </div>
                 <div className="translate-y-0.5 pb-8 ">{content}</div>
               </div>
-            );
+            )
           })}
         </div>
       </div>
     </Modal>
-  );
-};
+  )
+}
 
-export default PersonDetails;
+export default PersonDetails

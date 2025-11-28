@@ -1,5 +1,5 @@
-import { useId } from 'react';
-import './Toggle.sass';
+import { useId } from 'react'
+import './Toggle.sass'
 
 class UIToggleProps<S> {
   constructor(
@@ -12,21 +12,16 @@ class UIToggleProps<S> {
 }
 
 const UIToggle = (props: UIToggleProps<boolean>) => {
-  const id = useId();
+  const id = useId()
   return (
-    <div
-      className={
-        ' neumorphism-toggle cursor-pointer ' +
-        (!props.disabled ? '' : ' switchDisabled')
-      }
-    >
+    <div className={' neumorphism-toggle cursor-pointer ' + (!props.disabled ? '' : ' switchDisabled')}>
       <input
         type="checkbox"
         id={id}
         checked={props.state}
-        onChange={(e) => {
+        onChange={e => {
           if (!props.disabled) {
-            props.useState(e.target.checked);
+            props.useState(e.target.checked)
           }
         }}
       />
@@ -38,7 +33,7 @@ const UIToggle = (props: UIToggleProps<boolean>) => {
       </label>
       <span>{props.offMsg}</span>
     </div>
-  );
-};
+  )
+}
 
-export default UIToggle;
+export default UIToggle

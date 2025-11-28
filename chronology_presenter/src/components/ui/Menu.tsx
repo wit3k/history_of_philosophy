@@ -1,8 +1,8 @@
-import UIToggle from './Toggle';
-import React from 'react';
-import { type Dispatch, type SetStateAction } from 'react';
-import './Menu.sass';
-import Collection from '../../data/dto/Collection';
+import UIToggle from './Toggle'
+import React from 'react'
+import { type Dispatch, type SetStateAction } from 'react'
+import './Menu.sass'
+import Collection from '../../data/dto/Collection'
 
 class MenuProps {
   constructor(
@@ -19,22 +19,18 @@ class MenuProps {
     public displayHistoryEvents: boolean,
     public setDisplayHistoryEvents: Dispatch<SetStateAction<boolean>>,
     public collectionsState: Collection[],
-    public toggleCollectionsState: (
-      collectionId: string,
-      checked: boolean,
-    ) => void,
+    public toggleCollectionsState: (collectionId: string, checked: boolean) => void,
   ) {}
 }
 
 const Menu = (props: MenuProps) => {
-  const [settingsVisible, setSettingsVisible] = React.useState(false);
-  const [filtersVisible, setFiltersVisible] = React.useState(false);
+  const [settingsVisible, setSettingsVisible] = React.useState(false)
+  const [filtersVisible, setFiltersVisible] = React.useState(false)
   return (
     <div>
       <div
         className={
-          'sidebar fixed top-0 bottom-0 lg:left-0  p-2  ' +
-          (settingsVisible || filtersVisible ? 'hidden' : '')
+          'sidebar fixed top-0 bottom-0 lg:left-0  p-2  ' + (settingsVisible || filtersVisible ? 'hidden' : '')
         }
       >
         <div className="text-gray-100 text-xl">
@@ -66,8 +62,7 @@ const Menu = (props: MenuProps) => {
       </div>
       <div
         className={
-          'sidebar fixed top-0 bottom-0 lg:left-15  p-2  ' +
-          (settingsVisible || filtersVisible ? 'hidden' : '')
+          'sidebar fixed top-0 bottom-0 lg:left-15  p-2  ' + (settingsVisible || filtersVisible ? 'hidden' : '')
         }
       >
         <div className="text-gray-100 text-xl">
@@ -131,27 +126,21 @@ const Menu = (props: MenuProps) => {
               </svg>
             </i>
 
-            <h1 className="text-[15px]  ml-3 text-xl text-gray-200 font-bold">
-              Filtry
-            </h1>
+            <h1 className="text-[15px]  ml-3 text-xl text-gray-200 font-bold">Filtry</h1>
             {/* <i className="bi bi-x ml-20 cursor-pointer lg:hidden"></i> */}
           </div>
 
           <hr className="my-2 text-gray-600"></hr>
 
           <div className="scrollable-area">
-            <h1 className="text-[15px]  ml-3 text-xl text-gray-200 font-bold">
-              Widoczne kolekcje
-            </h1>
+            <h1 className="text-[15px]  ml-3 text-xl text-gray-200 font-bold">Widoczne kolekcje</h1>
 
             {props.collectionsState.map((collection: Collection, i: number) => (
               <UIToggle
                 key={'collection' + collection.id + i}
                 label={collection.name}
                 state={collection.isActive}
-                useState={(checked: boolean) =>
-                  props.toggleCollectionsState(collection.id, checked)
-                }
+                useState={(checked: boolean) => props.toggleCollectionsState(collection.id, checked)}
                 offMsg=""
                 disabled={false}
               />
@@ -191,19 +180,12 @@ const Menu = (props: MenuProps) => {
               </svg>
             </i>
 
-            <h1 className="text-[15px]  ml-3 text-xl text-gray-200 font-bold">
-              Ustawienia
-            </h1>
+            <h1 className="text-[15px]  ml-3 text-xl text-gray-200 font-bold">Ustawienia</h1>
             {/* <i className="bi bi-x ml-20 cursor-pointer lg:hidden"></i> */}
           </div>
 
           <hr className="my-2 text-gray-600"></hr>
-          <UIToggle
-            label="Autorzy"
-            state={props.displayAuthors}
-            useState={props.setDisplayAuthors}
-            offMsg=""
-          />
+          <UIToggle label="Autorzy" state={props.displayAuthors} useState={props.setDisplayAuthors} offMsg="" />
         </div>
 
         <div className="sm:col-span-4">
@@ -251,7 +233,7 @@ const Menu = (props: MenuProps) => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Menu;
+export default Menu

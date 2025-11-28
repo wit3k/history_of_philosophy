@@ -11,4 +11,4 @@ class Publication {
   ) {}
 }
 
-export default Publication;
+export default Publication

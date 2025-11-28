@@ -1,5 +1,5 @@
-import type Coordinates from '../../geometry/Coordinates';
-import ChronologyScaleLabel from './ChronologyScaleLabel';
+import type Coordinates from '../../geometry/Coordinates'
+import ChronologyScaleLabel from './ChronologyScaleLabel'
 
 class ChronologyScaleProps {
   constructor(
@@ -32,6 +32,6 @@ const ChronologyScale = (props: ChronologyScaleProps) => (
       </svg>
     </div>
   </div>
-);
+)
 
-export default ChronologyScale;
+export default ChronologyScale

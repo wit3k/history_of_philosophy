@@ -1,9 +1,7 @@
-import Person from '../../data/dto/Person';
-import PersonReference from '../../data/dto/PersonReference';
+import Person from '../../data/dto/Person'
+import PersonReference from '../../data/dto/PersonReference'
 
-import PersonReferenceNode, {
-  PersonReferenceSettings,
-} from './PersonReferenceNode';
+import PersonReferenceNode, { PersonReferenceSettings } from './PersonReferenceNode'
 
 class PersonReferencesListProps {
   constructor(
@@ -21,21 +19,14 @@ class PersonReferencesListProps {
 
 const PersonReferencesList = (props: PersonReferencesListProps) =>
   props.peopleReferenceList.map((reference, i) => {
-    const personFrom: Person | undefined = props.peopleList.find(
-      (p: Person) => p.id == reference.from,
-    );
-    const personTo: Person | undefined = props.peopleList.find(
-      (p: Person) => p.id == reference.to,
-    );
+    const personFrom: Person | undefined = props.peopleList.find((p: Person) => p.id == reference.from)
+    const personTo: Person | undefined = props.peopleList.find((p: Person) => p.id == reference.to)
     if (
       reference.from &&
       reference.to &&
       personFrom &&
       personTo &&
-      props.isVisibleRange(
-        Math.min(personFrom.born, personTo.born),
-        Math.max(personFrom.died, personTo.died),
-      )
+      props.isVisibleRange(Math.min(personFrom.born, personTo.born), Math.max(personFrom.died, personTo.died))
     ) {
       return (
         <PersonReferenceNode
@@ -49,13 +40,10 @@ const PersonReferencesList = (props: PersonReferencesListProps) =>
           rowPositionFrom={props.rowPosition(personFrom.rowNumber)}
           rowPositionTo={props.rowPosition(personTo.rowNumber)}
           highlightsOn={props.highlightedAuthor != '0'}
-          isHighlighted={
-            props.highlightedAuthor == personFrom.id ||
-            props.highlightedAuthor == personTo.id
-          }
+          isHighlighted={props.highlightedAuthor == personFrom.id || props.highlightedAuthor == personTo.id}
         />
-      );
+      )
     }
-  });
+  })
 
-export default PersonReferencesList;
+export default PersonReferencesList

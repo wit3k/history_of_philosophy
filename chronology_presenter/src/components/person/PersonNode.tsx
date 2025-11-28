@@ -1,5 +1,5 @@
-import Person from '../../data/dto/Person';
-import getAccentColor from '../../services/Colors';
+import Person from '../../data/dto/Person'
+import getAccentColor from '../../services/Colors'
 
 class PersonNodeProps {
   constructor(
@@ -9,9 +9,7 @@ class PersonNodeProps {
     public settings: PersonNodeSettings,
     public rowPosition: number,
     public highlightedAuthor: string,
-    public updateHighlightedAuthor: React.Dispatch<
-      React.SetStateAction<string>
-    >,
+    public updateHighlightedAuthor: React.Dispatch<React.SetStateAction<string>>,
     public displayAuthorsTimeline: boolean,
     public authorCallback: (id: string) => void,
   ) {}
@@ -22,8 +20,8 @@ export class PersonNodeSettings {
 }
 
 const PersonNode = (props: PersonNodeProps) => {
-  const appBasePath = '/history_of_philosophy';
-  const dominantColor = getAccentColor(props.person.nationality);
+  const appBasePath = '/history_of_philosophy'
+  const dominantColor = getAccentColor(props.person.nationality)
 
   return (
     <g>
@@ -52,12 +50,7 @@ const PersonNode = (props: PersonNodeProps) => {
             y2={props.rowPosition + props.settings.boxSize / 2}
             stroke={dominantColor}
             strokeWidth="4"
-            opacity={
-              props.highlightedAuthor == '0' ||
-              props.highlightedAuthor == props.person.id
-                ? '1'
-                : '0.3'
-            }
+            opacity={props.highlightedAuthor == '0' || props.highlightedAuthor == props.person.id ? '1' : '0.3'}
           />
         </g>
       )}
@@ -69,19 +62,14 @@ const PersonNode = (props: PersonNodeProps) => {
           y={props.rowPosition}
           rx="10"
           ry="10"
-          opacity={
-            props.highlightedAuthor == '0' ||
-            props.highlightedAuthor == props.person.id
-              ? '1'
-              : '0.3'
-          }
+          opacity={props.highlightedAuthor == '0' || props.highlightedAuthor == props.person.id ? '1' : '0.3'}
           width={props.settings.boxSize}
           height={props.settings.boxSize}
           className="cursor-pointer"
           onMouseMove={() => props.updateHighlightedAuthor(props.person.id)}
           onClick={() => {
-            props.updateHighlightedAuthor(props.person.id);
-            props.authorCallback(props.person.id);
+            props.updateHighlightedAuthor(props.person.id)
+            props.authorCallback(props.person.id)
           }}
         />
       )}
@@ -97,17 +85,13 @@ const PersonNode = (props: PersonNodeProps) => {
           stroke: dominantColor,
           strokeWidth: '4',
           fillOpacity: '0',
-          strokeOpacity:
-            props.highlightedAuthor == '0' ||
-            props.highlightedAuthor == props.person.id
-              ? '1'
-              : '0.3',
+          strokeOpacity: props.highlightedAuthor == '0' || props.highlightedAuthor == props.person.id ? '1' : '0.3',
         }}
         className="cursor-pointer"
         onMouseMove={() => props.updateHighlightedAuthor(props.person.id)}
         onClick={() => {
-          props.updateHighlightedAuthor(props.person.id);
-          props.authorCallback(props.person.id);
+          props.updateHighlightedAuthor(props.person.id)
+          props.authorCallback(props.person.id)
         }}
       />
       <rect
@@ -121,11 +105,7 @@ const PersonNode = (props: PersonNodeProps) => {
           fill: dominantColor,
           stroke: dominantColor,
           strokeWidth: '0',
-          fillOpacity:
-            props.highlightedAuthor == '0' ||
-            props.highlightedAuthor == props.person.id
-              ? '0.3'
-              : '0.1',
+          fillOpacity: props.highlightedAuthor == '0' || props.highlightedAuthor == props.person.id ? '0.3' : '0.1',
           strokeOpacity: '0',
         }}
         className="cursor-pointer"
@@ -140,17 +120,12 @@ const PersonNode = (props: PersonNodeProps) => {
         fontSize="14"
         fill="white"
         className="cursor-pointer font-mono"
-        opacity={
-          props.highlightedAuthor == '0' ||
-          props.highlightedAuthor == props.person.id
-            ? '1'
-            : '0.3'
-        }
+        opacity={props.highlightedAuthor == '0' || props.highlightedAuthor == props.person.id ? '1' : '0.3'}
       >
         {props.person.name}
       </text>
     </g>
-  );
-};
+  )
+}
 
-export default PersonNode;
+export default PersonNode

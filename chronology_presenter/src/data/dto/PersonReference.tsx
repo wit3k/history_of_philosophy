@@ -1,4 +1,4 @@
-import type Person from './Person';
+import type Person from './Person'
 
 export enum Attitude {
   Positive,
@@ -16,4 +16,4 @@ class PersonReference {
   ) {}
 }
 
-export default PersonReference;
+export default PersonReference

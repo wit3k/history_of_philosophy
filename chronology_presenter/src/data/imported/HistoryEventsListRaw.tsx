@@ -4,12 +4,7 @@ export const HistoryEventsListRaw = [
   { id: 11, name: 'Wyprawy Krzyżowe', yearFrom: 1094, yearTo: 1291 },
   { id: 12, name: 'Podbój Rusi przez Mongołów', yearFrom: 1236, yearTo: 1240 },
   { id: 17, name: 'Wojny husyckie', yearFrom: 1419, yearTo: 1434 },
-  {
-    id: 4,
-    name: 'Wynalezienie prasy drukarskiej',
-    yearFrom: 1439,
-    yearTo: 1440,
-  },
+  { id: 4, name: 'Wynalezienie prasy drukarskiej', yearFrom: 1439, yearTo: 1440 },
   { id: 3, name: 'Upadek Konstantynopola', yearFrom: 1453, yearTo: 1453 },
   { id: 7, name: 'Odkrycie ameryki', yearFrom: 1492, yearTo: 1492 },
   { id: 13, name: 'Wojna trzydziestoletnia', yearFrom: 1618, yearTo: 1648 },
@@ -20,4 +15,4 @@ export const HistoryEventsListRaw = [
   { id: 14, name: 'Objawienia w Gietrzwałdzie', yearFrom: 1877, yearTo: 1877 },
   { id: 1, name: 'I Wojna Światowa', yearFrom: 1914, yearTo: 1918 },
   { id: 2, name: 'II Wojna Światowa', yearFrom: 1939, yearTo: 1945 },
-];
+]

@@ -7,24 +7,18 @@ class TimeScaleLineProps {
 }
 
 const ChronologyScaleLine = (props: TimeScaleLineProps) => {
-  const currentYear = new Date().getFullYear();
+  const currentYear = new Date().getFullYear()
   return (
     <line
       x1={props.position}
       y1="0"
       x2={props.position}
       y2={props.height}
-      stroke={
-        props.year == currentYear
-          ? 'white'
-          : props.year % 100
-            ? 'rgba(61, 224, 224, 0.2)'
-            : '#c58eb0ff'
-      }
+      stroke={props.year == currentYear ? 'white' : props.year % 100 ? 'rgba(61, 224, 224, 0.2)' : '#c58eb0ff'}
       strokeWidth={props.year == currentYear ? '3' : '1'}
       strokeDasharray={props.year == currentYear ? '4 1 1 6 1 1' : ''}
     />
-  );
-};
+  )
+}
 
-export default ChronologyScaleLine;
+export default ChronologyScaleLine

@@ -1,6 +1,6 @@
-import type Person from '../../data/dto/Person';
-import type Publication from '../../data/dto/Publication';
-import PublicationNode, { PublicationNodeSettings } from './PublicationNode';
+import type Person from '../../data/dto/Person'
+import type Publication from '../../data/dto/Publication'
+import PublicationNode, { PublicationNodeSettings } from './PublicationNode'
 
 class PublicationsListProps {
   constructor(
@@ -10,12 +10,8 @@ class PublicationsListProps {
     public positionByYear: (year: number) => number,
     public rowPosition: (rowNumber: number) => number,
     public setCurrentAuthor: React.Dispatch<React.SetStateAction<Person>>,
-    public setCurrentPublication: React.Dispatch<
-      React.SetStateAction<Publication>
-    >,
-    public updateHighlightedPublication: React.Dispatch<
-      React.SetStateAction<string>
-    >,
+    public setCurrentPublication: React.Dispatch<React.SetStateAction<Publication>>,
+    public updateHighlightedPublication: React.Dispatch<React.SetStateAction<string>>,
     public publicationNodeSettings: PublicationNodeSettings,
     public modalHandle: React.Dispatch<React.SetStateAction<boolean>>,
   ) {}
@@ -23,10 +19,10 @@ class PublicationsListProps {
 
 const PublicationsList = (props: PublicationsListProps) =>
   props.publicationsList
-    .filter((publication) => props.isVisible(publication.publicationDate))
+    .filter(publication => props.isVisible(publication.publicationDate))
     .map((publication, _) => ({
       publication,
-      author: props.peopleList.find((p) => p.id == publication.authorId),
+      author: props.peopleList.find(p => p.id == publication.authorId),
     }))
     .map(({ publication, author }, i) => {
       if (author) {
@@ -43,8 +39,8 @@ const PublicationsList = (props: PublicationsListProps) =>
             setCurrentAuthor={props.setCurrentAuthor}
             setCurrentPublication={props.setCurrentPublication}
           />
-        );
+        )
       }
-    });
+    })
 
-export default PublicationsList;
+export default PublicationsList
