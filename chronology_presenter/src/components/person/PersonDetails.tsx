@@ -99,10 +99,10 @@ const PersonDetails = (props: PersonDetailsProps) => {
                   {' / '}
                   {historyItem.publication?.publicationLocation && (
                     <span
-                      onClick={() => props.locationCallback(historyItem.publication.publicationLocation!.id)}
+                      onClick={() => props.locationCallback(historyItem.publication.publicationLocation + '')}
                       className="text-slate-100 hover:text-pink-700 underline cursor-pointer"
                     >
-                      {historyItem.publication?.publicationLocation.name}
+                      {LocationListService.getById(historyItem.publication.publicationLocation + '')?.name}
                     </span>
                   )}
                   {historyItem.publication.isbn && ' / ' + historyItem.publication.isbn}

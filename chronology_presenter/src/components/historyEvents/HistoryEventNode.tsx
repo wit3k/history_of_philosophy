@@ -21,9 +21,7 @@ export class HistoryEventNodeSettings {
 const HistoryEventNode = (props: HistoryEventNodeProps) => {
   const tamedColor = ColorsService.getTamedColor(props.event.rowNumber)
   const fixedColor = ColorsService.getFixedColor(props.event.rowNumber)
-  const pseudoTransparentColor = ColorsService.rgbToHex(
-    ColorsService.blendColors(ColorsService.hexToRgb('#222222'), ColorsService.hexToRgb(tamedColor), 0.25),
-  )
+  const pseudoTransparentColor = ColorsService.convertToGray(tamedColor)
   return (
     <g>
       <rect

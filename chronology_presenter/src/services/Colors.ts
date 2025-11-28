@@ -14,13 +14,13 @@ const palette = [
   '#2CAA58',
   '#3f9db9ff',
   '#b159ddff',
-  '#3d1fd5ff',
+  '#4f467cff',
   '#8C3226',
   '#678A51',
   '#16835bff',
   '#E78140',
   '#b15a24ff',
-  '#962281ff',
+  '#7d2e6fff',
 ]
 class RGB {
   constructor(
@@ -29,14 +29,14 @@ class RGB {
     public b: number,
   ) {}
 }
-export default {
+const ColorsService = {
   getTamedColor: (number: number) => {
     return tamedPalette[number % tamedPalette.length]
   },
   getFixedColor: (number: number) => {
     return palette[number % tamedPalette.length]
   },
-  getAccentColor: (name: string | null) => {
+  getAccentColor: (name: string | null): string => {
     if (name == null) {
       return 'rgba(27, 100, 27, 1)'
     }
@@ -48,10 +48,12 @@ export default {
     fixedColors.set('Holender', '#f49d07ff')
     fixedColors.set('Francuz', '#318CE7')
     fixedColors.set('Niemiec', '#000000')
+    fixedColors.set('Norweg', '#0a1961ff')
     fixedColors.set('Węgier', '#477050')
 
     if (fixedColors.get(name) != undefined) {
-      return fixedColors.get(name)
+      const color = fixedColors.get(name)
+      return color ? color : '#c71717ff'
     }
 
     const random = name
@@ -59,7 +61,8 @@ export default {
       .map(char => char.charCodeAt(0))
       .reduce((current, previous) => Math.min(previous, 1000) + current)
 
-    return palette[Math.floor(((random % 1000) / 1000) * palette.length)]
+    const color = palette[Math.floor(((random % 1000) / 1000) * palette.length)]
+    return color ? color : '#c71717ff'
   },
 
   hexToRgb: (hex: string): RGB => {
@@ -85,4 +88,14 @@ export default {
   rgbToCssString: (rgb: RGB) => {
     return `rgb(${Math.round(rgb.r)}, ${Math.round(rgb.g)}, ${Math.round(rgb.b)})`
   },
+
+  convertToPale: (hex: string) =>
+    ColorsService.rgbToHex(
+      ColorsService.blendColors(ColorsService.hexToRgb('#ffffff'), ColorsService.hexToRgb(hex), 0.4),
+    ),
+  convertToGray: (hex: string) =>
+    ColorsService.rgbToHex(
+      ColorsService.blendColors(ColorsService.hexToRgb('#222222'), ColorsService.hexToRgb(hex), 0.25),
+    ),
 }
+export default ColorsService

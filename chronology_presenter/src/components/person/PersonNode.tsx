@@ -21,7 +21,8 @@ export class PersonNodeSettings {
 
 const PersonNode = (props: PersonNodeProps) => {
   const appBasePath = '/history_of_philosophy'
-  const dominantColor = ColorsService.getAccentColor(props.person.nationality)
+  const fixedColor = ColorsService.getAccentColor(props.person.nationality)
+  const tamedColor = ColorsService.convertToPale(fixedColor)
 
   return (
     <g>
@@ -48,7 +49,7 @@ const PersonNode = (props: PersonNodeProps) => {
             y1={props.rowPosition + props.settings.boxSize / 2}
             x2={props.positionEnd}
             y2={props.rowPosition + props.settings.boxSize / 2}
-            stroke={dominantColor}
+            stroke={tamedColor}
             strokeWidth="6"
             opacity={props.highlightedAuthor == '0' || props.highlightedAuthor == props.person.id ? '1' : '0.3'}
           />
@@ -81,9 +82,9 @@ const PersonNode = (props: PersonNodeProps) => {
         width={props.settings.boxSize + 1}
         height={props.settings.boxSize + 1}
         style={{
-          fill: dominantColor,
-          stroke: dominantColor,
-          strokeWidth: '1',
+          fill: fixedColor,
+          stroke: fixedColor,
+          strokeWidth: '2',
           fillOpacity: '0',
           strokeOpacity: props.highlightedAuthor == '0' || props.highlightedAuthor == props.person.id ? '1' : '0.3',
         }}
@@ -102,8 +103,8 @@ const PersonNode = (props: PersonNodeProps) => {
         width={Math.min(props.person.name.length * 10, props.positionEnd - props.positionStart)}
         height={22}
         style={{
-          fill: dominantColor,
-          stroke: dominantColor,
+          fill: fixedColor,
+          stroke: fixedColor,
           strokeWidth: '0',
           fillOpacity: props.highlightedAuthor == '0' || props.highlightedAuthor == props.person.id ? '1' : '0.1',
           strokeOpacity: '0',
