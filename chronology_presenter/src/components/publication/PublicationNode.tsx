@@ -1,7 +1,7 @@
 import './PublicationNode.css'
 import Publication from '../../data/dto/Publication'
 import Person from '../../data/dto/Person'
-import getAccentColor from '../../services/Colors'
+import getAccentColor, { getFixedColor, getTamedColor } from '../../services/Colors'
 
 class PublicationNodeProps {
   constructor(
@@ -27,7 +27,12 @@ export class PublicationNodeSettings {
 }
 
 const PublicationNode = (props: PublicationNodeProps) => {
-  const dominantColor = getAccentColor(props.author.nationality)
+  const words = props.publication.title.split(' ')
+  const abbreviation =
+    '' +
+    words[0].slice(0, 1) +
+    (words[1] != undefined ? words[1].slice(0, 1).toUpperCase() : '') +
+    (words[2] != undefined ? words[2].slice(0, 1).toUpperCase() : '')
   const titleSections = props.publication.title
     .split(' ')
     .map(e => [e])
@@ -49,8 +54,8 @@ const PublicationNode = (props: PublicationNodeProps) => {
           width="220"
           height={60 + 10 * (slices.length - 1)}
           style={{
-            fill: 'white',
-            stroke: dominantColor,
+            fill: getTamedColor(props.publication.publicationDate),
+            stroke: getFixedColor(props.publication.publicationDate),
             strokeWidth: '2px',
             fillOpacity: '1',
             strokeOpacity: '1',
@@ -65,7 +70,7 @@ const PublicationNode = (props: PublicationNodeProps) => {
           height={60 + 10 * (slices.length - 1)}
           fontSize="14"
           className=" font-mono font-bold "
-          fill="#152a38ff"
+          fill="white"
           dy="10"
         >
           {slices.map((s, i) => (
@@ -76,10 +81,20 @@ const PublicationNode = (props: PublicationNodeProps) => {
         </text>
       </g>
 
-      <circle
-        cx={props.position}
-        cy={props.rowPosition + props.settings.boxSize / 2}
-        r={props.settings.dotSize}
+      <rect
+        x={props.position - props.settings.dotSize}
+        y={props.rowPosition - props.settings.dotSize / 2}
+        rx="2"
+        ry="2"
+        width={props.settings.dotSize * 2}
+        height={props.settings.dotSize * 3}
+        style={{
+          fill: getTamedColor(props.publication.publicationDate),
+          stroke: getFixedColor(props.publication.publicationDate),
+          strokeWidth: '2',
+          fillOpacity: '1',
+          strokeOpacity: '1',
+        }}
         onMouseMove={() => props.updateHighlightedPublication(props.publication.id)}
         onTouchStart={() => props.updateHighlightedPublication(props.publication.id)}
         onClick={() => {
@@ -87,15 +102,29 @@ const PublicationNode = (props: PublicationNodeProps) => {
           props.setCurrentPublication(props.publication)
           props.modalHandle(true)
         }}
-        style={{
-          fill: 'white',
-          stroke: dominantColor,
-          strokeWidth: '10',
-          fillOpacity: '1',
-          strokeOpacity: '1',
-        }}
-        className="tooltipHover cursor-pointer flex h-10 w-10 items-center justify-center rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors duration-300"
+        className="tooltipHover cursor-pointer flex items-center justify-center rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors duration-300"
       />
+      <text
+        x={props.position}
+        y={props.rowPosition}
+        width={props.settings.dotSize * 2}
+        height={props.settings.dotSize * 3}
+        dominantBaseline="hanging"
+        textAnchor="middle"
+        fontSize="14"
+        className="font-mono font-bold tooltipHover cursor-pointer flex items-center justify-center rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors duration-300"
+        fill={getFixedColor(props.publication.publicationDate)}
+        dy="10"
+        onMouseMove={() => props.updateHighlightedPublication(props.publication.id)}
+        onTouchStart={() => props.updateHighlightedPublication(props.publication.id)}
+        onClick={() => {
+          props.setCurrentAuthor(props.author)
+          props.setCurrentPublication(props.publication)
+          props.modalHandle(true)
+        }}
+      >
+        {abbreviation}
+      </text>
     </g>
   )
 }

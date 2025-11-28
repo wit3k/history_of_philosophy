@@ -56,7 +56,12 @@ let getLinkedRecords = async (tableName: string, link: string, recordId: string)
     .then(res => res.data)
     .catch(err => console.error(err))
 
-let downloadAndProcessImage = async (imageUrl: string, outputPath: string, size: Coordinates): Promise<void> => {
+let downloadAndProcessImage = async (
+  imageUrl: string,
+  outputPath: string,
+  size: Coordinates,
+  circle: boolean,
+): Promise<void> => {
   try {
     const response = await axios.get(imageUrl, {
       responseType: 'arraybuffer',
@@ -73,6 +78,21 @@ let downloadAndProcessImage = async (imageUrl: string, outputPath: string, size:
         size.y +
         '" rx="10" ry="10" fill="white"/></svg>',
     )
+    const circleMask = Buffer.from(
+      '<svg width="' +
+        size.x +
+        '" height="' +
+        size.y +
+        '"><rect x="0" y="0" width="' +
+        size.x +
+        '" height="' +
+        size.y +
+        '" rx="' +
+        size.x +
+        '" ry="' +
+        size.y +
+        '" fill="white"/></svg>',
+    )
 
     await sharp(imageBuffer)
       .resize(size.x, size.y, {
@@ -81,7 +101,7 @@ let downloadAndProcessImage = async (imageUrl: string, outputPath: string, size:
       })
       .composite([
         {
-          input: roundedCornerMask,
+          input: circle ? circleMask : roundedCornerMask,
           blend: 'dest-in',
         },
       ])
@@ -103,11 +123,13 @@ let people = (await getTable('people')).list
         process.env.NOCO_URL + '/' + person['Zdjęcie'][0].path,
         './public/assets/person/' + person['Zdjęcie'][0].id + '.png',
         new Coordinates(50, 50),
+        true,
       )
       downloadAndProcessImage(
         process.env.NOCO_URL + '/' + person['Zdjęcie'][0].path,
         './public/assets/person_big/' + person['Zdjęcie'][0].id + '.png',
         new Coordinates(200, 300),
+        false,
       )
     }
     return {
@@ -181,6 +203,7 @@ let publications = (
             process.env.NOCO_URL + '/' + book['Okładka'][0].path,
             './public/assets/publication/' + book['Okładka'][0].id + '.png',
             new Coordinates(500, 700),
+            false,
           )
         }
         return await getLinkedRecords('publications', 'c5yt6jo8jpe04bk', book.Id).then(authors => ({ book, authors }))
@@ -228,6 +251,7 @@ let locations = (await getTable('locations')).list
         process.env.NOCO_URL + '/' + location['Zdjęcie'][0].path,
         './public/assets/location/' + location['Zdjęcie'][0].id + '.png',
         new Coordinates(480, 200),
+        false,
       )
     }
     return {

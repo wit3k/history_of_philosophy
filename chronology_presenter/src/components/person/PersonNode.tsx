@@ -29,11 +29,11 @@ const PersonNode = (props: PersonNodeProps) => {
       {props.displayAuthorsTimeline && (
         <g>
           <rect
-            x={props.positionStart}
+            x={props.positionStart + props.settings.boxSize + 5}
             y={props.rowPosition}
             rx="10"
             ry="10"
-            width={props.positionEnd - props.positionStart}
+            width={props.positionEnd - props.positionStart - props.settings.boxSize - 5}
             height={props.settings.boxSize}
             style={{
               fill: dominantColor,
@@ -60,8 +60,8 @@ const PersonNode = (props: PersonNodeProps) => {
           href={appBasePath + '/assets/person/' + props.person.thumbnail}
           x={props.positionStart}
           y={props.rowPosition}
-          rx="10"
-          ry="10"
+          rx={props.settings.boxSize}
+          ry={props.settings.boxSize}
           opacity={props.highlightedAuthor == '0' || props.highlightedAuthor == props.person.id ? '1' : '0.3'}
           width={props.settings.boxSize}
           height={props.settings.boxSize}
@@ -76,8 +76,8 @@ const PersonNode = (props: PersonNodeProps) => {
       <rect
         x={props.positionStart}
         y={props.rowPosition}
-        rx="10"
-        ry="10"
+        rx={props.settings.boxSize}
+        ry={props.settings.boxSize}
         width={props.settings.boxSize + 1}
         height={props.settings.boxSize + 1}
         style={{
