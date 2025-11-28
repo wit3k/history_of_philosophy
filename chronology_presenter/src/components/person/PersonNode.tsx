@@ -1,5 +1,5 @@
 import Person from '../../data/dto/Person'
-import getAccentColor from '../../services/Colors'
+import ColorsService from '../../services/Colors'
 
 class PersonNodeProps {
   constructor(
@@ -21,7 +21,7 @@ export class PersonNodeSettings {
 
 const PersonNode = (props: PersonNodeProps) => {
   const appBasePath = '/history_of_philosophy'
-  const dominantColor = getAccentColor(props.person.nationality)
+  const dominantColor = ColorsService.getAccentColor(props.person.nationality)
 
   return (
     <g>
@@ -118,7 +118,7 @@ const PersonNode = (props: PersonNodeProps) => {
         textAnchor="start"
         height="30"
         fontSize="14"
-        fill="black"
+        fill="white"
         className="cursor-pointer font-mono"
         opacity={props.highlightedAuthor == '0' || props.highlightedAuthor == props.person.id ? '1' : '0.3'}
       >

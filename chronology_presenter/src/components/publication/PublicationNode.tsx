@@ -1,7 +1,7 @@
 import './PublicationNode.css'
 import Publication from '../../data/dto/Publication'
 import Person from '../../data/dto/Person'
-import getAccentColor, { getFixedColor, getTamedColor } from '../../services/Colors'
+import ColorsService from '../../services/Colors'
 
 class PublicationNodeProps {
   constructor(
@@ -54,8 +54,8 @@ const PublicationNode = (props: PublicationNodeProps) => {
           width="220"
           height={60 + 10 * (slices.length - 1)}
           style={{
-            fill: getTamedColor(props.publication.publicationDate),
-            stroke: getFixedColor(props.publication.publicationDate),
+            fill: ColorsService.getTamedColor(props.publication.publicationDate),
+            stroke: ColorsService.getFixedColor(props.publication.publicationDate),
             strokeWidth: '2px',
             fillOpacity: '1',
             strokeOpacity: '1',
@@ -70,7 +70,7 @@ const PublicationNode = (props: PublicationNodeProps) => {
           height={60 + 10 * (slices.length - 1)}
           fontSize="14"
           className=" font-mono font-bold "
-          fill="white"
+          fill={ColorsService.getFixedColor(props.publication.publicationDate)}
           dy="10"
         >
           {slices.map((s, i) => (
@@ -89,8 +89,8 @@ const PublicationNode = (props: PublicationNodeProps) => {
         width={props.settings.dotSize * 2}
         height={props.settings.dotSize * 3}
         style={{
-          fill: getTamedColor(props.publication.publicationDate),
-          stroke: getFixedColor(props.publication.publicationDate),
+          fill: ColorsService.getTamedColor(props.publication.publicationDate),
+          stroke: ColorsService.getFixedColor(props.publication.publicationDate),
           strokeWidth: '2',
           fillOpacity: '1',
           strokeOpacity: '1',
@@ -113,7 +113,7 @@ const PublicationNode = (props: PublicationNodeProps) => {
         textAnchor="middle"
         fontSize="14"
         className="font-mono font-bold tooltipHover cursor-pointer flex items-center justify-center rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors duration-300"
-        fill={getFixedColor(props.publication.publicationDate)}
+        fill={ColorsService.getFixedColor(props.publication.publicationDate)}
         dy="10"
         onMouseMove={() => props.updateHighlightedPublication(props.publication.id)}
         onTouchStart={() => props.updateHighlightedPublication(props.publication.id)}

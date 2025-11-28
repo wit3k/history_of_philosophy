@@ -4,7 +4,7 @@ import type PublicationReference from '../../data/dto/PublicationReference'
 import Coordinates from '../../geometry/Coordinates'
 import { VDirection, HDirection } from '../../geometry/Directions'
 import { roundPathCorners } from '../../geometry/PathRounding'
-import getAccentColor from '../../services/Colors'
+import ColorsService from '../../services/Colors'
 import type Publication from '../../data/dto/Publication'
 
 class PublicationReferenceNodeProps {
@@ -82,7 +82,7 @@ const PublicationReferenceNode = (props: PublicationReferenceNodeProps) => {
       .map(p => p.join(' '))
       .join(' ')
 
-    const colorFrom = getAccentColor(props.authorFrom.nationality)
+    const colorFrom = ColorsService.getAccentColor(props.authorFrom.nationality)
     return (
       <path
         d={roundPathCorners(pathPoints, 5, false)}

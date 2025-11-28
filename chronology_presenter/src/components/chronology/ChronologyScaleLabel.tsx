@@ -25,7 +25,6 @@ const ChronologyScaleLabel = (props: TimeScaleLabelProps) => {
         dominantBaseline="hanging"
         textAnchor="middle"
         height="40"
-        // fontFamily="Verdana"
         fontSize="15"
         fill={props.year % 100 ? '#ffffffff' : '#000000ff'}
         className="font-mono"

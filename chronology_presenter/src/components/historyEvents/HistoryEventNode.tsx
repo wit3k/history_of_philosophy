@@ -1,5 +1,5 @@
 import type HistoryEvent from '../../data/dto/HistoryEvent'
-import { getTamedColor, getFixedColor } from '../../services/Colors'
+import ColorsService from '../../services/Colors'
 
 class HistoryEventNodeProps {
   constructor(
@@ -19,9 +19,11 @@ export class HistoryEventNodeSettings {
 }
 
 const HistoryEventNode = (props: HistoryEventNodeProps) => {
-  const tamedColor = getTamedColor(props.event.rowNumber)
-  const fixedColor = getFixedColor(props.event.rowNumber)
-
+  const tamedColor = ColorsService.getTamedColor(props.event.rowNumber)
+  const fixedColor = ColorsService.getFixedColor(props.event.rowNumber)
+  const pseudoTransparentColor = ColorsService.rgbToHex(
+    ColorsService.blendColors(ColorsService.hexToRgb('#222222'), ColorsService.hexToRgb(tamedColor), 0.25),
+  )
   return (
     <g>
       <rect
@@ -29,13 +31,35 @@ const HistoryEventNode = (props: HistoryEventNodeProps) => {
         y={props.rowPosition - props.event.name.length * 8 - 20}
         rx="4"
         ry="4"
-        width={props.positionEnd - props.positionStart + 5}
-        height={20000}
+        width={Math.max(props.positionEnd - props.positionStart + 5, 20)}
+        height={props.event.name.length * 8 + 20 + props.settings.boxSize}
         style={{
           fill: tamedColor,
           strokeWidth: '0',
           stroke: fixedColor,
-          fillOpacity: 1.0 / (props.event.rowNumber + 1),
+          fillOpacity: 1.0,
+        }}
+      />
+
+      <rect
+        x={props.positionStart}
+        y={
+          props.rowPosition -
+          props.event.name.length * 8 -
+          20 +
+          props.event.name.length * 8 +
+          20 +
+          props.settings.boxSize
+        }
+        rx="0"
+        ry="0"
+        width={Math.max(props.positionEnd - props.positionStart + 5, 20)}
+        height={20000}
+        style={{
+          fill: pseudoTransparentColor,
+          strokeWidth: '0',
+          stroke: fixedColor,
+          fillOpacity: 1,
         }}
       />
 
@@ -61,7 +85,7 @@ const HistoryEventNode = (props: HistoryEventNodeProps) => {
         textAnchor="start"
         height="30"
         fontSize="14"
-        fill="white"
+        fill="black"
         className="cursor-pointer font-mono"
         style={{
           textOrientation: 'sideways',

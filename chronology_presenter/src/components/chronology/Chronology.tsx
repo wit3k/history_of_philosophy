@@ -283,7 +283,7 @@ const Chronology = () => {
   return (
     <div
       style={{
-        background: 'rgba(8, 8, 11, 1)',
+        background: 'rgb(43, 44, 45)',
         width: prop.windowSize.x,
         height: prop.windowSize.y,
         overflow: 'hidden',
