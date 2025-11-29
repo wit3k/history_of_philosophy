@@ -1,5 +1,5 @@
 export const PublicationReferenceListRaw = [
-  { id: 5, name: 'eeee', from: 9, to: 10 },
-  { id: 6, name: 'oooo', from: 9, to: 11 },
-  { id: 7, name: 'iiii', from: 12, to: 10 },
+  { from: 9, id: 5, name: 'eeee', to: 10 },
+  { from: 9, id: 6, name: 'oooo', to: 11 },
+  { from: 12, id: 7, name: 'iiii', to: 10 },
 ]

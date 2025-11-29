@@ -1,5 +1,5 @@
 import type HistoryEvent from '../../data/dto/HistoryEvent'
-import HistoryEventNode, { HistoryEventNodeSettings } from './HistoryEventNode'
+import HistoryEventNode, { type HistoryEventNodeSettings } from './HistoryEventNode'
 
 class HistoryEventsListProps {
   constructor(
@@ -17,13 +17,13 @@ const HistoryEventsList = (props: HistoryEventsListProps) =>
     .filter((event: HistoryEvent) => props.isVisibleRange(event.yearFrom, event.yearTo))
     .map((event, i) => (
       <HistoryEventNode
-        key={'historyEvent' + event.id + i}
+        darkMode={props.darkMode}
         event={event}
-        positionStart={props.positionByYear(event.yearFrom)}
+        key={'historyEvent' + event.id + i}
         positionEnd={props.positionByYear(event.yearTo)}
+        positionStart={props.positionByYear(event.yearFrom)}
         rowPosition={props.rowPosition(event.rowNumber)}
         settings={props.historyEventNodeSettings}
-        darkMode={props.darkMode}
       />
     ))
 

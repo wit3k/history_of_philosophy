@@ -1,6 +1,6 @@
 .animated-dash {
-  stroke-dashoffset: 2000;
   stroke-dasharray: 20 3;
+  stroke-dashoffset: 2000;
 
   animation: dash-flow 50s linear infinite;
 }

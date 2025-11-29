@@ -1,7 +1,7 @@
 import type Person from '../../data/dto/Person'
 import type Publication from '../../data/dto/Publication'
 import type PublicationReference from '../../data/dto/PublicationReference'
-import PublicationReferenceNode, { PublicationReferenceSettings } from './PublicationReferenceNode'
+import PublicationReferenceNode, { type PublicationReferenceSettings } from './PublicationReferenceNode'
 
 class PublicationReferencesListProps {
   constructor(
@@ -22,10 +22,10 @@ class PublicationReferencesListProps {
 
 const PublicationReferencesList = (props: PublicationReferencesListProps) =>
   props.publicationReferenceList.map((reference, i) => {
-    const publicationFrom: Publication = props.publicationsList.find(p => p.id == reference.from + '')!
-    const publicationTo: Publication = props.publicationsList.find(p => p.id == reference.to + '')!
-    const authorFrom: Person = props.peopleList.find(a => a.id == publicationFrom?.authorId)!
-    const authorTo: Person = props.peopleList.find(a => a.id == publicationTo?.authorId)!
+    const publicationFrom: Publication = props.publicationsList.find(p => p.id === reference.from + '')!
+    const publicationTo: Publication = props.publicationsList.find(p => p.id === reference.to + '')!
+    const authorFrom: Person = props.peopleList.find(a => a.id === publicationFrom?.authorId)!
+    const authorTo: Person = props.peopleList.find(a => a.id === publicationTo?.authorId)!
     if (
       reference.from &&
       reference.to &&
@@ -40,22 +40,22 @@ const PublicationReferencesList = (props: PublicationReferencesListProps) =>
     ) {
       return (
         <PublicationReferenceNode
-          key={'pubref' + reference.id + i}
-          publicationsList={props.publicationsList}
-          publicationReference={reference}
-          settings={props.publicationReferenceSettings}
           authorFrom={authorFrom}
           authorTo={authorTo}
-          positionStart={props.positionByYear(publicationFrom.publicationDate)}
-          positionEnd={props.positionByYear(publicationTo.publicationDate)}
-          rowPositionFrom={props.rowPosition(authorFrom.rowNumber)}
-          rowPositionTo={props.rowPosition(authorTo.rowNumber)}
           isHighlighted={
             props.highlightedAuthor == authorFrom.id ||
             props.highlightedAuthor == authorTo.id ||
             props.highlightedPublication == publicationFrom.id ||
             props.highlightedPublication == publicationTo.id
           }
+          key={'pubref' + reference.id + i}
+          positionEnd={props.positionByYear(publicationTo.publicationDate)}
+          positionStart={props.positionByYear(publicationFrom.publicationDate)}
+          publicationReference={reference}
+          publicationsList={props.publicationsList}
+          rowPositionFrom={props.rowPosition(authorFrom.rowNumber)}
+          rowPositionTo={props.rowPosition(authorTo.rowNumber)}
+          settings={props.publicationReferenceSettings}
         />
       )
     }

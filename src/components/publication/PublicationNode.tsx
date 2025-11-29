@@ -1,6 +1,6 @@
 import './PublicationNode.css'
-import Publication from '../../data/dto/Publication'
-import Person from '../../data/dto/Person'
+import type Person from '../../data/dto/Person'
+import type Publication from '../../data/dto/Publication'
 import ColorsService from '../../services/Colors'
 
 class PublicationNodeProps {
@@ -31,8 +31,8 @@ const PublicationNode = (props: PublicationNodeProps) => {
   const abbreviation =
     '' +
     words[0].slice(0, 1) +
-    (words[1] != undefined ? words[1].slice(0, 1).toUpperCase() : '') +
-    (words[2] != undefined ? words[2].slice(0, 1).toUpperCase() : '')
+    (words[1] !== undefined ? words[1].slice(0, 1).toUpperCase() : '') +
+    (words[2] !== undefined ? words[2].slice(0, 1).toUpperCase() : '')
   const titleSections = props.publication.title
     .split(' ')
     .map(e => [e])
@@ -47,34 +47,34 @@ const PublicationNode = (props: PublicationNodeProps) => {
     <g>
       <g className="tooltip">
         <rect
-          x={props.position - 100}
-          y={props.rowPosition + props.settings.boxSize / 2}
+          height={60 + 10 * (slices.length - 1)}
           rx="3"
           ry="3"
-          width="220"
-          height={60 + 10 * (slices.length - 1)}
           style={{
             fill: ColorsService.getTamedColor(props.publication.publicationDate),
-            stroke: ColorsService.getFixedColor(props.publication.publicationDate),
-            strokeWidth: '2px',
             fillOpacity: '1',
+            stroke: ColorsService.getFixedColor(props.publication.publicationDate),
             strokeOpacity: '1',
+            strokeWidth: '2px',
           }}
+          width="220"
+          x={props.position - 100}
+          y={props.rowPosition + props.settings.boxSize / 2}
         />
         <text
+          className=" font-mono font-bold "
+          dominantBaseline="hanging"
+          dy="10"
+          fill={ColorsService.getFixedColor(props.publication.publicationDate)}
+          fontSize="14"
+          height={60 + 10 * (slices.length - 1)}
+          textAnchor="start"
+          width="200"
           x={props.position - 100}
           y={props.rowPosition + props.settings.boxSize / 2 + 20}
-          width="200"
-          dominantBaseline="hanging"
-          textAnchor="start"
-          height={60 + 10 * (slices.length - 1)}
-          fontSize="14"
-          className=" font-mono font-bold "
-          fill={ColorsService.getFixedColor(props.publication.publicationDate)}
-          dy="10"
         >
           {slices.map((s, i) => (
-            <tspan key={'pubTitle' + props.publication.id + i} x={props.position - 90} dy="0.8em">
+            <tspan dy="0.8em" key={'pubTitle' + props.publication.id + i} x={props.position - 90}>
               {s} {i == slices.length - 1 && slices.length != titleSections.length ? '...' : ''}{' '}
             </tspan>
           ))}
@@ -82,46 +82,46 @@ const PublicationNode = (props: PublicationNodeProps) => {
       </g>
 
       <rect
-        x={props.position - props.settings.dotSize}
-        y={props.rowPosition}
+        className="tooltipHover cursor-pointer flex items-center justify-center rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors duration-300"
+        height={props.settings.dotSize * 3}
+        onClick={() => {
+          props.setCurrentAuthor(props.author)
+          props.setCurrentPublication(props.publication)
+          props.modalHandle(true)
+        }}
+        onMouseMove={() => props.updateHighlightedPublication(props.publication.id)}
+        onTouchStart={() => props.updateHighlightedPublication(props.publication.id)}
         rx="2"
         ry="2"
-        width={props.settings.dotSize * 2}
-        height={props.settings.dotSize * 3}
         style={{
           fill: ColorsService.getTamedColor(props.publication.publicationDate),
-          stroke: ColorsService.getFixedColor(props.publication.publicationDate),
-          strokeWidth: '2',
           fillOpacity: '1',
+          stroke: ColorsService.getFixedColor(props.publication.publicationDate),
           strokeOpacity: '1',
+          strokeWidth: '2',
         }}
-        onMouseMove={() => props.updateHighlightedPublication(props.publication.id)}
-        onTouchStart={() => props.updateHighlightedPublication(props.publication.id)}
-        onClick={() => {
-          props.setCurrentAuthor(props.author)
-          props.setCurrentPublication(props.publication)
-          props.modalHandle(true)
-        }}
-        className="tooltipHover cursor-pointer flex items-center justify-center rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors duration-300"
+        width={props.settings.dotSize * 2}
+        x={props.position - props.settings.dotSize}
+        y={props.rowPosition}
       />
       <text
-        x={props.position}
-        y={props.rowPosition}
-        width={props.settings.dotSize * 2}
-        height={props.settings.dotSize * 3}
-        dominantBaseline="hanging"
-        textAnchor="middle"
-        fontSize="14"
         className="font-mono font-bold tooltipHover cursor-pointer flex items-center justify-center rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors duration-300"
-        fill={ColorsService.getFixedColor(props.publication.publicationDate)}
+        dominantBaseline="hanging"
         dy="10"
-        onMouseMove={() => props.updateHighlightedPublication(props.publication.id)}
-        onTouchStart={() => props.updateHighlightedPublication(props.publication.id)}
+        fill={ColorsService.getFixedColor(props.publication.publicationDate)}
+        fontSize="14"
+        height={props.settings.dotSize * 3}
         onClick={() => {
           props.setCurrentAuthor(props.author)
           props.setCurrentPublication(props.publication)
           props.modalHandle(true)
         }}
+        onMouseMove={() => props.updateHighlightedPublication(props.publication.id)}
+        onTouchStart={() => props.updateHighlightedPublication(props.publication.id)}
+        textAnchor="middle"
+        width={props.settings.dotSize * 2}
+        x={props.position}
+        y={props.rowPosition}
       >
         {abbreviation}
       </text>

@@ -2,9 +2,9 @@
   stroke-dasharray: 1 1;
 }
 .animated-bigdash {
-  stroke-dashoffset: 2000;
-  stroke-dasharray: 1 5;
   stroke-width: 5px;
+  stroke-dasharray: 1 5;
+  stroke-dashoffset: 2000;
 
   animation: dash-flow 50s linear infinite;
 }

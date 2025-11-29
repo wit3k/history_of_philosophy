@@ -64,7 +64,7 @@ export function roundPathCorners(pathString: string, radius: number, useFraction
   }
 
   // Split apart the path, handing concatonated letters and numbers
-  var pathParts = pathString.split(/[,\s]/).reduce(function (parts, part) {
+  var pathParts = pathString.split(/[,\s]/).reduce((parts, part) => {
     var match = part.match('([a-zA-Z])(.+)')
     if (match) {
       parts.push(match[1])
@@ -77,7 +77,7 @@ export function roundPathCorners(pathString: string, radius: number, useFraction
   }, [])
 
   // Group the commands with their arguments for easier handling
-  var commands = pathParts.reduce(function (commands, part) {
+  var commands = pathParts.reduce((commands, part) => {
     if (parseFloat(part) == part && commands.length) {
       commands[commands.length - 1].push(part)
     } else {
@@ -160,7 +160,5 @@ export function roundPathCorners(pathString: string, radius: number, useFraction
     resultCommands = commands
   }
 
-  return resultCommands.reduce(function (str, c) {
-    return str + c.join(' ') + ' '
-  }, '')
+  return resultCommands.reduce((str, c) => str + c.join(' ') + ' ', '')
 }

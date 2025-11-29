@@ -16,16 +16,16 @@ const ChronologyScale = (props: ChronologyScaleProps) => (
   <div className={'scaleContainer'}>
     <div className={'scale'}>
       <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox={`0 0 ${props.padSize.x} 60`}
         preserveAspectRatio="xMidYMid meet"
-        style={{ width: props.padSize.x, height: 60 }}
+        style={{ height: 60, width: props.padSize.x }}
+        viewBox={`0 0 ${props.padSize.x} 60`}
+        xmlns="http://www.w3.org/2000/svg"
       >
         {props.yearsOnScale.filter(props.isVisible).map((year, i) => (
           <ChronologyScaleLabel
             key={`yearLabel` + year + i}
-            year={year}
             position={props.positionByYear(year)}
+            year={year}
             yearLabelWidth={props.yearLabelWidth}
           />
         ))}

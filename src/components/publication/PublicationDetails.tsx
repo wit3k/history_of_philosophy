@@ -1,8 +1,8 @@
-import type Publication from '../../data/dto/Publication'
-import type Person from '../../data/dto/Person'
-import Modal from '../ui/Modal'
-import React from 'react'
+import type React from 'react'
 import type Location from '../../data/dto/Location'
+import type Person from '../../data/dto/Person'
+import type Publication from '../../data/dto/Publication'
+import Modal from '../ui/Modal'
 
 class PublicationDetailsProps {
   constructor(
@@ -26,8 +26,8 @@ const PublicationDetails = (props: PublicationDetailsProps) => {
         <div className="text-3xl text-white italic p-5">&bdquo;{props.currentPublication.title}&rdquo;</div>
         <div className="p-5">
           <span
-            onClick={() => props.authorCallback(props.currentAuthor.id)}
             className="text-pink-700 underline cursor-pointer"
+            onClick={() => props.authorCallback(props.currentAuthor.id)}
           >
             {props.currentAuthor.name}
           </span>{' '}
@@ -47,10 +47,10 @@ const PublicationDetails = (props: PublicationDetailsProps) => {
         </div>
         {props.currentPublication.thumbnail && (
           <img
+            className="pt-5"
+            height={700}
             src={appBasePath + '/assets/publication/' + props.currentPublication.thumbnail}
             width={500}
-            height={700}
-            className="pt-5"
           />
         )}
       </div>

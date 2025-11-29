@@ -1,6 +1,6 @@
-import Person from '../../data/dto/Person'
-import PersonNode from './PersonNode'
+import type Person from '../../data/dto/Person'
 import type { PersonNodeSettings } from './PersonNode'
+import PersonNode from './PersonNode'
 
 class PeopleListProps {
   constructor(
@@ -21,16 +21,16 @@ const PeopleList = (props: PeopleListProps) =>
     .filter(person => props.isVisibleRange(person.born, person.died))
     .map((person, i) => (
       <PersonNode
+        authorCallback={props.authorCallback}
+        displayAuthorsTimeline={props.displayAuthorsTimeline}
+        highlightedAuthor={props.highlightedAuthor}
         key={'person' + person.id + i}
         person={person}
-        positionStart={props.positionByYear(person.born)}
         positionEnd={props.positionByYear(person.died)}
-        settings={props.personNodesSettings}
+        positionStart={props.positionByYear(person.born)}
         rowPosition={props.rowPosition(person.rowNumber)}
-        highlightedAuthor={props.highlightedAuthor}
+        settings={props.personNodesSettings}
         updateHighlightedAuthor={props.updateHighlightedAuthor}
-        displayAuthorsTimeline={props.displayAuthorsTimeline}
-        authorCallback={props.authorCallback}
       />
     ))
 

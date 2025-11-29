@@ -1,8 +1,8 @@
+import type React from 'react'
+import LocationListService from '../../data/db/LocationListService'
+import PublicationsListService from '../../data/db/PublicationsListService'
 import type Person from '../../data/dto/Person'
 import Modal from '../ui/Modal'
-import React from 'react'
-import PublicationsListService from '../../data/db/PublicationsListService'
-import LocationListService from '../../data/db/LocationListService'
 
 class PersonDetailsProps {
   constructor(
@@ -31,10 +31,10 @@ const PersonDetails = (props: PersonDetailsProps) => {
         <div className="p-5">
           {props.currentPerson.thumbnail && (
             <img
+              className="pr-5 pt-0 float-left"
+              height={300}
               src={appBasePath + '/assets/person_big/' + props.currentPerson.thumbnail}
               width={200}
-              height={300}
-              className="pr-5 pt-0 float-left"
             />
           )}
           Urodzony: {props.currentPerson.born} -{' '}
@@ -72,17 +72,17 @@ const PersonDetails = (props: PersonDetailsProps) => {
               icon = (
                 <span className="relative z-10 grid h-8 w-8 place-items-center rounded-full bg-slate-400 text-slate-800">
                   <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
                     className="size-5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1.5}
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
                   >
                     <path
+                      d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"
                     />
                   </svg>
                 </span>
@@ -91,16 +91,16 @@ const PersonDetails = (props: PersonDetailsProps) => {
                 <small className="mt-2 font-sans text-sm text-slate-300 antialiased">
                   <span className="text-slate-100 -ml-3">{historyItem.date}</span> -{' '}
                   <span
-                    onClick={() => props.publicationCallback(historyItem.publication.id)}
                     className="italic hover:text-pink-700 underline cursor-pointer"
+                    onClick={() => props.publicationCallback(historyItem.publication.id)}
                   >
                     &bdquo;{historyItem.publication.title}&rdquo;
                   </span>
                   {' / '}
                   {historyItem.publication?.publicationLocation && (
                     <span
-                      onClick={() => props.locationCallback(historyItem.publication.publicationLocation + '')}
                       className="text-slate-100 hover:text-pink-700 underline cursor-pointer"
+                      onClick={() => props.locationCallback(historyItem.publication.publicationLocation + '')}
                     >
                       {LocationListService.getById(historyItem.publication.publicationLocation + '')?.name}
                     </span>

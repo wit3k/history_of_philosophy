@@ -28,21 +28,31 @@ const HistoryEventNode = (props: HistoryEventNodeProps) => {
   return (
     <g>
       <rect
-        x={props.positionStart}
-        y={props.rowPosition - props.event.name.length * 8 - 20}
+        height={props.event.name.length * 8 + 20 + props.settings.boxSize}
         rx="4"
         ry="4"
-        width={Math.max(props.positionEnd - props.positionStart + 5, 20)}
-        height={props.event.name.length * 8 + 20 + props.settings.boxSize}
         style={{
           fill: tamedColor,
-          strokeWidth: '0',
-          stroke: fixedColor,
           fillOpacity: 1.0,
+          stroke: fixedColor,
+          strokeWidth: '0',
         }}
+        width={Math.max(props.positionEnd - props.positionStart + 5, 20)}
+        x={props.positionStart}
+        y={props.rowPosition - props.event.name.length * 8 - 20}
       />
 
       <rect
+        height={20000}
+        rx="0"
+        ry="0"
+        style={{
+          fill: pseudoTransparentColor,
+          fillOpacity: 1,
+          stroke: fixedColor,
+          strokeWidth: '0',
+        }}
+        width={Math.max(props.positionEnd - props.positionStart + 5, 20)}
         x={props.positionStart}
         y={
           props.rowPosition -
@@ -52,46 +62,36 @@ const HistoryEventNode = (props: HistoryEventNodeProps) => {
           20 +
           props.settings.boxSize
         }
-        rx="0"
-        ry="0"
-        width={Math.max(props.positionEnd - props.positionStart + 5, 20)}
-        height={20000}
-        style={{
-          fill: pseudoTransparentColor,
-          strokeWidth: '0',
-          stroke: fixedColor,
-          fillOpacity: 1,
-        }}
       />
 
       <rect
-        x={props.positionStart}
-        y={props.rowPosition}
+        height={props.settings.boxSize}
         rx="0"
         ry="0"
-        width={props.positionEnd - props.positionStart + 5}
-        height={props.settings.boxSize}
         style={{
           fill: fixedColor,
-          strokeWidth: '0',
           fillOpacity: '1',
+          strokeWidth: '0',
         }}
+        width={props.positionEnd - props.positionStart + 5}
+        x={props.positionStart}
+        y={props.rowPosition}
       />
 
       <text
-        x={props.positionStart + 10}
-        y={props.rowPosition - props.event.name.length * 8 - 4}
-        width={props.event.name.length * 10}
-        dominantBaseline="central"
-        textAnchor="start"
-        height="30"
-        fontSize="14"
-        fill="black"
         className="cursor-pointer font-mono"
+        dominantBaseline="central"
+        fill="black"
+        fontSize="14"
+        height="30"
         style={{
           textOrientation: 'sideways',
           writingMode: 'sideways-lr',
         }}
+        textAnchor="start"
+        width={props.event.name.length * 10}
+        x={props.positionStart + 10}
+        y={props.rowPosition - props.event.name.length * 8 - 4}
       >
         {props.event.name}
       </text>

@@ -1,11 +1,11 @@
 import './PublicationReferenceNode.css'
 import type Person from '../../data/dto/Person'
+import type Publication from '../../data/dto/Publication'
 import type PublicationReference from '../../data/dto/PublicationReference'
 import Coordinates from '../../geometry/Coordinates'
-import { VDirection, HDirection } from '../../geometry/Directions'
+import type { HDirection, VDirection } from '../../geometry/Directions'
 import { roundPathCorners } from '../../geometry/PathRounding'
 import ColorsService from '../../services/Colors'
-import type Publication from '../../data/dto/Publication'
 
 class PublicationReferenceNodeProps {
   constructor(
@@ -31,8 +31,8 @@ export class PublicationReferenceSettings {
 
 const PublicationReferenceNode = (props: PublicationReferenceNodeProps) => {
   if (props.publicationReference.from && props.publicationReference.to) {
-    const publicationFrom = props.publicationsList.find(p => p.id == props.publicationReference.from + '')!
-    const publicationTo = props.publicationsList.find(p => p.id == props.publicationReference.to + '')!
+    const publicationFrom = props.publicationsList.find(p => p.id === props.publicationReference.from + '')!
+    const publicationTo = props.publicationsList.find(p => p.id === props.publicationReference.to + '')!
     const extraSpacing = props.settings.boxSize * 2
     const mostLeft = Math.min(props.positionStart, props.positionEnd)
     const mostRight = Math.max(props.positionStart, props.positionEnd)
@@ -41,14 +41,14 @@ const PublicationReferenceNode = (props: PublicationReferenceNodeProps) => {
     const start: Coordinates = new Coordinates(props.positionStart, props.rowPositionFrom + props.settings.boxSize / 2)
     const end: Coordinates = new Coordinates(props.positionEnd, props.rowPositionTo + props.settings.boxSize / 2)
     const vdir: VDirection = start.y > end.y ? -1 : 1
-    const isEqual: VDirection = start.y == end.y ? -1 : 1
+    const isEqual: VDirection = start.y === end.y ? -1 : 1
     const hdir: HDirection = start.x > end.x ? -1 : 1
     const cos05 = 0.877
     const distanceFromFactor =
       0.7 + (0.7 * ((publicationTo.publicationDate + publicationFrom.publicationDate) % 15)) / 15
     const distanceToFactor = 1.4 + (0.7 * ((publicationTo.publicationDate + publicationFrom.publicationDate) % 5)) / 5
     const points = []
-    if (props.positionEnd == props.positionStart) {
+    if (props.positionEnd === props.positionStart) {
       points.push(new Coordinates(start.x, start.y))
       points.push(new Coordinates(end.x + 0.1, end.y + 0.1))
     } else {
@@ -85,11 +85,11 @@ const PublicationReferenceNode = (props: PublicationReferenceNodeProps) => {
     const colorFrom = ColorsService.getAccentColor(props.authorFrom.nationality)
     return (
       <path
+        className={'opacity-70 ' + (props.isHighlighted ? 'animated-dash' : '')}
         d={roundPathCorners(pathPoints, 5, false)}
+        fill="none"
         stroke={colorFrom}
         strokeWidth="2"
-        fill="none"
-        className={'opacity-70 ' + (props.isHighlighted ? 'animated-dash' : '')}
       />
     )
   }

@@ -7,7 +7,7 @@ const HistoryEventsList = HistoryEventsListRaw.map(
 
 const HistoryEventsListService = {
   getAll: () => {
-    let rowEnds: number[] = []
+    const rowEnds: number[] = []
     return HistoryEventsList.map((event: HistoryEvent) => {
       for (let i = 0; i < rowEnds.length; i++) {
         if (rowEnds[i] < event.yearFrom) {

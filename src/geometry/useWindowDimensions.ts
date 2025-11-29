@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 export default function useWindowDimensions() {
   const hasWindow = typeof window !== 'undefined'
 
   const getWindowDimensions = () => ({
-    width: hasWindow ? window.innerWidth : 0,
     height: hasWindow ? window.innerHeight : 0,
+    width: hasWindow ? window.innerWidth : 0,
   })
 
   const [windowDimensions, setWindowDimensions] = useState(getWindowDimensions())

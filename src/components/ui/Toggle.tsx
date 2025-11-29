@@ -16,14 +16,14 @@ const UIToggle = (props: UIToggleProps<boolean>) => {
   return (
     <div className={' neumorphism-toggle cursor-pointer ' + (!props.disabled ? '' : ' switchDisabled')}>
       <input
-        type="checkbox"
-        id={id}
         checked={props.state}
+        id={id}
         onChange={e => {
           if (!props.disabled) {
             props.useState(e.target.checked)
           }
         }}
+        type="checkbox"
       />
       <label htmlFor={id}>
         <div className="switch">

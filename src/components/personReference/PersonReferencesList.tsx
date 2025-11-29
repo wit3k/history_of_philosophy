@@ -1,7 +1,7 @@
-import Person from '../../data/dto/Person'
-import PersonReference from '../../data/dto/PersonReference'
+import type Person from '../../data/dto/Person'
+import type PersonReference from '../../data/dto/PersonReference'
 
-import PersonReferenceNode, { PersonReferenceSettings } from './PersonReferenceNode'
+import PersonReferenceNode, { type PersonReferenceSettings } from './PersonReferenceNode'
 
 class PersonReferencesListProps {
   constructor(
@@ -30,17 +30,17 @@ const PersonReferencesList = (props: PersonReferencesListProps) =>
     ) {
       return (
         <PersonReferenceNode
-          key={'personref' + reference.id + i}
-          personReference={reference}
-          settings={props.personReferenceSettings}
           authorFrom={personFrom}
           authorTo={personTo}
-          positionStart={props.positionByYear(personFrom.born)}
+          highlightsOn={props.highlightedAuthor !== '0'}
+          isHighlighted={props.highlightedAuthor === personFrom.id || props.highlightedAuthor === personTo.id}
+          key={'personref' + reference.id + i}
+          personReference={reference}
           positionEnd={props.positionByYear(personTo.born)}
+          positionStart={props.positionByYear(personFrom.born)}
           rowPositionFrom={props.rowPosition(personFrom.rowNumber)}
           rowPositionTo={props.rowPosition(personTo.rowNumber)}
-          highlightsOn={props.highlightedAuthor != '0'}
-          isHighlighted={props.highlightedAuthor == personFrom.id || props.highlightedAuthor == personTo.id}
+          settings={props.personReferenceSettings}
         />
       )
     }

@@ -1,5 +1,6 @@
 import type Coordinates from '../../geometry/Coordinates'
 import ChronologyScaleLine from './ChronologyScaleLine'
+
 class ChronologyPadProps {
   constructor(
     public padSize: Coordinates,
@@ -15,33 +16,33 @@ const ChronologyPad = (props: ChronologyPadProps) => {
   return (
     <g>
       <rect
-        x="0%"
-        y="0%"
-        width={props.padSize.x}
         height={props.padSize.y}
         onClick={props.stateResetHandler}
         onMouseMove={props.stateResetHandler}
         style={{
           fill: 'white',
-          stroke: 'none',
-          strokeWidth: '0',
           fillOpacity: '0',
+          stroke: 'none',
           strokeOpacity: '0',
+          strokeWidth: '0',
         }}
+        width={props.padSize.x}
+        x="0%"
+        y="0%"
       />
       {props.yearsOnScale.filter(props.isVisible).map((year, i) => (
         <ChronologyScaleLine
-          year={year}
           height={props.padSize.y}
-          position={props.positionByYear(year)}
           key={`yearLine` + year + i}
+          position={props.positionByYear(year)}
+          year={year}
         />
       ))}
       <ChronologyScaleLine
-        year={currentYear}
         height={props.padSize.y}
-        position={props.positionByYear(currentYear)}
         key={`yearLineL` + currentYear}
+        position={props.positionByYear(currentYear)}
+        year={currentYear}
       />
     </g>
   )

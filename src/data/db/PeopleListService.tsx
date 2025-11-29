@@ -39,7 +39,7 @@ class CategoryBlock {
   }
 }
 const PeopleList = PeopleListRaw.filter(
-  p => p.born != undefined, // && p.died != undefined,
+  p => p.born !== undefined, // && p.died != undefined,
 ).map(
   p =>
     new Person(
@@ -60,18 +60,18 @@ const PeopleList = PeopleListRaw.filter(
 const PeopleListService = {
   getAll: () => PeopleList,
   withRowNumbers: (people: Person[]): Person[] => {
-    const peopleSorted = Array.from(
+    const peopleSorted: Person[] = Array.from(
       groupBy(
-        people.sort((a, b) => a.born - b.born),
+        people.sort((a, b) => a.died - a.born - (b.died - b.born)),
         (p: Person) => p.nationality,
       ).entries(),
-    ).flatMap(([e, b]) => b)
-    let blocks: Map<string, CategoryBlock> = new Map<string, CategoryBlock>()
+    ).flatMap(([_, b]): Person => b)
+    const blocks: Map<string, CategoryBlock> = new Map<string, CategoryBlock>()
     const margin = 0
     peopleSorted.forEach((person: Person) => {
       const maybeBlock = blocks.get('')
       // const maybeBlock = blocks.get(person.category ? person.category : '');
-      const currentBlock = maybeBlock != undefined ? maybeBlock : new CategoryBlock('', [])
+      const currentBlock = maybeBlock !== undefined ? maybeBlock : new CategoryBlock('', [])
       // : new CategoryBlock(person.category ? person.category : '', []);
       let addedToExistingRow = false
       for (let i = 0; i < currentBlock.rows.length; i++) {
@@ -102,9 +102,9 @@ const PeopleListService = {
       // blocks.set(person.category ? person.category : '', currentBlock);
     })
 
-    let allBlocksArray = Array.from(blocks.entries()).reverse()
+    const allBlocksArray = Array.from(blocks.entries()).reverse()
     let categoryBlockShift: number = 1
-    return allBlocksArray.flatMap(([categoryBlockK, categoryBlockV]) => {
+    return allBlocksArray.flatMap(([_, categoryBlockV]) => {
       const blocksToReturn = categoryBlockV.rows.flatMap((categoryBlockRowV, categoryBlockRowI) => {
         return categoryBlockRowV.people.map(person => ({
           ...person,

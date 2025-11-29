@@ -1,6 +1,6 @@
 import type Person from '../../data/dto/Person'
 import type Publication from '../../data/dto/Publication'
-import PublicationNode, { PublicationNodeSettings } from './PublicationNode'
+import PublicationNode, { type PublicationNodeSettings } from './PublicationNode'
 
 class PublicationsListProps {
   constructor(
@@ -21,23 +21,23 @@ const PublicationsList = (props: PublicationsListProps) =>
   props.publicationsList
     .filter(publication => props.isVisible(publication.publicationDate))
     .map((publication, _) => ({
+      author: props.peopleList.find(p => p.id === publication.authorId),
       publication,
-      author: props.peopleList.find(p => p.id == publication.authorId),
     }))
     .map(({ publication, author }, i) => {
       if (author) {
         return (
           <PublicationNode
-            key={'publication' + publication.id + i}
-            publication={publication}
             author={author}
-            position={props.positionByYear(publication.publicationDate)}
-            settings={props.publicationNodeSettings}
-            rowPosition={props.rowPosition(author.rowNumber)}
-            updateHighlightedPublication={props.updateHighlightedPublication}
+            key={'publication' + publication.id + i}
             modalHandle={props.modalHandle}
+            position={props.positionByYear(publication.publicationDate)}
+            publication={publication}
+            rowPosition={props.rowPosition(author.rowNumber)}
             setCurrentAuthor={props.setCurrentAuthor}
             setCurrentPublication={props.setCurrentPublication}
+            settings={props.publicationNodeSettings}
+            updateHighlightedPublication={props.updateHighlightedPublication}
           />
         )
       }

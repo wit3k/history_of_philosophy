@@ -2,7 +2,7 @@
 
 html {
   overscroll-behavior-y: contain;
-  touch-action: none;
   font-family: sans-serif;
   color: white;
+  touch-action: none;
 }

@@ -1,8 +1,7 @@
+import React, { type Dispatch, type SetStateAction } from 'react'
 import UIToggle from './Toggle'
-import React from 'react'
-import { type Dispatch, type SetStateAction } from 'react'
 import './Menu.sass'
-import Collection from '../../data/dto/Collection'
+import type Collection from '../../data/dto/Collection'
 
 class MenuProps {
   constructor(
@@ -45,17 +44,17 @@ const Menu = (props: MenuProps) => {
               style={{ background: 'linear-gradient(90deg, #ff4f7e, #fe27be)' }}
             >
               <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
                 className="size-6"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1.5}
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
               >
                 <path
+                  d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75"
                 />
               </svg>
             </i>
@@ -77,18 +76,18 @@ const Menu = (props: MenuProps) => {
               style={{ background: 'linear-gradient(90deg, #ff4f7e, #fe27be)' }}
             >
               <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
                 className="size-6"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1.5}
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
               >
                 <path d="M10 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16Z" />
                 <path
-                  fillRule="evenodd"
-                  d="M21.707 21.707a1 1 0 0 1-1.414 0l-3.5-3.5a1 1 0 0 1 1.414-1.414l3.5 3.5a1 1 0 0 1 0 1.414Z"
                   clipRule="evenodd"
+                  d="M21.707 21.707a1 1 0 0 1-1.414 0l-3.5-3.5a1 1 0 0 1 1.414-1.414l3.5 3.5a1 1 0 0 1 0 1.414Z"
+                  fillRule="evenodd"
                 />
               </svg>
             </i>
@@ -112,18 +111,18 @@ const Menu = (props: MenuProps) => {
               style={{ background: 'linear-gradient(90deg, #ff4f7e, #fe27be)' }}
             >
               <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
                 className="size-6"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1.5}
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
               >
                 <path d="M10 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16Z" />
                 <path
-                  fillRule="evenodd"
-                  d="M21.707 21.707a1 1 0 0 1-1.414 0l-3.5-3.5a1 1 0 0 1 1.414-1.414l3.5 3.5a1 1 0 0 1 0 1.414Z"
                   clipRule="evenodd"
+                  d="M21.707 21.707a1 1 0 0 1-1.414 0l-3.5-3.5a1 1 0 0 1 1.414-1.414l3.5 3.5a1 1 0 0 1 0 1.414Z"
+                  fillRule="evenodd"
                 />
               </svg>
             </i>
@@ -139,12 +138,12 @@ const Menu = (props: MenuProps) => {
 
             {props.collectionsState.map((collection: Collection, i: number) => (
               <UIToggle
+                disabled={false}
                 key={'collection' + collection.id + i}
                 label={collection.name}
+                offMsg=""
                 state={collection.isActive}
                 useState={(checked: boolean) => props.toggleCollectionsState(collection.id, checked)}
-                offMsg=""
-                disabled={false}
               />
             ))}
           </div>
@@ -167,17 +166,17 @@ const Menu = (props: MenuProps) => {
               style={{ background: 'linear-gradient(90deg, #ff4f7e, #fe27be)' }}
             >
               <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
                 className="size-6"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1.5}
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
               >
                 <path
+                  d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75"
                 />
               </svg>
             </i>
@@ -187,54 +186,54 @@ const Menu = (props: MenuProps) => {
           </div>
 
           <hr className="my-2 text-gray-600"></hr>
-          <UIToggle label="Autorzy" state={props.displayAuthors} useState={props.setDisplayAuthors} offMsg="" />
+          <UIToggle label="Autorzy" offMsg="" state={props.displayAuthors} useState={props.setDisplayAuthors} />
         </div>
 
         <div className="sm:col-span-4">
           <UIToggle
+            disabled={!props.displayAuthors}
             label="Życiorysy"
+            offMsg=""
             state={props.displayAuthorsTimeline}
             useState={props.setDisplayAuthorsTimeline}
-            offMsg=""
-            disabled={!props.displayAuthors}
           />
         </div>
         <div className="sm:col-span-4">
           <UIToggle
+            disabled={!props.displayAuthors}
             label="Sympatie"
+            offMsg=""
             state={props.displayAuthorRelations}
             useState={props.setDisplayAuthorRelations}
-            offMsg=""
-            disabled={!props.displayAuthors}
           />
         </div>
         <div className="sm:col-span-4">
           <UIToggle
             label="Publikacje"
+            offMsg=""
             state={props.displayPublications}
             useState={props.setDisplayPublications}
-            offMsg=""
           />
         </div>
         <div className="sm:col-span-4">
           <UIToggle
+            disabled={!props.displayPublications}
             label="Odniesienia"
+            offMsg=""
             state={props.displayPublicationRelations}
             useState={props.setDisplayPublicationRelations}
-            offMsg=""
-            disabled={!props.displayPublications}
           />
         </div>
         <div className="sm:col-span-4">
           <UIToggle
             label="Wydarzenia historyczne"
+            offMsg=""
             state={props.displayHistoryEvents}
             useState={props.setDisplayHistoryEvents}
-            offMsg=""
           />
         </div>
         <div className="sm:col-span-4">
-          <UIToggle label="Tryb ciemny" state={props.darkMode} useState={props.setDarkMode} offMsg="" />
+          <UIToggle label="Tryb ciemny" offMsg="" state={props.darkMode} useState={props.setDarkMode} />
         </div>
       </div>
     </div>
