@@ -23,28 +23,29 @@ const PersonNode = (props: PersonNodeProps) => {
   const appBasePath = '/history_of_philosophy'
   const fixedColor = ColorsService.getAccentColor(props.person.nationality)
   const tamedColor = ColorsService.convertToPale(fixedColor)
+  const darkColor = ColorsService.convertToDark(fixedColor)
 
   return (
     <g>
       (
       {props.displayAuthorsTimeline && (
         <g>
-          {/* <rect
-            x={props.positionStart + props.settings.boxSize + 5}
-            y={props.rowPosition}
-            rx="10"
-            ry="10"
-            width={props.positionEnd - props.positionStart - props.settings.boxSize - 5}
+          <rect
             height={props.settings.boxSize}
+            rx="0"
+            ry="0"
             style={{
-              fill: dominantColor,
-              stroke: dominantColor,
-              strokeWidth: '0',
-              fillOpacity: '0.1',
+              fill: tamedColor,
+              fillOpacity: '1',
+              stroke: fixedColor,
               strokeOpacity: '1',
+              strokeWidth: '1',
             }}
-          /> */}
-          <line
+            width={props.positionEnd - props.positionStart}
+            x={props.positionStart}
+            y={props.rowPosition}
+          />
+          {/* <line
             opacity={props.highlightedAuthor == '0' || props.highlightedAuthor == props.person.id ? '1' : '0.3'}
             stroke={tamedColor}
             strokeWidth="6"
@@ -52,7 +53,7 @@ const PersonNode = (props: PersonNodeProps) => {
             x2={props.positionEnd}
             y1={props.rowPosition + props.settings.boxSize / 2}
             y2={props.rowPosition + props.settings.boxSize / 2}
-          />
+          /> */}
         </g>
       )}
       )
@@ -67,16 +68,16 @@ const PersonNode = (props: PersonNodeProps) => {
           }}
           onMouseMove={() => props.updateHighlightedAuthor(props.person.id)}
           opacity={props.highlightedAuthor == '0' || props.highlightedAuthor == props.person.id ? '1' : '0.3'}
-          rx={10}
-          ry={10}
+          rx="0"
+          ry="0"
           width={props.settings.boxSize}
           x={props.positionStart}
           y={props.rowPosition}
         />
       )}
-      <rect
+      {/* <rect
         className="cursor-pointer"
-        height={props.settings.boxSize + 1}
+        height={props.settings.boxSize}
         onClick={() => {
           props.updateHighlightedAuthor(props.person.id)
           props.authorCallback(props.person.id)
@@ -91,11 +92,11 @@ const PersonNode = (props: PersonNodeProps) => {
           strokeOpacity: props.highlightedAuthor == '0' || props.highlightedAuthor == props.person.id ? '1' : '0.3',
           strokeWidth: '2',
         }}
-        width={props.settings.boxSize + 1}
+        width={props.settings.boxSize}
         x={props.positionStart}
         y={props.rowPosition}
-      />
-      <rect
+      /> */}
+      {/* <rect
         className="cursor-pointer"
         height={22}
         rx="2"
@@ -110,18 +111,18 @@ const PersonNode = (props: PersonNodeProps) => {
         width={Math.min(props.person.name.length * 10, props.positionEnd - props.positionStart)}
         x={props.positionStart - 1}
         y={props.rowPosition + props.settings.boxSize + 3}
-      />
+      /> */}
       <text
         className="cursor-pointer font-mono"
         dominantBaseline="hanging"
-        fill="white"
+        fill={darkColor}
         fontSize="14"
         height="30"
-        opacity={props.highlightedAuthor == '0' || props.highlightedAuthor == props.person.id ? '1' : '0.3'}
+        opacity={props.highlightedAuthor === '0' || props.highlightedAuthor === props.person.id ? '1' : '0.3'}
         textAnchor="start"
         width={props.person.name.length * 10}
-        x={props.positionStart + 5}
-        y={props.rowPosition + props.settings.boxSize + 8}
+        x={props.positionStart + props.settings.boxSize + 8}
+        y={props.rowPosition + 12}
       >
         {props.person.name.length * 8 < props.positionEnd - props.positionStart
           ? props.person.name

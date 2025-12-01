@@ -62,7 +62,7 @@ const Chronology = () => {
   }, [])
 
   const prop: ChronologyProperies = {
-    rowHeight: 85,
+    rowHeight: 45,
     windowSize: dimenstions,
     yearLabelWidth: 100,
   }
@@ -152,27 +152,27 @@ const Chronology = () => {
   })
 
   const historyEventNodeSettings: HistoryEventNodeSettings = {
-    boxSize: 20,
-    rowHeight: 21,
+    boxSize: 14,
+    rowHeight: 15,
   }
 
   const personNodesSettings: PersonNodeSettings = {
-    boxSize: 50,
+    boxSize: 35,
   }
 
   const personReferenceSettings: PersonReferenceSettings = {
-    boxSize: 50,
+    boxSize: 35,
   }
 
   const publicationNodeSettings: PublicationNodeSettings = {
-    boxSize: 50,
-    dotSize: 15,
+    boxSize: 35,
+    dotSize: 30,
     maxLettersColumns: 25,
     maxLettersRows: 3,
   }
 
   const publicationReferenceSettings: PublicationReferenceSettings = {
-    boxSize: 30,
+    boxSize: 35,
     dotSize: 15,
   }
 

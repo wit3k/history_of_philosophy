@@ -81,7 +81,25 @@ const PublicationNode = (props: PublicationNodeProps) => {
         </text>
       </g>
 
-      <rect
+      <line
+        className="tooltipHover cursor-pointer flex items-center justify-center rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors duration-300"
+        onClick={() => {
+          props.setCurrentAuthor(props.author)
+          props.setCurrentPublication(props.publication)
+          props.modalHandle(true)
+        }}
+        onMouseMove={() => props.updateHighlightedPublication(props.publication.id)}
+        onTouchStart={() => props.updateHighlightedPublication(props.publication.id)}
+        opacity="1"
+        stroke={ColorsService.getFixedColor(props.publication.publicationDate)}
+        strokeWidth="10"
+        x1={props.position}
+        x2={props.position}
+        y1={props.rowPosition}
+        y2={props.rowPosition + props.settings.boxSize}
+      />
+
+      {/* <rect
         className="tooltipHover cursor-pointer flex items-center justify-center rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors duration-300"
         height={props.settings.dotSize * 3}
         onClick={() => {
@@ -103,8 +121,8 @@ const PublicationNode = (props: PublicationNodeProps) => {
         width={props.settings.dotSize * 2}
         x={props.position - props.settings.dotSize}
         y={props.rowPosition}
-      />
-      <text
+      /> */}
+      {/* <text
         className="font-mono font-bold tooltipHover cursor-pointer flex items-center justify-center rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors duration-300"
         dominantBaseline="hanging"
         dy="10"
@@ -124,7 +142,7 @@ const PublicationNode = (props: PublicationNodeProps) => {
         y={props.rowPosition}
       >
         {abbreviation}
-      </text>
+      </text> */}
     </g>
   )
 }

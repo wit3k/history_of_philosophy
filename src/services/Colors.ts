@@ -36,6 +36,10 @@ const ColorsService = {
     const b = Math.round(rgbA.b * (1 - amountToMix) + rgbB.b * amountToMix)
     return { b, g, r }
   },
+  convertToDark: (hex: string) =>
+    ColorsService.rgbToHex(
+      ColorsService.blendColors(ColorsService.hexToRgb('#000000'), ColorsService.hexToRgb(hex), 0.6),
+    ),
   convertToGray: (hex: string) =>
     ColorsService.rgbToHex(
       ColorsService.blendColors(ColorsService.hexToRgb('#222222'), ColorsService.hexToRgb(hex), 0.25),
@@ -43,7 +47,7 @@ const ColorsService = {
 
   convertToPale: (hex: string) =>
     ColorsService.rgbToHex(
-      ColorsService.blendColors(ColorsService.hexToRgb('#ffffff'), ColorsService.hexToRgb(hex), 0.4),
+      ColorsService.blendColors(ColorsService.hexToRgb('#ffffff'), ColorsService.hexToRgb(hex), 0.3),
     ),
   getAccentColor: (name: string | null): string => {
     if (name == null) {

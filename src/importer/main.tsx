@@ -111,8 +111,10 @@ const people = (await getTable('people')).list
       downloadAndProcessImage(
         process.env.NOCO_URL + '/' + person['Zdjęcie'][0].path,
         './public/assets/person/' + person['Zdjęcie'][0].id + '.png',
-        new Coordinates(50, 50),
-        5,
+        new Coordinates(30, 30),
+        0,
+        // new Coordinates(50, 50),
+        // 5,
       )
       downloadAndProcessImage(
         process.env.NOCO_URL + '/' + person['Zdjęcie'][0].path,
