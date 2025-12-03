@@ -1,4 +1,4 @@
-import type Coordinates from '../../geometry/Coordinates'
+import Coordinates from '../../geometry/Coordinates'
 import ChronologyScaleLabel from './ChronologyScaleLabel'
 
 class ChronologyScaleProps {
@@ -12,26 +12,16 @@ class ChronologyScaleProps {
   ) {}
 }
 
-const ChronologyScale = (props: ChronologyScaleProps) => (
-  <div className={'scaleContainer'}>
-    <div className={'scale'}>
-      <svg
-        preserveAspectRatio="xMidYMid meet"
-        style={{ height: 60, width: props.padSize.x }}
-        viewBox={`0 0 ${props.padSize.x} 60`}
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        {props.yearsOnScale.filter(props.isVisible).map((year, i) => (
-          <ChronologyScaleLabel
-            key={`yearLabel` + year + i}
-            position={props.positionByYear(year)}
-            year={year}
-            yearLabelWidth={props.yearLabelWidth}
-          />
-        ))}
-      </svg>
-    </div>
-  </div>
-)
+const ChronologyScale = (props: ChronologyScaleProps) =>
+  props.yearsOnScale
+    .filter(props.isVisible)
+    .map((year, _) => (
+      <ChronologyScaleLabel
+        key={`yearLabel${year}`}
+        position={new Coordinates(props.positionByYear(year), props.padSize.y - 30)}
+        year={year}
+        yearLabelWidth={props.yearLabelWidth}
+      />
+    ))
 
 export default ChronologyScale

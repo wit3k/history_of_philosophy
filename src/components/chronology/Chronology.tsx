@@ -393,15 +393,15 @@ const Chronology = () => {
             updateHighlightedPublication={updateHighlightedPublication}
           />
         )}
-      </svg>
 
-      <ChronologyScale
-        isVisible={isVisible}
-        padSize={new Coordinates(prop.windowSize.x, prop.windowSize.y)}
-        positionByYear={positionByYear}
-        yearLabelWidth={prop.yearLabelWidth}
-        yearsOnScale={yearsOnScale}
-      />
+        <ChronologyScale
+          isVisible={isVisible}
+          padSize={new Coordinates(prop.windowSize.x, prop.windowSize.y)}
+          positionByYear={positionByYear}
+          yearLabelWidth={prop.yearLabelWidth}
+          yearsOnScale={yearsOnScale}
+        />
+      </svg>
 
       <Menu
         collectionsState={collectionsState}

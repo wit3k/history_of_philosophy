@@ -1,7 +1,9 @@
+import type Coordinates from '../../geometry/Coordinates'
+
 class TimeScaleLabelProps {
   constructor(
     public year: number,
-    public position: number,
+    public position: Coordinates,
     public yearLabelWidth: number,
   ) {}
 }
@@ -15,8 +17,8 @@ const ChronologyScaleLabel = (props: TimeScaleLabelProps) => {
         rx="5"
         ry="5"
         width={props.yearLabelWidth}
-        x={props.position - props.yearLabelWidth / 2}
-        y="0"
+        x={props.position.x - props.yearLabelWidth / 2}
+        y={props.position.y}
       />
       <text
         className="font-mono"
@@ -26,8 +28,8 @@ const ChronologyScaleLabel = (props: TimeScaleLabelProps) => {
         height="40"
         textAnchor="middle"
         width={props.yearLabelWidth}
-        x={props.position}
-        y="8"
+        x={props.position.x}
+        y={props.position.y + 10}
       >
         {props.year}
       </text>
