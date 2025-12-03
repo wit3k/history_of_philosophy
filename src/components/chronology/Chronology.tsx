@@ -94,7 +94,7 @@ const Chronology = () => {
       const includedIds: string[] = newCollectionsState
         .filter(c => c.isActive)
         .flatMap(cmap)
-        .map(c => c + '')
+        .map(c => c.toString())
       const allCollectionIds: string[] = newCollectionsState.flatMap(cmap).map(c => c + '')
 
       return (item: S, _: number) =>
@@ -126,9 +126,7 @@ const Chronology = () => {
   const [displayPublications, setDisplayPublications] = React.useState(true)
   const [displayPublicationRelations, setDisplayPublicationRelations] = React.useState(true)
   const [displayHistoryEvents, setDisplayHistoryEvents] = React.useState(true)
-  const [darkMode, setDarkMode] = React.useState(
-    window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches,
-  )
+  const [darkMode, setDarkMode] = React.useState(window?.matchMedia('(prefers-color-scheme: dark)').matches)
 
   const [zoom, setZoom] = React.useState(10)
   const [pinchDelta, setPinchDelta] = React.useState(0)
@@ -138,7 +136,7 @@ const Chronology = () => {
     startViewPosition: { x: 0, y: 0 },
   })
   const [highlightedAuthor, updateHighlightedAuthor] = React.useState('0')
-  const [currentPublication, setCurrentPublication] = React.useState(new Publication('', '', 0, 0, '', ''))
+  const [currentPublication, setCurrentPublication] = React.useState<Publication>(new Publication('', '', 0, 0, '', ''))
   const [currentAuthor, setCurrentAuthor] = React.useState(new Person('', '', 0, 0, true, '', '', '', 1, '', ''))
   const [highlightedPublication, updateHighlightedPublication] = React.useState('0')
   const [viewPosition, setPosition] = React.useState({
@@ -277,7 +275,7 @@ const Chronology = () => {
     }
     document.addEventListener('keydown', handleKeyDown)
     const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-    const darkModeEventHandler = (event: any) => {
+    const darkModeEventHandler = (event: MediaQueryListEvent) => {
       setDarkMode(event.matches)
     }
     darkModeMediaQuery.addEventListener('change', darkModeEventHandler)

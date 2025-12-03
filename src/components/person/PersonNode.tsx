@@ -26,7 +26,13 @@ const PersonNode = (props: PersonNodeProps) => {
   const darkColor = ColorsService.convertToDark(fixedColor)
 
   return (
-    <g>
+    <g
+      onClick={() => {
+        props.updateHighlightedAuthor(props.person.id)
+        props.authorCallback(props.person.id)
+      }}
+      onMouseMove={() => props.updateHighlightedAuthor(props.person.id)}
+    >
       (
       {props.displayAuthorsTimeline && (
         <g>
@@ -36,7 +42,7 @@ const PersonNode = (props: PersonNodeProps) => {
             ry="0"
             style={{
               fill: tamedColor,
-              fillOpacity: '1',
+              fillOpacity: props.highlightedAuthor === '0' || props.highlightedAuthor === props.person.id ? '1' : '0.3',
               stroke: fixedColor,
               strokeOpacity: '1',
               strokeWidth: '1',
@@ -45,15 +51,6 @@ const PersonNode = (props: PersonNodeProps) => {
             x={props.positionStart}
             y={props.rowPosition}
           />
-          {/* <line
-            opacity={props.highlightedAuthor == '0' || props.highlightedAuthor == props.person.id ? '1' : '0.3'}
-            stroke={tamedColor}
-            strokeWidth="6"
-            x1={props.positionStart + props.settings.boxSize}
-            x2={props.positionEnd}
-            y1={props.rowPosition + props.settings.boxSize / 2}
-            y2={props.rowPosition + props.settings.boxSize / 2}
-          /> */}
         </g>
       )}
       )
@@ -61,13 +58,8 @@ const PersonNode = (props: PersonNodeProps) => {
         <image
           className="cursor-pointer"
           height={props.settings.boxSize}
-          href={appBasePath + '/assets/person/' + props.person.thumbnail}
-          onClick={() => {
-            props.updateHighlightedAuthor(props.person.id)
-            props.authorCallback(props.person.id)
-          }}
-          onMouseMove={() => props.updateHighlightedAuthor(props.person.id)}
-          opacity={props.highlightedAuthor == '0' || props.highlightedAuthor == props.person.id ? '1' : '0.3'}
+          href={`${appBasePath}/assets/person/${props.person.thumbnail}`}
+          opacity={props.highlightedAuthor === '0' || props.highlightedAuthor === props.person.id ? '1' : '0.3'}
           rx="0"
           ry="0"
           width={props.settings.boxSize}
@@ -75,43 +67,6 @@ const PersonNode = (props: PersonNodeProps) => {
           y={props.rowPosition}
         />
       )}
-      {/* <rect
-        className="cursor-pointer"
-        height={props.settings.boxSize}
-        onClick={() => {
-          props.updateHighlightedAuthor(props.person.id)
-          props.authorCallback(props.person.id)
-        }}
-        onMouseMove={() => props.updateHighlightedAuthor(props.person.id)}
-        rx={5}
-        ry={5}
-        style={{
-          fill: fixedColor,
-          fillOpacity: '0',
-          stroke: fixedColor,
-          strokeOpacity: props.highlightedAuthor == '0' || props.highlightedAuthor == props.person.id ? '1' : '0.3',
-          strokeWidth: '2',
-        }}
-        width={props.settings.boxSize}
-        x={props.positionStart}
-        y={props.rowPosition}
-      /> */}
-      {/* <rect
-        className="cursor-pointer"
-        height={22}
-        rx="2"
-        ry="2"
-        style={{
-          fill: fixedColor,
-          fillOpacity: props.highlightedAuthor == '0' || props.highlightedAuthor == props.person.id ? '1' : '0.1',
-          stroke: fixedColor,
-          strokeOpacity: '0',
-          strokeWidth: '0',
-        }}
-        width={Math.min(props.person.name.length * 10, props.positionEnd - props.positionStart)}
-        x={props.positionStart - 1}
-        y={props.rowPosition + props.settings.boxSize + 3}
-      /> */}
       <text
         className="cursor-pointer font-mono"
         dominantBaseline="hanging"
@@ -124,9 +79,9 @@ const PersonNode = (props: PersonNodeProps) => {
         x={props.positionStart + props.settings.boxSize + 8}
         y={props.rowPosition + 12}
       >
-        {props.person.name.length * 8 < props.positionEnd - props.positionStart
+        {props.person.name.length * 8 < props.positionEnd - props.positionStart - props.settings.boxSize - 12
           ? props.person.name
-          : props.person.name.slice(0, (props.positionEnd - props.positionStart) / 8 - 4) + '...'}
+          : `${props.person.name.slice(0, Math.max((props.positionEnd - props.positionStart - props.settings.boxSize - 12) / 8 - 4, 0))}...`}
       </text>
     </g>
   )

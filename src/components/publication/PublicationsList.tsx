@@ -24,23 +24,19 @@ const PublicationsList = (props: PublicationsListProps) =>
       author: props.peopleList.find(p => p.id === publication.authorId),
       publication,
     }))
-    .map(({ publication, author }, i) => {
-      if (author) {
-        return (
-          <PublicationNode
-            author={author}
-            key={'publication' + publication.id + i}
-            modalHandle={props.modalHandle}
-            position={props.positionByYear(publication.publicationDate)}
-            publication={publication}
-            rowPosition={props.rowPosition(author.rowNumber)}
-            setCurrentAuthor={props.setCurrentAuthor}
-            setCurrentPublication={props.setCurrentPublication}
-            settings={props.publicationNodeSettings}
-            updateHighlightedPublication={props.updateHighlightedPublication}
-          />
-        )
-      }
-    })
+    .map(({ publication, author }, _) => (
+      <PublicationNode
+        author={author}
+        key={`publication${publication.id}`}
+        modalHandle={props.modalHandle}
+        position={props.positionByYear(publication.publicationDate)}
+        publication={publication}
+        rowPosition={props.rowPosition(author?.rowNumber!)}
+        setCurrentAuthor={props.setCurrentAuthor}
+        setCurrentPublication={props.setCurrentPublication}
+        settings={props.publicationNodeSettings}
+        updateHighlightedPublication={props.updateHighlightedPublication}
+      />
+    ))
 
 export default PublicationsList
