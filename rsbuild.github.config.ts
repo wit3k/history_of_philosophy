@@ -13,7 +13,7 @@ export default defineConfig({
     assetPrefix: '/history_of_philosophy',
     cleanDistPath: true,
     distPath: {
-      root: '../docs',
+      root: './docs',
     },
   },
 })
