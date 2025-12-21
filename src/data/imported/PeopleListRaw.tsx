@@ -1267,4 +1267,14 @@ export const PeopleListRaw = [
     stillAlive: false,
     thumbnail: 'atcfnf5akt3fo03j.png',
   },
+  {
+    bornLocation: null,
+    category: null,
+    diedLocation: null,
+    id: '139',
+    name: 'Carl Gustav Jung',
+    nationality: null,
+    stillAlive: false,
+    thumbnail: null,
+  },
 ]

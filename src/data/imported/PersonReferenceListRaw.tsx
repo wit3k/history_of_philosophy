@@ -32,4 +32,6 @@ export const PersonReferenceListRaw = [
   { attitude: 'Positive', from: '97', id: '22', name: 'Ojciec Chrzestny Ruchu', to: '60' },
   { attitude: 'Positive', from: '99', id: '23', name: 'Współtwórcy Václav Klofáč', to: '98' },
   { attitude: 'Positive', from: '61', id: '24', name: 'Ciepły miś', to: '60' },
+  { attitude: 'Positive', from: '87', id: '26', name: 'Inspiracja', to: '14' },
+  { attitude: 'Positive', from: '131', id: '27', name: 'Inspiracja', to: '133' },
 ]
