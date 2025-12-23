@@ -42,10 +42,10 @@ const PersonNode = (props: PersonNodeProps) => {
             ry="0"
             style={{
               fill: tamedColor,
-              fillOpacity: props.highlightedAuthor === '0' || props.highlightedAuthor === props.person.id ? '1' : '0.3',
+              fillOpacity: 1,
               stroke: fixedColor,
               strokeOpacity: '1',
-              strokeWidth: '1',
+              strokeWidth: props.highlightedAuthor === props.person.id ? '3' : '1',
             }}
             width={props.positionEnd - props.positionStart}
             x={props.positionStart}
@@ -59,7 +59,7 @@ const PersonNode = (props: PersonNodeProps) => {
           className="cursor-pointer"
           height={props.settings.boxSize}
           href={`${appBasePath}/assets/person/${props.person.thumbnail}`}
-          opacity={props.highlightedAuthor === '0' || props.highlightedAuthor === props.person.id ? '1' : '0.3'}
+          // opacity={props.highlightedAuthor === '0' || props.highlightedAuthor === props.person.id ? '1' : '0.3'}
           rx="0"
           ry="0"
           width={props.settings.boxSize}
@@ -73,7 +73,7 @@ const PersonNode = (props: PersonNodeProps) => {
         fill={darkColor}
         fontSize="14"
         height="30"
-        opacity={props.highlightedAuthor === '0' || props.highlightedAuthor === props.person.id ? '1' : '0.3'}
+        opacity={props.highlightedAuthor === props.person.id ? '1' : '0.8'}
         textAnchor="start"
         width={props.person.name.length * 10}
         x={props.positionStart + props.settings.boxSize + 8}
