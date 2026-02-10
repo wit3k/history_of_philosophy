@@ -32,10 +32,10 @@ const PublicationNode = (props: PublicationNodeProps) => {
     .split(' ')
     .map(e => [e])
     .reduce((acc, word) => {
-      const withLastWord = acc[acc.length - 1] + ' ' + word[0]
+      const withLastWord = `${acc[acc.length - 1]} ${word[0]}`
       return withLastWord.length < props.settings.maxLettersColumns
         ? [...acc.slice(0, -1), withLastWord]
-        : [...acc, word[0]]
+        : acc.concat(word[0])
     })
   const slices = titleSections.slice(0, props.settings.maxLettersRows)
   return (
@@ -79,12 +79,12 @@ const PublicationNode = (props: PublicationNodeProps) => {
       <line
         className="tooltipHover cursor-pointer flex items-center justify-center rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors duration-300"
         onClick={() => {
-          props.setCurrentAuthor(props.author!)
-          props.setCurrentPublication(props.publication)
+          props.setCurrentAuthor(_ => props.author!)
+          props.setCurrentPublication(_ => props.publication)
           props.modalHandle(true)
         }}
-        onMouseMove={() => props.updateHighlightedPublication(props.publication.id)}
-        onTouchStart={() => props.updateHighlightedPublication(props.publication.id)}
+        onMouseMove={() => props.updateHighlightedPublication(_ => props.publication.id)}
+        onTouchStart={() => props.updateHighlightedPublication(_ => props.publication.id)}
         opacity="1"
         stroke={ColorsService.getFixedColor(props.publication.publicationDate)}
         strokeWidth="10"

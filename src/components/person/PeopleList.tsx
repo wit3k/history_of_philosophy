@@ -18,7 +18,7 @@ class PeopleListProps {
 
 const PeopleList = (props: PeopleListProps) =>
   props.peopleList
-    .filter(person => props.isVisibleRange(person.born, person.died))
+    // .filter(person => props.isVisibleRange(person.born, person.died))
     .map((person, i) => (
       <PersonNode
         authorCallback={props.authorCallback}

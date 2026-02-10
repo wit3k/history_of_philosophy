@@ -349,7 +349,7 @@ const Chronology = () => {
         {displayAuthors && (
           <PeopleList
             authorCallback={id => {
-              setCurrentAuthor(peopleList.find(p => p.id === id)!)
+              setCurrentAuthor(_ => peopleList.find(p => p.id === id)!)
               setDisplayLocationModal(false)
               setDisplayPublicationModal(false)
               setDisplayPersonModal(true)

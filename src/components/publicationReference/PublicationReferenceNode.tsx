@@ -85,7 +85,7 @@ const PublicationReferenceNode = (props: PublicationReferenceNodeProps) => {
     const colorFrom = ColorsService.getAccentColor(props.authorFrom.nationality)
     return (
       <path
-        className={'opacity-70 ' + (props.isHighlighted ? 'animated-dash' : '')}
+        className={`opacity-70 ${props.isHighlighted ? 'animated-dash' : ''}`}
         d={roundPathCorners(pathPoints, 5, false)}
         fill="none"
         stroke={colorFrom}

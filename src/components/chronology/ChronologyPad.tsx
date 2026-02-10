@@ -33,14 +33,14 @@ const ChronologyPad = (props: ChronologyPadProps) => {
       {props.yearsOnScale.filter(props.isVisible).map((year, i) => (
         <ChronologyScaleLine
           height={props.padSize.y}
-          key={`yearLine` + year + i}
+          key={`yearLine${year}`}
           position={props.positionByYear(year)}
           year={year}
         />
       ))}
       <ChronologyScaleLine
         height={props.padSize.y}
-        key={`yearLineL` + currentYear}
+        key={`yearLineL${currentYear}`}
         position={props.positionByYear(currentYear)}
         year={currentYear}
       />

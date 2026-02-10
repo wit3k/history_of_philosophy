@@ -70,6 +70,7 @@ const LocationDetails = (props: LocationDetailsProps) => {
               viewBox="0 0 24 24"
               xmlns="http://www.w3.org/2000/svg"
             >
+              <title>Location icon</title>
               <path
                 d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0Z"
                 strokeLinecap="round"
@@ -82,6 +83,7 @@ const LocationDetails = (props: LocationDetailsProps) => {
         <div className="p-5 pt-0 italic">
           {props.currentLocation.picture && (
             <img
+              alt={props.currentLocation.name}
               className="pr-5 float-left"
               height={200}
               src={appBasePath + '/assets/location/' + props.currentLocation.picture}
@@ -105,6 +107,7 @@ const LocationDetails = (props: LocationDetailsProps) => {
                     viewBox="0 0 24 24"
                     xmlns="http://www.w3.org/2000/svg"
                   >
+                    <title>Publication icon</title>
                     <path
                       d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"
                       strokeLinecap="round"
@@ -120,12 +123,14 @@ const LocationDetails = (props: LocationDetailsProps) => {
                   <span
                     className="italic hover:text-pink-700 underline cursor-pointer"
                     onClick={() => props.publicationCallback(historyItem.publication.id)}
+                    onKeyDown={() => props.publicationCallback(historyItem.publication.id)}
                   >
                     &bdquo;{historyItem.publication.title}&rdquo;
                   </span>{' '}
                   <span
                     className="text-slate-100 font-black hover:text-pink-700 hover:underline cursor-pointer"
                     onClick={() => props.authorCallback(author!.id)}
+                    onKeyDown={() => props.authorCallback(author!.id)}
                   >
                     {author?.name}
                   </span>
@@ -143,6 +148,7 @@ const LocationDetails = (props: LocationDetailsProps) => {
                     viewBox="0 0 24 24"
                     xmlns="http://www.w3.org/2000/svg"
                   >
+                    <title>Person born icon</title>
                     <path
                       d="M16 12h4m-2 2v-4M4 18v-1a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Zm8-10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
                       stroke="currentColor"
@@ -159,6 +165,7 @@ const LocationDetails = (props: LocationDetailsProps) => {
                   <span
                     className="font-black hover:text-pink-700 hover:underline cursor-pointer"
                     onClick={() => props.authorCallback(historyItem.personBorn.id)}
+                    onKeyDown={() => props.authorCallback(historyItem.personBorn.id)}
                   >
                     {historyItem.personBorn.name}
                   </span>{' '}
@@ -175,6 +182,7 @@ const LocationDetails = (props: LocationDetailsProps) => {
                     viewBox="0 0 24 24"
                     xmlns="http://www.w3.org/2000/svg"
                   >
+                    <title>Person died icon</title>
                     <path
                       d="M16 12h4M4 18v-1a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1Zm8-10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
                       stroke="currentColor"
@@ -191,6 +199,7 @@ const LocationDetails = (props: LocationDetailsProps) => {
                   <span
                     className="font-black hover:text-pink-700 hover:underline cursor-pointer"
                     onClick={() => props.authorCallback(historyItem.personDied.id)}
+                    onKeyDown={() => props.authorCallback(historyItem.personDied.id)}
                   >
                     {historyItem.personDied.name}
                   </span>

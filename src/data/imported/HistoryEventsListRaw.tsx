@@ -8,7 +8,6 @@ export const HistoryEventsListRaw = [
   { id: 3, name: 'Upadek Konstantynopola', yearFrom: 1453, yearTo: 1453 },
   { id: 7, name: 'Odkrycie ameryki', yearFrom: 1492, yearTo: 1492 },
   { id: 13, name: 'Wojna trzydziestoletnia', yearFrom: 1618, yearTo: 1648 },
-  { id: 18, name: 'Sakoku', yearFrom: 1629, yearTo: 1852 },
   { id: 6, name: 'Odkrycie elektryczności', yearFrom: 1752, yearTo: 1752 },
   { id: 5, name: 'Rewolucja Francuska', yearFrom: 1789, yearTo: 1799 },
   { id: 8, name: 'Wojna secesyjna', yearFrom: 1861, yearTo: 1865 },

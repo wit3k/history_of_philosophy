@@ -35,20 +35,20 @@ const PublicationReferencesList = (props: PublicationReferencesListProps) =>
         Math.min(publicationFrom.publicationDate, publicationTo.publicationDate),
         Math.max(publicationFrom.publicationDate, publicationTo.publicationDate),
       ) &&
-      authorFrom != undefined &&
-      authorTo != undefined
+      authorFrom !== undefined &&
+      authorTo !== undefined
     ) {
       return (
         <PublicationReferenceNode
           authorFrom={authorFrom}
           authorTo={authorTo}
           isHighlighted={
-            props.highlightedAuthor == authorFrom.id ||
-            props.highlightedAuthor == authorTo.id ||
-            props.highlightedPublication == publicationFrom.id ||
-            props.highlightedPublication == publicationTo.id
+            props.highlightedAuthor === authorFrom.id ||
+            props.highlightedAuthor === authorTo.id ||
+            props.highlightedPublication === publicationFrom.id ||
+            props.highlightedPublication === publicationTo.id
           }
-          key={'pubref' + reference.id + i}
+          key={`pubref${reference.id}`}
           positionEnd={props.positionByYear(publicationTo.publicationDate)}
           positionStart={props.positionByYear(publicationFrom.publicationDate)}
           publicationReference={reference}
@@ -58,6 +58,8 @@ const PublicationReferencesList = (props: PublicationReferencesListProps) =>
           settings={props.publicationReferenceSettings}
         />
       )
+    } else {
+      return <div key={`pubref${reference.id}`}></div>
     }
   })
 

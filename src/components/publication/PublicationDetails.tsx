@@ -18,7 +18,7 @@ class PublicationDetailsProps {
 
 const PublicationDetails = (props: PublicationDetailsProps) => {
   const appBasePath = '/history_of_philosophy/'
-  const locations = props.locationsList.find(l => l.id == props.currentPublication.publicationLocation + '')
+  const locations = props.locationsList.find(l => l.id === props.currentPublication.publicationLocation + '')
 
   return (
     <Modal displayModal={props.displayModal} setDisplayModal={props.setDisplayModal}>
@@ -28,6 +28,7 @@ const PublicationDetails = (props: PublicationDetailsProps) => {
           <span
             className="text-pink-700 underline cursor-pointer"
             onClick={() => props.authorCallback(props.currentAuthor.id)}
+            onKeyDown={() => props.authorCallback(props.currentAuthor.id)}
           >
             {props.currentAuthor.name}
           </span>{' '}
@@ -38,6 +39,7 @@ const PublicationDetails = (props: PublicationDetailsProps) => {
               <span
                 className="text-pink-700 underline cursor-pointer"
                 onClick={() => props.locationCallback(props.currentPublication.publicationLocation + '')}
+                onKeyDown={() => props.locationCallback(props.currentPublication.publicationLocation + '')}
               >
                 {locations?.name}
               </span>
@@ -47,9 +49,10 @@ const PublicationDetails = (props: PublicationDetailsProps) => {
         </div>
         {props.currentPublication.thumbnail && (
           <img
+            alt={props.currentPublication.title}
             className="pt-5"
             height={700}
-            src={appBasePath + '/assets/publication/' + props.currentPublication.thumbnail}
+            src={`${appBasePath}/assets/publication/${props.currentPublication.thumbnail}`}
             width={500}
           />
         )}

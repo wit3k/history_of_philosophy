@@ -28,7 +28,7 @@ const PersonNode = (props: PersonNodeProps) => {
   return (
     <g
       onClick={() => {
-        props.updateHighlightedAuthor(props.person.id)
+        props.updateHighlightedAuthor(_ => props.person.id)
         props.authorCallback(props.person.id)
       }}
       onMouseMove={() => props.updateHighlightedAuthor(props.person.id)}

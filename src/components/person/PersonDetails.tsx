@@ -31,9 +31,10 @@ const PersonDetails = (props: PersonDetailsProps) => {
         <div className="p-5">
           {props.currentPerson.thumbnail && (
             <img
+              alt={props.currentPerson.name}
               className="pr-5 pt-0 float-left"
               height={300}
-              src={appBasePath + '/assets/person_big/' + props.currentPerson.thumbnail}
+              src={`${appBasePath}/assets/person_big/${props.currentPerson.thumbnail}`}
               width={200}
             />
           )}
@@ -41,6 +42,7 @@ const PersonDetails = (props: PersonDetailsProps) => {
           <span
             className="hover:text-pink-700 underline cursor-pointer"
             onClick={() => props.locationCallback(props.currentPerson.bornLocation)}
+            onKeyDown={() => props.locationCallback(props.currentPerson.bornLocation)}
           >
             {LocationListService.getById(props.currentPerson.bornLocation)?.name}
           </span>{' '}
@@ -53,6 +55,7 @@ const PersonDetails = (props: PersonDetailsProps) => {
               <span
                 className="hover:text-pink-700 underline cursor-pointer"
                 onClick={() => props.locationCallback(props.currentPerson.diedLocation)}
+                onKeyDown={() => props.locationCallback(props.currentPerson.diedLocation)}
               >
                 {LocationListService.getById(props.currentPerson.diedLocation)?.name}
               </span>
@@ -79,6 +82,7 @@ const PersonDetails = (props: PersonDetailsProps) => {
                     viewBox="0 0 24 24"
                     xmlns="http://www.w3.org/2000/svg"
                   >
+                    <title>Publication icon</title>
                     <path
                       d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"
                       strokeLinecap="round"
@@ -93,6 +97,7 @@ const PersonDetails = (props: PersonDetailsProps) => {
                   <span
                     className="italic hover:text-pink-700 underline cursor-pointer"
                     onClick={() => props.publicationCallback(historyItem.publication.id)}
+                    onKeyDown={() => props.publicationCallback(historyItem.publication.id)}
                   >
                     &bdquo;{historyItem.publication.title}&rdquo;
                   </span>
@@ -101,6 +106,7 @@ const PersonDetails = (props: PersonDetailsProps) => {
                     <span
                       className="text-slate-100 hover:text-pink-700 underline cursor-pointer"
                       onClick={() => props.locationCallback(historyItem.publication.publicationLocation + '')}
+                      onKeyDown={() => props.locationCallback(historyItem.publication.publicationLocation + '')}
                     >
                       {LocationListService.getById(historyItem.publication.publicationLocation + '')?.name}
                     </span>
