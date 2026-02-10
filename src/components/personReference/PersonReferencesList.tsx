@@ -34,7 +34,7 @@ const PersonReferencesList = (props: PersonReferencesListProps) =>
           authorTo={personTo}
           highlightsOn={props.highlightedAuthor !== '0'}
           isHighlighted={props.highlightedAuthor === personFrom.id || props.highlightedAuthor === personTo.id}
-          key={'personref' + reference.id + reference.from + reference.to}
+          key={`personref${reference.id}${reference.from}${reference.to}`}
           personReference={reference}
           positionEnd={props.positionByYear(personTo.born)}
           positionStart={props.positionByYear(personFrom.born)}
@@ -44,7 +44,7 @@ const PersonReferencesList = (props: PersonReferencesListProps) =>
         />
       )
     } else {
-      return <div key={'personref' + reference.id + reference.from + reference.to}></div>
+      return <div key={`personref${reference.id}${reference.from}${reference.to}`}></div>
     }
   })
 

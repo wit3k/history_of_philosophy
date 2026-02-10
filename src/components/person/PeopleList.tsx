@@ -24,7 +24,7 @@ const PeopleList = (props: PeopleListProps) =>
         authorCallback={props.authorCallback}
         displayAuthorsTimeline={props.displayAuthorsTimeline}
         highlightedAuthor={props.highlightedAuthor}
-        key={'person' + person.id}
+        key={`person${person.id}`}
         person={person}
         positionEnd={props.positionByYear(person.died)}
         positionStart={props.positionByYear(person.born)}

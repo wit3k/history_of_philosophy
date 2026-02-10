@@ -19,7 +19,7 @@ const HistoryEventsList = (props: HistoryEventsListProps) =>
       <HistoryEventNode
         darkMode={props.darkMode}
         event={event}
-        key={'historyEvent' + event.id + i}
+        key={`historyEvent${event.id}${i}`}
         positionEnd={props.positionByYear(event.yearTo)}
         positionStart={props.positionByYear(event.yearFrom)}
         rowPosition={props.rowPosition(event.rowNumber)}
