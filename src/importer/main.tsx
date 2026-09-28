@@ -4,6 +4,8 @@ import sharp from 'sharp'
 import { Attitude } from '../data/dto/PersonReference'
 import Coordinates from '../geometry/Coordinates'
 
+const nocoUrl = (process.env.NOCO_URL ?? '').replace(/\/+$/, '')
+
 const tabMap: any = {
   collections: { tableId: 'mqubv6pjfhgobsd', viewId: 'vwiqdleig055xc5b' },
   historyEvents: { tableId: 'm78tbyteswhe0sq', viewId: 'vwqfiq3o3f3kgeuk' },
@@ -26,7 +28,7 @@ const getTable = async (tableName: string) =>
         viewId: tabMap[tableName].viewId,
         where: '',
       },
-      url: process.env.NOCO_URL + '/api/v2/tables/' + tabMap[tableName].tableId + '/records',
+      url: nocoUrl + '/api/v2/tables/' + tabMap[tableName].tableId + '/records',
     })
     .then(res => res.data)
     .catch(err => console.error(err))
@@ -45,7 +47,7 @@ const getLinkedRecords = async (tableName: string, link: string, recordId: strin
         where: '',
       },
       url:
-        process.env.NOCO_URL +
+        nocoUrl +
         '/api/v2/tables/' +
         tabMap[tableName].tableId +
         '/links/' +
@@ -100,24 +102,43 @@ const downloadAndProcessImage = async (
 
     console.log(`Image saved to: ${outputPath}`)
   } catch (error) {
-    throw error
+    const status = axios.isAxiosError(error) ? error.response?.status : undefined
+    console.error(`Image failed${status ? ` (${status})` : ''}: ${outputPath}`)
   }
+}
+
+const imageJobs: Array<() => Promise<void>> = []
+
+const queueImage = (imageUrl: string, outputPath: string, size: Coordinates, roundedCorners: number) => {
+  imageJobs.push(() => downloadAndProcessImage(imageUrl, outputPath, size, roundedCorners))
+}
+
+const runImageJobs = async (concurrency: number) => {
+  let next = 0
+  const worker = async () => {
+    while (next < imageJobs.length) {
+      const job = imageJobs[next]
+      next += 1
+      await job()
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(concurrency, imageJobs.length) }, () => worker()))
 }
 
 const people = (await getTable('people')).list
   .filter((person: any) => person['Imię i nazwisko'])
   .map((person: any, i: number) => {
     if (person['Zdjęcie'] != null && person['Zdjęcie'][0] != null) {
-      downloadAndProcessImage(
-        process.env.NOCO_URL + '/' + person['Zdjęcie'][0].path,
+      queueImage(
+        nocoUrl + '/' + person['Zdjęcie'][0].path,
         './public/assets/person/' + person['Zdjęcie'][0].id + '.png',
         new Coordinates(30, 30),
         0,
         // new Coordinates(50, 50),
         // 5,
       )
-      downloadAndProcessImage(
-        process.env.NOCO_URL + '/' + person['Zdjęcie'][0].path,
+      queueImage(
+        nocoUrl + '/' + person['Zdjęcie'][0].path,
         './public/assets/person_big/' + person['Zdjęcie'][0].id + '.png',
         new Coordinates(200, 300),
         10,
@@ -191,8 +212,8 @@ const publications = (
       .filter((pr: any) => pr.Autorzy && pr.Tytuł)
       .map(async (book: any, i: number) => {
         if (book.Okładka != null && book.Okładka[0] != null) {
-          downloadAndProcessImage(
-            process.env.NOCO_URL + '/' + book['Okładka'][0].path,
+          queueImage(
+            nocoUrl + '/' + book['Okładka'][0].path,
             './public/assets/publication/' + book['Okładka'][0].id + '.png',
             new Coordinates(500, 700),
             10,
@@ -239,8 +260,8 @@ const locations = (await getTable('locations')).list
   .filter((location: any) => location['Nazwa'] && location['Koordynaty'])
   .map((location: any, i: number) => {
     if (location['Zdjęcie'] != null) {
-      downloadAndProcessImage(
-        process.env.NOCO_URL + '/' + location['Zdjęcie'][0].path,
+      queueImage(
+        nocoUrl + '/' + location['Zdjęcie'][0].path,
         './public/assets/location/' + location['Zdjęcie'][0].id + '.png',
         new Coordinates(480, 200),
         10,
@@ -308,3 +329,14 @@ fs.writeFileSync(
   'export const HistoryEventsListRaw = ' + JSON.stringify(historyEvents),
   'utf8',
 )
+
+for (const dir of [
+  './public/assets/person',
+  './public/assets/person_big',
+  './public/assets/publication',
+  './public/assets/location',
+]) {
+  fs.mkdirSync(dir, { recursive: true })
+}
+
+await runImageJobs(4)
