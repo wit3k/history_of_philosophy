@@ -66,6 +66,9 @@ const downloadAndProcessImage = async (
   size: Coordinates,
   roundedCorners: number,
 ): Promise<void> => {
+  if (imageUrl.includes('/undefined')) {
+    return
+  }
   const absoluteOutput = path.resolve(projectRoot, outputPath)
   const outputDir = path.dirname(absoluteOutput)
   fs.mkdirSync(outputDir, { recursive: true })
@@ -237,7 +240,7 @@ const publications = (
     isbn: book['ISBN'],
     publicationDate: book['Rok wydania'].slice(0, 4) * 1,
     publicationLocation: book['Miejsce wydania'] !== null ? book['Miejsce wydania'].Id : -1,
-    thumbnail: book['Okładka']?.[0]?.id ? book['Okładka'][0].id + '.png' : '',
+    thumbnail: book['Okładka'] != null && book['Okładka'][0] != null ? book['Okładka'][0].id + '.png' : '',
     title: book['Tytuł'],
   })),
 )
