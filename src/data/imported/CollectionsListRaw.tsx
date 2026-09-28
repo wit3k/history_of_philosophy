@@ -20,16 +20,6 @@ export const CollectionsListRaw = [
     name: 'Leibniz',
   },
   {
-    id: 8,
-    includedEvents: [],
-    includedLocations: [],
-    includedPeople: [86],
-    includedPeopleRelations: [],
-    includedPublications: [],
-    includedReferences: [],
-    name: 'Feminizm',
-  },
-  {
     id: 2,
     includedEvents: [],
     includedLocations: [7, 9, 10, 11, 12, 15],
@@ -58,6 +48,23 @@ export const CollectionsListRaw = [
     includedPublications: [],
     includedReferences: [],
     name: 'Antynatalizm',
+  },
+  {
+    id: 8,
+    includedEvents: [
+      32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56,
+    ],
+    includedLocations: [
+      15, 26, 31, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 160, 163, 164, 167,
+      171, 173,
+    ],
+    includedPeople: [86, 150, 149, 148, 147, 146, 145, 144, 143, 142, 141],
+    includedPeopleRelations: [30, 31, 32, 33, 34, 35, 36, 37],
+    includedPublications: [
+      20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44,
+    ],
+    includedReferences: [10, 11, 12, 13, 14, 15, 16],
+    name: 'Feminizm',
   },
   {
     id: 3,

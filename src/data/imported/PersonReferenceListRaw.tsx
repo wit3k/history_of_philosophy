@@ -35,4 +35,12 @@ export const PersonReferenceListRaw = [
   { attitude: 'Positive', from: '87', id: '26', name: 'Inspiracja', to: '14' },
   { attitude: 'Positive', from: '131', id: '27', name: 'Inspiracja', to: '133' },
   { attitude: 'Positive', from: '133', id: '28', name: 'Inspiracja', to: '87' },
+  { attitude: 'Positive', from: '142', id: '30', name: 'Beauvoir → Friedan (inspiracja Second Sex)', to: '144' },
+  { attitude: 'Positive', from: '142', id: '31', name: 'Beauvoir → Butler (Gender Trouble)', to: '149' },
+  { attitude: 'Positive', from: '142', id: '32', name: 'Beauvoir → Firestone (Dialectic of Sex)', to: '146' },
+  { attitude: 'Positive', from: '141', id: '33', name: 'Wollstonecraft → Woolf (Room)', to: '143' },
+  { attitude: 'Positive', from: '147', id: '34', name: 'Lorde ↔ hooks (Black feminism)', to: '148' },
+  { attitude: 'Positive', from: '150', id: '35', name: 'Davis ↔ hooks (SF State)', to: '148' },
+  { attitude: 'Neutral', from: '144', id: '36', name: 'Friedan ↔ Millett (2. fala — napięcie)', to: '145' },
+  { attitude: 'Negative', from: '148', id: '37', name: 'hooks → Friedan (krytyka Mystique)', to: '144' },
 ]

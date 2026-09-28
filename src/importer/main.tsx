@@ -62,6 +62,9 @@ const downloadAndProcessImage = async (
   size: Coordinates,
   roundedCorners: number,
 ): Promise<void> => {
+  if (imageUrl.includes('/undefined')) {
+    return
+  }
   try {
     const response = await axios.get(imageUrl, {
       responseType: 'arraybuffer',
@@ -100,7 +103,11 @@ const downloadAndProcessImage = async (
 
     console.log(`Image saved to: ${outputPath}`)
   } catch (error) {
-    throw error
+    console.error(imageUrl)
+    console.error(outputPath)
+    console.error(size)
+    console.error(roundedCorners)
+    process.exit(1)
   }
 }
 
@@ -209,7 +216,7 @@ const publications = (
     isbn: book['ISBN'],
     publicationDate: book['Rok wydania'].slice(0, 4) * 1,
     publicationLocation: book['Miejsce wydania'] !== null ? book['Miejsce wydania'].Id : -1,
-    thumbnail: book['Okładka'] !== undefined ? book['Okładka'][0].id + '.png' : '',
+    thumbnail: book['Okładka'] != null && book['Okładka'][0] != null ? book['Okładka'][0].id + '.png' : '',
     title: book['Tytuł'],
   })),
 )
