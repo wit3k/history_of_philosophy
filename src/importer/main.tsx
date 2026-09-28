@@ -1,8 +1,12 @@
 import axios from 'axios'
 import * as fs from 'fs'
+import * as path from 'node:path'
 import sharp from 'sharp'
 import { Attitude } from '../data/dto/PersonReference'
 import Coordinates from '../geometry/Coordinates'
+
+const nocoUrl = (process.env.NOCO_URL ?? '').replace(/\/+$/, '')
+const projectRoot = path.resolve(import.meta.dir, '../..')
 
 const tabMap: any = {
   collections: { tableId: 'mqubv6pjfhgobsd', viewId: 'vwiqdleig055xc5b' },
@@ -26,7 +30,7 @@ const getTable = async (tableName: string) =>
         viewId: tabMap[tableName].viewId,
         where: '',
       },
-      url: process.env.NOCO_URL + '/api/v2/tables/' + tabMap[tableName].tableId + '/records',
+      url: nocoUrl + '/api/v2/tables/' + tabMap[tableName].tableId + '/records',
     })
     .then(res => res.data)
     .catch(err => console.error(err))
@@ -44,14 +48,7 @@ const getLinkedRecords = async (tableName: string, link: string, recordId: strin
         viewId: tabMap[tableName].viewId,
         where: '',
       },
-      url:
-        process.env.NOCO_URL +
-        '/api/v2/tables/' +
-        tabMap[tableName].tableId +
-        '/links/' +
-        link +
-        '/records/' +
-        recordId,
+      url: nocoUrl + '/api/v2/tables/' + tabMap[tableName].tableId + '/links/' + link + '/records/' + recordId,
     })
     .then(res => res.data)
     .catch(err => console.error(err))
@@ -65,6 +62,9 @@ const downloadAndProcessImage = async (
   if (imageUrl.includes('/undefined')) {
     return
   }
+  const absoluteOutput = path.resolve(projectRoot, outputPath)
+  const outputDir = path.dirname(absoluteOutput)
+  fs.mkdirSync(outputDir, { recursive: true })
   try {
     const response = await axios.get(imageUrl, {
       responseType: 'arraybuffer',
@@ -99,32 +99,49 @@ const downloadAndProcessImage = async (
       ])
       .ensureAlpha()
       .png()
-      .toFile(outputPath)
+      .toFile(absoluteOutput)
 
-    console.log(`Image saved to: ${outputPath}`)
+    console.log(`Image saved to: ${absoluteOutput}`)
   } catch (error) {
-    console.error(imageUrl)
-    console.error(outputPath)
-    console.error(size)
-    console.error(roundedCorners)
-    process.exit(1)
+    const status = axios.isAxiosError(error) ? error.response?.status : undefined
+    console.error(
+      `Image failed${status ? ` (${status})` : ''}: ${absoluteOutput} (cwd ${process.cwd()}, directory exists: ${fs.existsSync(outputDir)})`,
+    )
   }
+}
+
+const imageJobs: Array<() => Promise<void>> = []
+
+const queueImage = (imageUrl: string, outputPath: string, size: Coordinates, roundedCorners: number) => {
+  imageJobs.push(() => downloadAndProcessImage(imageUrl, outputPath, size, roundedCorners))
+}
+
+const runImageJobs = async (concurrency: number) => {
+  let next = 0
+  const worker = async () => {
+    while (next < imageJobs.length) {
+      const job = imageJobs[next]
+      next += 1
+      await job()
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(concurrency, imageJobs.length) }, () => worker()))
 }
 
 const people = (await getTable('people')).list
   .filter((person: any) => person['Imię i nazwisko'])
   .map((person: any, i: number) => {
     if (person['Zdjęcie'] != null && person['Zdjęcie'][0] != null) {
-      downloadAndProcessImage(
-        process.env.NOCO_URL + '/' + person['Zdjęcie'][0].path,
+      queueImage(
+        nocoUrl + '/' + person['Zdjęcie'][0].path,
         './public/assets/person/' + person['Zdjęcie'][0].id + '.png',
         new Coordinates(30, 30),
         0,
         // new Coordinates(50, 50),
         // 5,
       )
-      downloadAndProcessImage(
-        process.env.NOCO_URL + '/' + person['Zdjęcie'][0].path,
+      queueImage(
+        nocoUrl + '/' + person['Zdjęcie'][0].path,
         './public/assets/person_big/' + person['Zdjęcie'][0].id + '.png',
         new Coordinates(200, 300),
         10,
@@ -198,8 +215,8 @@ const publications = (
       .filter((pr: any) => pr.Autorzy && pr.Tytuł)
       .map(async (book: any, i: number) => {
         if (book.Okładka != null && book.Okładka[0] != null) {
-          downloadAndProcessImage(
-            process.env.NOCO_URL + '/' + book['Okładka'][0].path,
+          queueImage(
+            nocoUrl + '/' + book['Okładka'][0].path,
             './public/assets/publication/' + book['Okładka'][0].id + '.png',
             new Coordinates(500, 700),
             10,
@@ -246,8 +263,8 @@ const locations = (await getTable('locations')).list
   .filter((location: any) => location['Nazwa'] && location['Koordynaty'])
   .map((location: any, i: number) => {
     if (location['Zdjęcie'] != null) {
-      downloadAndProcessImage(
-        process.env.NOCO_URL + '/' + location['Zdjęcie'][0].path,
+      queueImage(
+        nocoUrl + '/' + location['Zdjęcie'][0].path,
         './public/assets/location/' + location['Zdjęcie'][0].id + '.png',
         new Coordinates(480, 200),
         10,
@@ -290,24 +307,26 @@ fs.writeFileSync(
   'utf8',
 )
 
-const historyEvents = (await getTable('historyEvents')).list
+const yearFromNoco = (date: string | undefined, era: string | undefined): number | undefined => {
+  if (!date) return undefined
+  const yearText = date.slice(0, 1) === '3' ? date.slice(2, 4) : date.slice(0, 4)
+  return Number(yearText) * (era === 'N.E.' ? 1 : -1)
+}
+
+const allHistoryEvents = (await getTable('historyEvents')).list
+
+const historyEvents = allHistoryEvents
   .filter(
     (event: any) =>
       event['Rodzaj wydarzenia'] === 'Historia świata' &&
       event['Data od'] !== undefined &&
       event['Data do'] !== undefined,
   )
-  .map((event: any, i: number) => ({
+  .map((event: any) => ({
     id: event.Id,
     name: event.Tytuł,
-    yearFrom: event['Data od']
-      ? (event['Data od']?.slice(0, 1) === '3' ? event['Data od']?.slice(2, 4) : event['Data od']?.slice(0, 4)) *
-        (event['Data od Era'] === 'N.E.' ? 1 : -1)
-      : undefined,
-    yearTo: event['Data do']
-      ? (event['Data do']?.slice(0, 1) === '3' ? event['Data do']?.slice(2, 4) : event['Data do']?.slice(0, 4)) *
-        (event['Data do Era'] === 'N.E.' ? 1 : -1)
-      : undefined,
+    yearFrom: yearFromNoco(event['Data od'], event['Data od Era']),
+    yearTo: yearFromNoco(event['Data do'], event['Data do Era']),
   }))
 
 fs.writeFileSync(
@@ -315,3 +334,23 @@ fs.writeFileSync(
   'export const HistoryEventsListRaw = ' + JSON.stringify(historyEvents),
   'utf8',
 )
+
+const peopleHistoryEvents = allHistoryEvents
+  .filter((event: any) => event['Rodzaj wydarzenia'] !== 'Historia świata' && event['Osoby']?.length)
+  .map((event: any) => ({
+    id: event.Id,
+    locationId: event['Miejsca']?.[0]?.Id ?? null,
+    name: event.Tytuł,
+    personId: event['Osoby'][0].Id + '',
+    type: event['Rodzaj wydarzenia'],
+    yearFrom: yearFromNoco(event['Data od'], event['Data od Era']) ?? null,
+    yearTo: yearFromNoco(event['Data do'], event['Data do Era']) ?? null,
+  }))
+
+fs.writeFileSync(
+  './src/data/imported/PeopleHistoryEventsListRaw.tsx',
+  'export const PeopleHistoryEventsListRaw = ' + JSON.stringify(peopleHistoryEvents),
+  'utf8',
+)
+
+await runImageJobs(4)

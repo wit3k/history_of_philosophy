@@ -1,7 +1,10 @@
 import type React from 'react'
 import LocationListService from '../../data/db/LocationListService'
+import PeopleHistoryEventsListService from '../../data/db/PeopleHistoryEventsListService'
 import PublicationsListService from '../../data/db/PublicationsListService'
 import type Person from '../../data/dto/Person'
+import type PersonHistoryEvent from '../../data/dto/PersonHistoryEvent'
+import type Publication from '../../data/dto/Publication'
 import Modal from '../ui/Modal'
 
 class PersonDetailsProps {
@@ -11,18 +14,32 @@ class PersonDetailsProps {
     public setDisplayModal: React.Dispatch<React.SetStateAction<boolean>>,
     public locationCallback: (id: string) => void,
     public publicationCallback: (id: string) => void,
+    public personHistoryEventCallback: (id: string) => void,
   ) {}
 }
+
+type TimelineItem =
+  | { date: number; kind: 'publication'; publication: Publication }
+  | { date: number; kind: 'event'; event: PersonHistoryEvent }
 
 const PersonDetails = (props: PersonDetailsProps) => {
   const appBasePath = '/history_of_philosophy/'
 
-  const allPublications = PublicationsListService.getAllByAuthor(props.currentPerson.id).map(p => ({
+  const publicationItems: TimelineItem[] = PublicationsListService.getAllByAuthor(props.currentPerson.id).map(p => ({
     date: p.publicationDate,
+    kind: 'publication' as const,
     publication: p,
   }))
 
-  const historyComplete = [...allPublications].sort((p1, p2) => p1.date - p2.date)
+  const eventItems: TimelineItem[] = PeopleHistoryEventsListService.getAllByPerson(props.currentPerson.id)
+    .filter(e => e.yearFrom != null)
+    .map(e => ({
+      date: e.yearFrom!,
+      event: e,
+      kind: 'event' as const,
+    }))
+
+  const historyComplete = [...publicationItems, ...eventItems].sort((p1, p2) => p1.date - p2.date)
 
   return (
     <Modal displayModal={props.displayModal} setDisplayModal={props.setDisplayModal}>
@@ -71,7 +88,7 @@ const PersonDetails = (props: PersonDetailsProps) => {
             let icon = null
             let content = null
 
-            if (historyItem.publication) {
+            if (historyItem.kind === 'publication') {
               icon = (
                 <span className="relative z-10 grid h-8 w-8 place-items-center rounded-full bg-slate-400 text-slate-800">
                   <svg
@@ -102,7 +119,7 @@ const PersonDetails = (props: PersonDetailsProps) => {
                     &bdquo;{historyItem.publication.title}&rdquo;
                   </span>
                   {' / '}
-                  {historyItem.publication?.publicationLocation && (
+                  {historyItem.publication.publicationLocation && (
                     <span
                       className="text-slate-100 hover:text-pink-700 underline cursor-pointer"
                       onClick={() => props.locationCallback(historyItem.publication.publicationLocation + '')}
@@ -116,10 +133,61 @@ const PersonDetails = (props: PersonDetailsProps) => {
               )
             }
 
+            if (historyItem.kind === 'event') {
+              const yearLabel =
+                historyItem.event.yearTo == null || historyItem.event.yearTo === historyItem.event.yearFrom
+                  ? `${historyItem.event.yearFrom}`
+                  : `${historyItem.event.yearFrom}–${historyItem.event.yearTo}`
+              icon = (
+                <span className="relative z-10 grid h-8 w-8 place-items-center rounded-full bg-slate-500 text-slate-100">
+                  <svg
+                    className="size-5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1.5}
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <title>Event icon</title>
+                    <path
+                      d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </span>
+              )
+              content = (
+                <small className="mt-2 font-sans text-sm text-slate-300 antialiased">
+                  <span className="text-slate-100 -ml-3">{yearLabel}</span> -{' '}
+                  <span className="text-slate-400">{historyItem.event.type}</span>:{' '}
+                  <span
+                    className="italic hover:text-pink-700 underline cursor-pointer"
+                    onClick={() => props.personHistoryEventCallback(historyItem.event.id)}
+                    onKeyDown={() => props.personHistoryEventCallback(historyItem.event.id)}
+                  >
+                    {historyItem.event.name}
+                  </span>
+                  {historyItem.event.locationId != null && (
+                    <>
+                      {' / '}
+                      <span
+                        className="text-slate-100 hover:text-pink-700 underline cursor-pointer"
+                        onClick={() => props.locationCallback(historyItem.event.locationId + '')}
+                        onKeyDown={() => props.locationCallback(historyItem.event.locationId + '')}
+                      >
+                        {LocationListService.getById(historyItem.event.locationId + '')?.name}
+                      </span>
+                    </>
+                  )}
+                </small>
+              )
+            }
+
             if (!icon || !content) return null
 
             return (
-              <div className="group flex gap-x-6" key={i}>
+              <div className="group flex gap-x-6" key={`${historyItem.kind}-${i}`}>
                 <div className="relative">
                   {i < historyComplete.length - 1 && (
                     <div className="absolute left-1/2 top-0 h-full w-0.5 -translate-x-1/2 bg-slate-400"></div>

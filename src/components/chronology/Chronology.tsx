@@ -6,11 +6,13 @@ import LocationListService from '../../data/db/LocationListService'
 import PeopleListService from '../../data/db/PeopleListService'
 import PersonReferenceListService from '../../data/db/PersonReferenceListService'
 import PublicationReferenceListService from '../../data/db/PublicationReferenceListService'
+import PeopleHistoryEventsListService from '../../data/db/PeopleHistoryEventsListService'
 import PublicationsListService from '../../data/db/PublicationsListService'
 import type Collection from '../../data/dto/Collection'
 import type HistoryEvent from '../../data/dto/HistoryEvent'
 import Location from '../../data/dto/Location'
 import Person from '../../data/dto/Person'
+import PersonHistoryEvent from '../../data/dto/PersonHistoryEvent'
 import type PersonReference from '../../data/dto/PersonReference'
 import Publication from '../../data/dto/Publication'
 import type PublicationReference from '../../data/dto/PublicationReference'
@@ -21,6 +23,9 @@ import LocationDetails from '../location/LocationDetails'
 import PeopleList from '../person/PeopleList'
 import PersonDetails from '../person/PersonDetails'
 import type { PersonNodeSettings } from '../person/PersonNode'
+import PersonHistoryEventDetails from '../personHistoryEvents/PersonHistoryEventDetails'
+import type { PersonHistoryEventNodeSettings } from '../personHistoryEvents/PersonHistoryEventNode'
+import PersonHistoryEventsList from '../personHistoryEvents/PersonHistoryEventsList'
 import type { PersonReferenceSettings } from '../personReference/PersonReferenceNode'
 import PersonReferencesList from '../personReference/PersonReferencesList'
 import PublicationDetails from '../publication/PublicationDetails'
@@ -79,6 +84,9 @@ const Chronology = () => {
   const [publicationReferenceList, setPublicationReferenceList] = React.useState<PublicationReference[]>(
     PublicationReferenceListService.getAll(),
   )
+  const [peopleHistoryEvents, setPeopleHistoryEvents] = React.useState<PersonHistoryEvent[]>(
+    PeopleHistoryEventsListService.getAll(),
+  )
   const [collectionsState, setCollectionsState] = React.useState<Collection[]>(CollectionsListService.getAll())
   interface HasId {
     id: string
@@ -105,19 +113,21 @@ const Chronology = () => {
 
     setCollectionsState(newCollectionsState)
 
-    setPeopleList(
-      PeopleListService.withRowNumbers(PeopleListService.getAll().filter(itemsFilter(c => c.includedPeople))),
-    )
+    const filteredPeople = PeopleListService.getAll().filter(itemsFilter(c => c.includedPeople))
+    setPeopleList(PeopleListService.withRowNumbers(filteredPeople))
     setLocationsList(LocationListService.getAll().filter(itemsFilter(c => c.includedLocations)))
     setHistoryEvents(HistoryEventsListService.getAll().filter(itemsFilter(c => c.includedEvents)))
     setPublicationsList(PublicationsListService.getAll().filter(itemsFilter(c => c.includedPublications)))
     setPublicationReferenceList(PublicationReferenceListService.getAll().filter(itemsFilter(c => c.includedReferences)))
     setPeopleReferenceList(PersonReferenceListService.getAll().filter(itemsFilter(c => c.includedPeopleRelations)))
+    const visiblePersonIds = new Set(filteredPeople.map(p => p.id))
+    setPeopleHistoryEvents(PeopleHistoryEventsListService.getAll().filter(e => visiblePersonIds.has(e.personId)))
   }
 
   const [displayPublicationModal, setDisplayPublicationModal] = React.useState<boolean>(false)
   const [displayLocationModal, setDisplayLocationModal] = React.useState<boolean>(false)
   const [displayPersonModal, setDisplayPersonModal] = React.useState<boolean>(false)
+  const [displayPersonHistoryEventModal, setDisplayPersonHistoryEventModal] = React.useState<boolean>(false)
   const [currentLocation, setCurrentLocation] = React.useState(new Location('', '', new Coordinates(0, 0), ''))
 
   const [displayAuthors, setDisplayAuthors] = React.useState(true)
@@ -126,6 +136,7 @@ const Chronology = () => {
   const [displayPublications, setDisplayPublications] = React.useState(true)
   const [displayPublicationRelations, setDisplayPublicationRelations] = React.useState(true)
   const [displayHistoryEvents, setDisplayHistoryEvents] = React.useState(true)
+  const [displayPersonHistoryEvents, setDisplayPersonHistoryEvents] = React.useState(true)
   const [darkMode, setDarkMode] = React.useState(window?.matchMedia('(prefers-color-scheme: dark)').matches)
 
   const [zoom, setZoom] = React.useState(10)
@@ -138,6 +149,9 @@ const Chronology = () => {
   const [highlightedAuthor, updateHighlightedAuthor] = React.useState('0')
   const [currentPublication, setCurrentPublication] = React.useState<Publication>(new Publication('', '', 0, 0, '', ''))
   const [currentAuthor, setCurrentAuthor] = React.useState(new Person('', '', 0, 0, true, '', '', '', 1, '', ''))
+  const [currentPersonHistoryEvent, setCurrentPersonHistoryEvent] = React.useState<PersonHistoryEvent>(
+    new PersonHistoryEvent('', '', '', '', null, null, null),
+  )
   const [highlightedPublication, updateHighlightedPublication] = React.useState('0')
   const [viewPosition, setPosition] = React.useState({
     x: 1588,
@@ -166,6 +180,14 @@ const Chronology = () => {
     boxSize: 35,
     dotSize: 30,
     maxLettersColumns: 25,
+    maxLettersRows: 3,
+  }
+
+  const personHistoryEventNodeSettings: PersonHistoryEventNodeSettings = {
+    barHeight: 10,
+    boxSize: 35,
+    dotRadius: 5,
+    maxLettersColumns: 28,
     maxLettersRows: 3,
   }
 
@@ -271,6 +293,7 @@ const Chronology = () => {
         setDisplayPublicationModal(false)
         setDisplayLocationModal(false)
         setDisplayPersonModal(false)
+        setDisplayPersonHistoryEventModal(false)
       }
     }
     document.addEventListener('keydown', handleKeyDown)
@@ -352,6 +375,7 @@ const Chronology = () => {
               setCurrentAuthor(_ => peopleList.find(p => p.id === id)!)
               setDisplayLocationModal(false)
               setDisplayPublicationModal(false)
+              setDisplayPersonHistoryEventModal(false)
               setDisplayPersonModal(true)
             }}
             displayAuthorsTimeline={displayAuthorsTimeline}
@@ -394,6 +418,20 @@ const Chronology = () => {
           />
         )}
 
+        {displayPersonHistoryEvents && displayAuthors && (
+          <PersonHistoryEventsList
+            events={peopleHistoryEvents}
+            isVisibleRange={isVisibleRange}
+            modalHandle={setDisplayPersonHistoryEventModal}
+            peopleList={peopleList}
+            personHistoryEventNodeSettings={personHistoryEventNodeSettings}
+            positionByYear={positionByYear}
+            rowPosition={rowPosition}
+            setCurrentEvent={setCurrentPersonHistoryEvent}
+            setCurrentPerson={setCurrentAuthor}
+          />
+        )}
+
         <ChronologyScale
           isVisible={isVisible}
           padSize={new Coordinates(prop.windowSize.x, prop.windowSize.y)}
@@ -410,6 +448,7 @@ const Chronology = () => {
         displayAuthors={displayAuthors}
         displayAuthorsTimeline={displayAuthorsTimeline}
         displayHistoryEvents={displayHistoryEvents}
+        displayPersonHistoryEvents={displayPersonHistoryEvents}
         displayPublicationRelations={displayPublicationRelations}
         displayPublications={displayPublications}
         setDarkMode={setDarkMode}
@@ -417,6 +456,7 @@ const Chronology = () => {
         setDisplayAuthors={setDisplayAuthors}
         setDisplayAuthorsTimeline={setDisplayAuthorsTimeline}
         setDisplayHistoryEvents={setDisplayHistoryEvents}
+        setDisplayPersonHistoryEvents={setDisplayPersonHistoryEvents}
         setDisplayPublicationRelations={setDisplayPublicationRelations}
         setDisplayPublications={setDisplayPublications}
         toggleCollectionsState={toggleCollectionsState}
@@ -427,6 +467,7 @@ const Chronology = () => {
           setCurrentAuthor(peopleList.find(p => p.id === id)!)
           setDisplayLocationModal(false)
           setDisplayPublicationModal(false)
+          setDisplayPersonHistoryEventModal(false)
           setDisplayPersonModal(true)
         }}
         currentAuthor={currentAuthor}
@@ -436,10 +477,32 @@ const Chronology = () => {
           setCurrentLocation(LocationListService.getById(id)!)
           setDisplayLocationModal(true)
           setDisplayPublicationModal(false)
+          setDisplayPersonHistoryEventModal(false)
           setDisplayPersonModal(false)
         }}
         locationsList={locationsList}
         setDisplayModal={setDisplayPublicationModal}
+      />
+
+      <PersonHistoryEventDetails
+        currentEvent={currentPersonHistoryEvent}
+        currentPerson={currentAuthor}
+        displayModal={displayPersonHistoryEventModal}
+        locationCallback={id => {
+          setCurrentLocation(LocationListService.getById(id)!)
+          setDisplayLocationModal(true)
+          setDisplayPublicationModal(false)
+          setDisplayPersonHistoryEventModal(false)
+          setDisplayPersonModal(false)
+        }}
+        personCallback={id => {
+          setCurrentAuthor(peopleList.find(p => p.id === id)!)
+          setDisplayPersonModal(true)
+          setDisplayLocationModal(false)
+          setDisplayPublicationModal(false)
+          setDisplayPersonHistoryEventModal(false)
+        }}
+        setDisplayModal={setDisplayPersonHistoryEventModal}
       />
 
       <LocationDetails
@@ -448,6 +511,7 @@ const Chronology = () => {
           setDisplayPersonModal(true)
           setDisplayLocationModal(false)
           setDisplayPublicationModal(false)
+          setDisplayPersonHistoryEventModal(false)
         }}
         currentLocation={currentLocation}
         displayModal={displayLocationModal}
@@ -457,6 +521,7 @@ const Chronology = () => {
           setDisplayPublicationModal(true)
           setDisplayLocationModal(false)
           setDisplayPersonModal(false)
+          setDisplayPersonHistoryEventModal(false)
         }}
         setDisplayModal={setDisplayLocationModal}
       />
@@ -469,12 +534,23 @@ const Chronology = () => {
           setDisplayLocationModal(true)
           setDisplayPersonModal(false)
           setDisplayPublicationModal(false)
+          setDisplayPersonHistoryEventModal(false)
+        }}
+        personHistoryEventCallback={id => {
+          const event = peopleHistoryEvents.find(e => e.id === id) ?? PeopleHistoryEventsListService.getAll().find(e => e.id === id)
+          if (!event) return
+          setCurrentPersonHistoryEvent(event)
+          setDisplayPersonHistoryEventModal(true)
+          setDisplayPersonModal(false)
+          setDisplayLocationModal(false)
+          setDisplayPublicationModal(false)
         }}
         publicationCallback={id => {
           setCurrentPublication(publicationsList.find(p => p.id === id)!)
           setDisplayPublicationModal(true)
           setDisplayPersonModal(false)
           setDisplayLocationModal(false)
+          setDisplayPersonHistoryEventModal(false)
         }}
         setDisplayModal={setDisplayPersonModal}
       />
