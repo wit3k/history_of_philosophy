@@ -1,10 +1,12 @@
 import axios from 'axios'
 import * as fs from 'fs'
+import * as path from 'node:path'
 import sharp from 'sharp'
 import { Attitude } from '../data/dto/PersonReference'
 import Coordinates from '../geometry/Coordinates'
 
 const nocoUrl = (process.env.NOCO_URL ?? '').replace(/\/+$/, '')
+const projectRoot = path.resolve(import.meta.dir, '../..')
 
 const tabMap: any = {
   collections: { tableId: 'mqubv6pjfhgobsd', viewId: 'vwiqdleig055xc5b' },
@@ -64,6 +66,9 @@ const downloadAndProcessImage = async (
   size: Coordinates,
   roundedCorners: number,
 ): Promise<void> => {
+  const absoluteOutput = path.resolve(projectRoot, outputPath)
+  const outputDir = path.dirname(absoluteOutput)
+  fs.mkdirSync(outputDir, { recursive: true })
   try {
     const response = await axios.get(imageUrl, {
       responseType: 'arraybuffer',
@@ -98,12 +103,14 @@ const downloadAndProcessImage = async (
       ])
       .ensureAlpha()
       .png()
-      .toFile(outputPath)
+      .toFile(absoluteOutput)
 
-    console.log(`Image saved to: ${outputPath}`)
+    console.log(`Image saved to: ${absoluteOutput}`)
   } catch (error) {
     const status = axios.isAxiosError(error) ? error.response?.status : undefined
-    console.error(`Image failed${status ? ` (${status})` : ''}: ${outputPath}`)
+    console.error(
+      `Image failed${status ? ` (${status})` : ''}: ${absoluteOutput} (cwd ${process.cwd()}, directory exists: ${fs.existsSync(outputDir)})`,
+    )
   }
 }
 
@@ -230,7 +237,7 @@ const publications = (
     isbn: book['ISBN'],
     publicationDate: book['Rok wydania'].slice(0, 4) * 1,
     publicationLocation: book['Miejsce wydania'] !== null ? book['Miejsce wydania'].Id : -1,
-    thumbnail: book['Okładka'] !== undefined ? book['Okładka'][0].id + '.png' : '',
+    thumbnail: book['Okładka']?.[0]?.id ? book['Okładka'][0].id + '.png' : '',
     title: book['Tytuł'],
   })),
 )
@@ -304,24 +311,26 @@ fs.writeFileSync(
   'utf8',
 )
 
-const historyEvents = (await getTable('historyEvents')).list
+const yearFromNoco = (date: string | undefined, era: string | undefined): number | undefined => {
+  if (!date) return undefined
+  const yearText = date.slice(0, 1) === '3' ? date.slice(2, 4) : date.slice(0, 4)
+  return Number(yearText) * (era === 'N.E.' ? 1 : -1)
+}
+
+const allHistoryEvents = (await getTable('historyEvents')).list
+
+const historyEvents = allHistoryEvents
   .filter(
     (event: any) =>
       event['Rodzaj wydarzenia'] === 'Historia świata' &&
       event['Data od'] !== undefined &&
       event['Data do'] !== undefined,
   )
-  .map((event: any, i: number) => ({
+  .map((event: any) => ({
     id: event.Id,
     name: event.Tytuł,
-    yearFrom: event['Data od']
-      ? (event['Data od']?.slice(0, 1) === '3' ? event['Data od']?.slice(2, 4) : event['Data od']?.slice(0, 4)) *
-        (event['Data od Era'] === 'N.E.' ? 1 : -1)
-      : undefined,
-    yearTo: event['Data do']
-      ? (event['Data do']?.slice(0, 1) === '3' ? event['Data do']?.slice(2, 4) : event['Data do']?.slice(0, 4)) *
-        (event['Data do Era'] === 'N.E.' ? 1 : -1)
-      : undefined,
+    yearFrom: yearFromNoco(event['Data od'], event['Data od Era']),
+    yearTo: yearFromNoco(event['Data do'], event['Data do Era']),
   }))
 
 fs.writeFileSync(
@@ -330,13 +339,22 @@ fs.writeFileSync(
   'utf8',
 )
 
-for (const dir of [
-  './public/assets/person',
-  './public/assets/person_big',
-  './public/assets/publication',
-  './public/assets/location',
-]) {
-  fs.mkdirSync(dir, { recursive: true })
-}
+const peopleHistoryEvents = allHistoryEvents
+  .filter((event: any) => event['Rodzaj wydarzenia'] !== 'Historia świata' && event['Osoby']?.length)
+  .map((event: any) => ({
+    id: event.Id,
+    locationId: event['Miejsca']?.[0]?.Id ?? null,
+    name: event.Tytuł,
+    personId: event['Osoby'][0].Id + '',
+    type: event['Rodzaj wydarzenia'],
+    yearFrom: yearFromNoco(event['Data od'], event['Data od Era']) ?? null,
+    yearTo: yearFromNoco(event['Data do'], event['Data do Era']) ?? null,
+  }))
+
+fs.writeFileSync(
+  './src/data/imported/PeopleHistoryEventsListRaw.tsx',
+  'export const PeopleHistoryEventsListRaw = ' + JSON.stringify(peopleHistoryEvents),
+  'utf8',
+)
 
 await runImageJobs(4)
