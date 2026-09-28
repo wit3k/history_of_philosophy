@@ -537,7 +537,8 @@ const Chronology = () => {
           setDisplayPersonHistoryEventModal(false)
         }}
         personHistoryEventCallback={id => {
-          const event = peopleHistoryEvents.find(e => e.id === id) ?? PeopleHistoryEventsListService.getAll().find(e => e.id === id)
+          const event =
+            peopleHistoryEvents.find(e => e.id === id) ?? PeopleHistoryEventsListService.getAll().find(e => e.id === id)
           if (!event) return
           setCurrentPersonHistoryEvent(event)
           setDisplayPersonHistoryEventModal(true)

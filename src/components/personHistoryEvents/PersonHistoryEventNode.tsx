@@ -52,9 +52,7 @@ const PersonHistoryEventNode = (props: PersonHistoryEventNodeProps) => {
     })
   const slices = titleSections.slice(0, props.settings.maxLettersRows)
   const yearLabel =
-    instant || props.event.yearTo == null
-      ? `${props.event.yearFrom}`
-      : `${props.event.yearFrom}–${props.event.yearTo}`
+    instant || props.event.yearTo == null ? `${props.event.yearFrom}` : `${props.event.yearFrom}–${props.event.yearTo}`
 
   const openModal = (e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation()

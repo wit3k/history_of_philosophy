@@ -23,9 +23,7 @@ const formatYears = (event: PersonHistoryEvent) => {
 
 const PersonHistoryEventDetails = (props: PersonHistoryEventDetailsProps) => {
   const location =
-    props.currentEvent.locationId != null
-      ? LocationListService.getById(props.currentEvent.locationId + '')
-      : undefined
+    props.currentEvent.locationId != null ? LocationListService.getById(props.currentEvent.locationId + '') : undefined
 
   return (
     <Modal displayModal={props.displayModal} setDisplayModal={props.setDisplayModal}>
