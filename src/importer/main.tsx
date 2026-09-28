@@ -48,14 +48,7 @@ const getLinkedRecords = async (tableName: string, link: string, recordId: strin
         viewId: tabMap[tableName].viewId,
         where: '',
       },
-      url:
-        nocoUrl +
-        '/api/v2/tables/' +
-        tabMap[tableName].tableId +
-        '/links/' +
-        link +
-        '/records/' +
-        recordId,
+      url: nocoUrl + '/api/v2/tables/' + tabMap[tableName].tableId + '/links/' + link + '/records/' + recordId,
     })
     .then(res => res.data)
     .catch(err => console.error(err))
