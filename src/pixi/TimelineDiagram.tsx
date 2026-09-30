@@ -75,8 +75,21 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
   const pinchRef = useRef(0)
   const viewRef = useRef(props.viewPosition)
   const zoomRef = useRef(props.zoom)
+  const clampRef = useRef({
+    from: props.yearSelection.from,
+    to: props.yearSelection.to,
+    yearLabelWidth: props.yearLabelWidth,
+  })
+  const velocityRef = useRef({ vx: 0, vy: 0 })
+  const lastMoveRef = useRef({ x: 0, y: 0, t: 0 })
+  const inertiaRafRef = useRef<number | null>(null)
   viewRef.current = props.viewPosition
   zoomRef.current = props.zoom
+  clampRef.current = {
+    from: props.yearSelection.from,
+    to: props.yearSelection.to,
+    yearLabelWidth: props.yearLabelWidth,
+  }
 
   const updateOffset = useCallback(() => {
     const el = hostRef.current
@@ -166,47 +179,111 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
     yearLabelWidth: props.yearLabelWidth,
   }
 
+  const setZoom = props.setZoom
+  const setPosition = props.setPosition
+  const setYearSelection = props.setYearSelection
+
+  const stopInertia = useCallback(() => {
+    if (inertiaRafRef.current != null) {
+      cancelAnimationFrame(inertiaRafRef.current)
+      inertiaRafRef.current = null
+    }
+  }, [])
+
+  const clampViewX = useCallback((x: number) => {
+    const { from, to, yearLabelWidth: labelW } = clampRef.current
+    return Math.min(Math.max(x, from - labelW), to + labelW)
+  }, [])
+
+  const startInertia = useCallback(
+    (vxYearsPerSec: number, vyPxPerSec: number) => {
+      stopInertia()
+      let vx = vxYearsPerSec
+      let vy = vyPxPerSec
+      let last = performance.now()
+      const friction = 4.2
+      const minSpeedPx = 35
+
+      const tick = (now: number) => {
+        const dt = Math.min((now - last) / 1000, 0.064)
+        last = now
+        const decay = Math.exp(-friction * dt)
+        vx *= decay
+        vy *= decay
+
+        if (Math.hypot(vx * zoomRef.current, vy) < minSpeedPx) {
+          inertiaRafRef.current = null
+          return
+        }
+
+        const view = viewRef.current
+        setPosition({
+          x: clampViewX(view.x + vx * dt),
+          y: view.y + vy * dt,
+        })
+        inertiaRafRef.current = requestAnimationFrame(tick)
+      }
+
+      inertiaRafRef.current = requestAnimationFrame(tick)
+    },
+    [clampViewX, setPosition, stopInertia],
+  )
+
   const startPageDrag = (button: number, pageX: number, pageY: number) => {
     if (button === 0) {
+      stopInertia()
       dragRef.current = {
         isDragged: true,
         startDragPosition: { x: pageX, y: pageY },
         startViewPosition: { ...viewRef.current },
       }
+      lastMoveRef.current = { x: pageX, y: pageY, t: performance.now() }
+      velocityRef.current = { vx: 0, vy: 0 }
       setIsDragged(true)
     }
   }
-  const stopPageDrag = () => {
+  const stopPageDrag = (releaseInertia = true) => {
+    const wasDragging = dragRef.current.isDragged
     dragRef.current.isDragged = false
     setIsDragged(false)
+    if (releaseInertia && wasDragging) {
+      const { vx, vy } = velocityRef.current
+      const speedPx = Math.hypot(vx * zoomRef.current, vy)
+      if (speedPx > 80) startInertia(vx, vy)
+    }
+    velocityRef.current = { vx: 0, vy: 0 }
   }
   const executePageDrag = (pageX: number, pageY: number) => {
     const drag = dragRef.current
     if (!drag.isDragged) return
     const zoom = zoomRef.current
-    props.setPosition({
-      x: Math.min(
-        Math.max(
-          drag.startViewPosition.x - (pageX - drag.startDragPosition.x) / zoom,
-          props.yearSelection.from - props.yearLabelWidth,
-        ),
-        props.yearSelection.to + props.yearLabelWidth,
-      ),
+    const now = performance.now()
+    const dt = (now - lastMoveRef.current.t) / 1000
+    if (dt > 0 && dt < 0.12) {
+      const dPageX = pageX - lastMoveRef.current.x
+      const dPageY = pageY - lastMoveRef.current.y
+      const sampleVx = -dPageX / zoom / dt
+      const sampleVy = dPageY / dt
+      velocityRef.current = {
+        vx: velocityRef.current.vx * 0.35 + sampleVx * 0.65,
+        vy: velocityRef.current.vy * 0.35 + sampleVy * 0.65,
+      }
+    } else if (dt >= 0.12) {
+      velocityRef.current = { vx: 0, vy: 0 }
+    }
+    lastMoveRef.current = { x: pageX, y: pageY, t: now }
+
+    setPosition({
+      x: clampViewX(drag.startViewPosition.x - (pageX - drag.startDragPosition.x) / zoom),
       y: drag.startViewPosition.y + (pageY - drag.startDragPosition.y),
     })
   }
 
   const calculateDelta = (x1: number, y1: number, x2: number, y2: number) => Math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
 
-  const setZoom = props.setZoom
-  const setPosition = props.setPosition
-  const setYearSelection = props.setYearSelection
-  const yearFrom = props.yearSelection.from
-  const yearTo = props.yearSelection.to
-  const yearLabelWidth = props.yearLabelWidth
-
   const applyZoomDelta = useCallback(
     (deltaY: number) => {
+      stopInertia()
       const zoom = zoomRef.current
       if (Math.max(1, zoom - deltaY / 100) <= 11.0) {
         setYearSelection(ys => ({ ...ys, stepSize: 100 }))
@@ -223,18 +300,19 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
         y: viewRef.current.y,
       })
     },
-    [setPosition, setZoom, setYearSelection],
+    [setPosition, setZoom, setYearSelection, stopInertia],
   )
 
   const applyPan = useCallback(
     (dxYears: number, dyPx: number) => {
+      stopInertia()
       const view = viewRef.current
       setPosition({
-        x: Math.min(Math.max(view.x + dxYears, yearFrom - yearLabelWidth), yearTo + yearLabelWidth),
+        x: clampViewX(view.x + dxYears),
         y: view.y + dyPx,
       })
     },
-    [setPosition, yearFrom, yearTo, yearLabelWidth],
+    [clampViewX, setPosition, stopInertia],
   )
 
   useEffect(() => {
@@ -277,12 +355,13 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
         )
         const zoom = zoomRef.current
         const nextZoom = zoom - (pinchRef.current - pinchSize) / 100
+        stopInertia()
         setZoom(nextZoom)
         pinchRef.current = pinchSize
         if (nextZoom <= 10) setYearSelection(ys => ({ ...ys, stepSize: 100 }))
         else if (nextZoom <= 20) setYearSelection(ys => ({ ...ys, stepSize: 10 }))
         else setYearSelection(ys => ({ ...ys, stepSize: 5 }))
-        stopPageDrag()
+        stopPageDrag(false)
       }
     }
     const onTouchEnd = () => stopPageDrag()
@@ -367,8 +446,9 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
       el.removeEventListener('touchmove', onTouchMove)
       el.removeEventListener('touchend', onTouchEnd)
       window.removeEventListener('keydown', onKeyDown)
+      stopInertia()
     }
-  }, [applyPan, applyZoomDelta, setZoom, setYearSelection])
+  }, [applyPan, applyZoomDelta, setZoom, setYearSelection, startInertia, stopInertia])
 
   return (
     <div
