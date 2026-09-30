@@ -647,6 +647,9 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
       >
         <CameraTransformDriver layoutCameraRef={layoutCameraRef} liveCameraRef={liveCameraRef} />
 
+        {/* Behind world content so people/pubs receive hover & clicks; still catches empty-space clears. */}
+        <PadLayer clearHighlights={clearHighlights} height={props.windowHeight} width={props.windowWidth} />
+
         <pixiContainer label="hop-world">
           {props.displayHistoryEvents && (
             <HistoryEventsLayer
@@ -683,7 +686,7 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
           )}
         </pixiContainer>
 
-        <pixiContainer label="hop-years">
+        <pixiContainer eventMode="none" label="hop-years">
           <YearLinesLayer
             height={props.windowHeight}
             isVisible={isVisible}
@@ -698,8 +701,6 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
             yearsOnScale={yearsOnScale}
           />
         </pixiContainer>
-
-        <PadLayer clearHighlights={clearHighlights} height={props.windowHeight} width={props.windowWidth} />
       </Application>
 
       <TimelineTooltip tooltip={tooltip} />
