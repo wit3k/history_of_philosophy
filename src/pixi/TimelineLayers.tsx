@@ -223,12 +223,15 @@ export function HistoryEventsLayer({
                 }}
               />
               <pixiText
+                // -90°: glyphs advance upward (−Y). Anchor at the bottom of the
+                // green header so the label starts at the bar's beginning (near
+                // the timeline strip), not at the top end.
                 anchor={{ x: 0, y: 0.5 }}
                 rotation={-Math.PI / 2}
                 style={{ fill: '#000000', fontFamily: MONO, fontSize: 14 }}
                 text={event.name}
                 x={x0 + 10}
-                y={row - event.name.length * 8 - 4}
+                y={row - 4}
               />
             </pixiContainer>
           )
