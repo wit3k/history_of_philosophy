@@ -58,6 +58,7 @@ export type SharedTimelineProps = CameraFns &
     setTooltip: (t: TimelineTooltipState | null) => void
     displayAuthorsTimeline: boolean
     canvasOffset: { left: number; top: number }
+    getWorldOffset: () => { x: number; y: number }
   }
 
 export function YearLinesLayer({
@@ -396,6 +397,7 @@ export function PublicationsLayer({
     publicationMaxCols,
     publicationMaxRows,
     canvasOffset,
+    getWorldOffset,
   } = shared
   return (
     <pixiContainer>
@@ -422,9 +424,10 @@ export function PublicationsLayer({
               eventMode="static"
               onPointerMove={() => {
                 shared.updateHighlightedPublication(publication.id)
+                const offset = getWorldOffset()
                 shared.setTooltip({
-                  clientX: canvasOffset.left + x,
-                  clientY: canvasOffset.top + y + publicationBox / 2,
+                  clientX: canvasOffset.left + x + offset.x,
+                  clientY: canvasOffset.top + y + publicationBox / 2 + offset.y,
                   colorSeed: publication.publicationDate,
                   kind: 'publication',
                   titleLines: lines,
@@ -526,6 +529,7 @@ export function PersonHistoryEventsLayer({
     personHistoryMaxCols,
     personHistoryMaxRows,
     canvasOffset,
+    getWorldOffset,
   } = shared
 
   return (
@@ -551,16 +555,18 @@ export function PersonHistoryEventsLayer({
           const lines = slices.map((s, i) => (i === slices.length - 1 && truncated ? `${s}...` : s))
           const yearLabel = instant || event.yearTo == null ? `${yearFrom}` : `${yearFrom}–${event.yearTo}`
 
-          const showTip = () =>
+          const showTip = () => {
+            const offset = getWorldOffset()
             shared.setTooltip({
-              clientX: canvasOffset.left + centerX,
-              clientY: canvasOffset.top + y + personHistoryBox / 2,
+              clientX: canvasOffset.left + centerX + offset.x,
+              clientY: canvasOffset.top + y + personHistoryBox / 2 + offset.y,
               colorSeed: yearFrom,
               kind: 'personHistory',
               titleLines: lines,
               type: event.type,
               yearLabel,
             })
+          }
 
           if (instant) {
             return (
