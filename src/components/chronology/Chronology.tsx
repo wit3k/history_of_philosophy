@@ -1,5 +1,8 @@
 import React from 'react'
-import CollectionsListService from '../../data/db/CollectionsListService'
+import CollectionsListService, {
+  ALL_COLLECTIONS_ID,
+  UNASSIGNED_COLLECTION_ID,
+} from '../../data/db/CollectionsListService'
 import HistoryEventsListService from '../../data/db/HistoryEventsListService'
 import LocationListService from '../../data/db/LocationListService'
 import PeopleListService from '../../data/db/PeopleListService'
@@ -77,27 +80,27 @@ const Chronology = () => {
   interface HasId {
     id: string
   }
-  const toggleCollectionsState = (collectionId: string, checked: boolean) => {
-    const newCollectionsState = collectionsState.map((c: Collection) =>
-      c.id === collectionId ? { ...c, isActive: checked } : c,
-    )
 
-    function itemsFilter<S extends HasId>(cmap: (collections: Collection) => number[]) {
-      const includeUnassigned = newCollectionsState.find(cs => cs.id === '0')
-      const isWhiteList: boolean = includeUnassigned?.isActive ?? false
-      const includedIds: string[] = newCollectionsState
-        .filter(c => c.isActive)
-        .flatMap(cmap)
-        .map(c => c.toString())
-      const allCollectionIds: string[] = newCollectionsState.flatMap(cmap).map(c => c + '')
+  const applyCollectionFilter = (selectedId: string, collections: Collection[]) => {
+    const selected = collections.find(c => c.id === selectedId)
 
-      return (item: S, _: number) =>
-        isWhiteList
-          ? !allCollectionIds.includes(item.id) || includedIds.includes(item.id)
-          : includedIds.includes(item.id)
+    function itemsFilter<S extends HasId>(cmap: (collection: Collection) => number[]) {
+      if (selectedId === ALL_COLLECTIONS_ID || !selected) {
+        return (_item: S, __: number) => true
+      }
+
+      const realCollections = collections.filter(
+        c => c.id !== ALL_COLLECTIONS_ID && c.id !== UNASSIGNED_COLLECTION_ID,
+      )
+      const allCollectionIds = realCollections.flatMap(cmap).map(c => `${c}`)
+
+      if (selectedId === UNASSIGNED_COLLECTION_ID) {
+        return (item: S, _: number) => !allCollectionIds.includes(item.id)
+      }
+
+      const includedIds = cmap(selected).map(c => `${c}`)
+      return (item: S, _: number) => includedIds.includes(item.id)
     }
-
-    setCollectionsState(newCollectionsState)
 
     const filteredPeople = PeopleListService.getAll().filter(itemsFilter(c => c.includedPeople))
     setPeopleList(PeopleListService.withRowNumbers(filteredPeople))
@@ -108,6 +111,15 @@ const Chronology = () => {
     setPeopleReferenceList(PersonReferenceListService.getAll().filter(itemsFilter(c => c.includedPeopleRelations)))
     const visiblePersonIds = new Set(filteredPeople.map(p => p.id))
     setPeopleHistoryEvents(PeopleHistoryEventsListService.getAll().filter(e => visiblePersonIds.has(e.personId)))
+  }
+
+  const selectCollection = (collectionId: string) => {
+    const newCollectionsState = collectionsState.map((c: Collection) => ({
+      ...c,
+      isActive: c.id === collectionId,
+    }))
+    setCollectionsState(newCollectionsState)
+    applyCollectionFilter(collectionId, newCollectionsState)
   }
 
   const [displayPublicationModal, setDisplayPublicationModal] = React.useState<boolean>(false)
@@ -244,7 +256,7 @@ const Chronology = () => {
           setDisplayPersonHistoryEvents={setDisplayPersonHistoryEvents}
           setDisplayPublicationRelations={setDisplayPublicationRelations}
           setDisplayPublications={setDisplayPublications}
-          toggleCollectionsState={toggleCollectionsState}
+          selectCollection={selectCollection}
         />
       </div>
 

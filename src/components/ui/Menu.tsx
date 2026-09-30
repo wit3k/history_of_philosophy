@@ -22,7 +22,7 @@ class MenuProps {
     public darkMode: boolean,
     public setDarkMode: Dispatch<SetStateAction<boolean>>,
     public collectionsState: Collection[],
-    public toggleCollectionsState: (collectionId: string, checked: boolean) => void,
+    public selectCollection: (collectionId: string) => void,
   ) {}
 }
 
@@ -136,7 +136,7 @@ const Menu = (props: MenuProps) => {
           <hr className="my-2 text-gray-600"></hr>
 
           <div className="scrollable-area">
-            <h1 className="text-[15px]  ml-3 text-xl text-gray-200 font-bold">Widoczne kolekcje</h1>
+            <h1 className="text-[15px]  ml-3 text-xl text-gray-200 font-bold">Widoczna kolekcja</h1>
 
             {props.collectionsState.map((collection: Collection, i: number) => (
               <UIToggle
@@ -145,7 +145,9 @@ const Menu = (props: MenuProps) => {
                 label={collection.name}
                 offMsg=""
                 state={collection.isActive}
-                useState={(checked: boolean) => props.toggleCollectionsState(collection.id, checked)}
+                useState={(checked: boolean) => {
+                  if (checked) props.selectCollection(collection.id)
+                }}
               />
             ))}
           </div>
