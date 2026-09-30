@@ -89,9 +89,7 @@ const Chronology = () => {
         return (_item: S, __: number) => true
       }
 
-      const realCollections = collections.filter(
-        c => c.id !== ALL_COLLECTIONS_ID && c.id !== UNASSIGNED_COLLECTION_ID,
-      )
+      const realCollections = collections.filter(c => c.id !== ALL_COLLECTIONS_ID && c.id !== UNASSIGNED_COLLECTION_ID)
       const allCollectionIds = realCollections.flatMap(cmap).map(c => `${c}`)
 
       if (selectedId === UNASSIGNED_COLLECTION_ID) {

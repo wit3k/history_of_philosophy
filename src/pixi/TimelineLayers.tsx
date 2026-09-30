@@ -11,16 +11,10 @@ import type PublicationReference from '../data/dto/PublicationReference'
 import ColorsService from '../services/Colors'
 import { dashOffsetFromTime, strokeDashedPathData, strokeDashedVerticalLine } from './dashedStroke'
 import { strokePathData } from './pathBridge'
-import {
-  attitudeColor,
-  buildPersonReferencePath,
-  buildPublicationReferencePath,
-  wrapTitleWords,
-} from './relationPaths'
+import { attitudeColor, buildPersonReferencePath, buildPublicationReferencePath, wrapTitleWords } from './relationPaths'
 import type { TimelineTooltipState } from './TimelineTooltip'
 
-const MONO =
-  'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace'
+const MONO = 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace'
 
 const APP_BASE = '/history_of_philosophy'
 

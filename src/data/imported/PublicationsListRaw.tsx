@@ -117,7 +117,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1792,
     publicationLocation: 26,
-    thumbnail: 'ateom1byoqueyshu.png',
+    thumbnail: 'atm3jia9hljyd4q8.png',
     title: 'A Vindication of the Rights of Woman',
   },
   {
@@ -128,7 +128,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1949,
     publicationLocation: 15,
-    thumbnail: 'atvcd129oq4qkrva.png',
+    thumbnail: 'at7abr35y0ayry92.png',
     title: 'Le Deuxième Sexe',
   },
   {
@@ -139,7 +139,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1929,
     publicationLocation: 26,
-    thumbnail: 'at7upntlfmzfa8nw.png',
+    thumbnail: 'at5l8tpgl2nnfxua.png',
     title: "A Room of One's Own",
   },
   {
@@ -150,7 +150,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1938,
     publicationLocation: 26,
-    thumbnail: 'attk3kfkjjh6cqk5.png',
+    thumbnail: 'atr54xdnnkrwovov.png',
     title: 'Three Guineas',
   },
   {
@@ -160,7 +160,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1963,
     publicationLocation: 140,
-    thumbnail: 'attt16cs43iyvvvz.png',
+    thumbnail: 'atrpmjcgg0app2l5.png',
     title: 'The Feminine Mystique',
   },
   {
@@ -170,7 +170,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1970,
     publicationLocation: 140,
-    thumbnail: 'aty89e0xg46t9jzg.png',
+    thumbnail: 'atm28fcpenumpot1.png',
     title: 'Sexual Politics',
   },
   {
@@ -181,7 +181,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1970,
     publicationLocation: 140,
-    thumbnail: 'at0yoag2jm4qgqfq.png',
+    thumbnail: 'at36advmw9l8ep7y.png',
     title: 'The Dialectic of Sex',
   },
   {
@@ -191,7 +191,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1984,
     publicationLocation: 140,
-    thumbnail: 'at09injw9d4zoeb5.png',
+    thumbnail: 'atvykp9o1kngg28r.png',
     title: 'Sister Outsider',
   },
   {
@@ -202,7 +202,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1981,
     publicationLocation: 140,
-    thumbnail: 'atgtbg0bzi5uvkq3.png',
+    thumbnail: 'atwyvibreg70owxz.png',
     title: "Ain't I a Woman",
   },
   {
@@ -213,7 +213,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1984,
     publicationLocation: 140,
-    thumbnail: 'atnl7x1c1eot3gea.png',
+    thumbnail: 'atwk2e5kwfvojexw.png',
     title: 'Feminist Theory: From Margin to Center',
   },
   {
@@ -223,7 +223,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1990,
     publicationLocation: 140,
-    thumbnail: 'at9demek8v1ujb61.png',
+    thumbnail: 'at1okrcf54mlhv00.png',
     title: 'Gender Trouble',
   },
   {
@@ -233,7 +233,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1981,
     publicationLocation: 140,
-    thumbnail: 'atkbjp12tooap9d3.png',
+    thumbnail: 'atijohtg4w4zwr1y.png',
     title: 'Women, Race and Class',
   },
   {
@@ -243,7 +243,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1790,
     publicationLocation: 26,
-    thumbnail: 'atf84xbx6suahvnc.png',
+    thumbnail: 'ath7tijkoc0j98yl.png',
     title: 'A Vindication of the Rights of Men',
   },
   {
@@ -253,7 +253,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1798,
     publicationLocation: 26,
-    thumbnail: 'atn0jnrlj4grgl4u.png',
+    thumbnail: 'atx4vnze8wzhc4os.png',
     title: 'Maria; or, The Wrongs of Woman',
   },
   {
@@ -263,7 +263,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1981,
     publicationLocation: 140,
-    thumbnail: 'atw86khfhbh341n3.png',
+    thumbnail: 'ataeflv2zevqcnbn.png',
     title: 'The Second Stage',
   },
   {
@@ -273,7 +273,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1998,
     publicationLocation: 140,
-    thumbnail: 'attxc6d2e5qpvatz.png',
+    thumbnail: 'atlkupxmk0ksxso7.png',
     title: 'Airless Spaces',
   },
   {
@@ -283,7 +283,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1993,
     publicationLocation: 140,
-    thumbnail: 'atm0326ykfnn8m44.png',
+    thumbnail: 'atzlitjohbcgikak.png',
     title: 'Bodies That Matter',
   },
   {
@@ -293,7 +293,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1989,
     publicationLocation: 140,
-    thumbnail: 'atmvob5uebeks8dc.png',
+    thumbnail: 'at8cvtzqzl87m8pz.png',
     title: 'Women, Culture & Politics',
   },
   {
@@ -303,7 +303,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1980,
     publicationLocation: 140,
-    thumbnail: 'atmqzyavn7xekh9y.png',
+    thumbnail: 'atej8w44yum7xaey.png',
     title: 'The Cancer Journals',
   },
   {
@@ -313,7 +313,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1931,
     publicationLocation: 26,
-    thumbnail: 'ats5236f0qkp4d5z.png',
+    thumbnail: 'aturfugp4ygu7di0.png',
     title: 'The Waves',
   },
   {
@@ -323,7 +323,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1937,
     publicationLocation: 26,
-    thumbnail: 'atro8xvwpd7sn56t.png',
+    thumbnail: 'atg55jqb5360fiw6.png',
     title: 'The Years',
   },
   {
@@ -333,7 +333,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1915,
     publicationLocation: 26,
-    thumbnail: 'atq3d8zha6c7ejo3.png',
+    thumbnail: 'at27boaoj830wkqh.png',
     title: 'The Voyage Out',
   },
   {
@@ -343,7 +343,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1941,
     publicationLocation: 26,
-    thumbnail: 'at0fc3ys4zmrtjo2.png',
+    thumbnail: 'atfwyxb79e9bbt4d.png',
     title: 'Between the Acts',
   },
   {
@@ -353,7 +353,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1932,
     publicationLocation: 26,
-    thumbnail: 'atwira0gqal6m0si.png',
+    thumbnail: 'atxu6womlfyn2bi7.png',
     title: 'The Common Reader: Second Series',
   },
   {
@@ -363,7 +363,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1943,
     publicationLocation: 15,
-    thumbnail: 'aterfe623yqjygxa.png',
+    thumbnail: 'athfbbi2snzchpr8.png',
     title: "L'Invitée",
   },
   {
@@ -373,7 +373,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1944,
     publicationLocation: 15,
-    thumbnail: 'at797x2f3p6w6o38.png',
+    thumbnail: 'atjn1aqt8f0655am.png',
     title: 'Pyrrhus et Cinéas',
   },
   {
@@ -383,7 +383,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1947,
     publicationLocation: 15,
-    thumbnail: 'at8x8t92asfwt8j5.png',
+    thumbnail: 'atwwd56urwzjyxn5.png',
     title: "Pour une morale de l'ambiguïté",
   },
   {
@@ -393,7 +393,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1954,
     publicationLocation: 15,
-    thumbnail: 'at7v8oczqpilrnl9.png',
+    thumbnail: 'atvef200vssam6jr.png',
     title: 'Les Mandarins',
   },
   {
@@ -403,7 +403,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1958,
     publicationLocation: 15,
-    thumbnail: 'athhh4o0g31jhqhw.png',
+    thumbnail: 'atnjd28t9cwy1m5l.png',
     title: "Mémoires d'une jeune fille rangée",
   },
   {
@@ -414,7 +414,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1787,
     publicationLocation: 26,
-    thumbnail: 'atcbkerl9vuojs06.png',
+    thumbnail: 'at3nla7t7x5pn9rh.png',
     title:
       'Thoughts on the Education of Daughters: With Reflections on Female Conduct, in the More Important Duties of Life',
   },
@@ -426,7 +426,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1788,
     publicationLocation: 26,
-    thumbnail: 'atnqk4wroaxtbdpw.png',
+    thumbnail: 'atgz8fd45hn9wxke.png',
     title: 'Mary: A Fiction',
   },
   {
@@ -437,7 +437,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1788,
     publicationLocation: 26,
-    thumbnail: 'atg292rr4n9mux3m.png',
+    thumbnail: 'at2b35v41qg2ktpv.png',
     title:
       'Original Stories from Real Life; with Conversations Calculated to Regulate the Affections and Form the Mind to Truth and Goodness',
   },
@@ -449,7 +449,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1794,
     publicationLocation: 26,
-    thumbnail: 'at9raikg7sugdafu.png',
+    thumbnail: 'aty51lx74cy5999s.png',
     title:
       'An Historical and Moral View of the Origin and Progress of the French Revolution; and the Effect It Has Produced in Europe',
   },
@@ -461,7 +461,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1796,
     publicationLocation: 26,
-    thumbnail: 'atvyyrad7gcm1awy.png',
+    thumbnail: 'at7el44l62rtij8t.png',
     title: 'Letters Written During a Short Residence in Sweden, Norway, and Denmark',
   },
   {
@@ -483,7 +483,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1928,
     publicationLocation: 26,
-    thumbnail: 'atl8x3m9mpxllfg2.png',
+    thumbnail: 'atddfw2dqvzfw7uk.png',
     title: 'Orlando: A Biography',
   },
   {
@@ -494,7 +494,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1925,
     publicationLocation: 26,
-    thumbnail: 'atrf0z9txewjunz3.png',
+    thumbnail: 'atw56tkcvxskj535.png',
     title: 'Mrs Dalloway',
   },
   {
@@ -505,7 +505,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1927,
     publicationLocation: 26,
-    thumbnail: 'at77vj9fga39zhbv.png',
+    thumbnail: 'atnqpuq33hw5x4ue.png',
     title: 'To the Lighthouse',
   },
   {
@@ -516,7 +516,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1931,
     publicationLocation: 26,
-    thumbnail: 'atn1oi7f0z47jczg.png',
+    thumbnail: 'aty35ornux987lck.png',
     title: 'The Waves',
   },
   {
@@ -527,7 +527,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1937,
     publicationLocation: 26,
-    thumbnail: 'atpbeelxoqiqf1cu.png',
+    thumbnail: 'atq8n32ghzu83qr7.png',
     title: 'The Years',
   },
   {
@@ -538,7 +538,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1915,
     publicationLocation: 26,
-    thumbnail: 'attlty76hx3uqtp3.png',
+    thumbnail: 'atkqdbqkd0wg2h5p.png',
     title: 'The Voyage Out',
   },
   {
@@ -549,7 +549,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1941,
     publicationLocation: 26,
-    thumbnail: 'at5i1wrib3x30w70.png',
+    thumbnail: 'atftvwmk9x0ztd0s.png',
     title: 'Between the Acts',
   },
   {
@@ -560,7 +560,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1932,
     publicationLocation: 26,
-    thumbnail: 'at7mdx88t8idkqcu.png',
+    thumbnail: 'atgf9gi1dt8wk00q.png',
     title: 'The Common Reader: Second Series',
   },
   {
@@ -571,7 +571,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1943,
     publicationLocation: 15,
-    thumbnail: 'at6b5e5wdrhiq7b2.png',
+    thumbnail: 'atrp8neik4idrvdw.png',
     title: "L'Invitée",
   },
   {
@@ -582,7 +582,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1944,
     publicationLocation: 15,
-    thumbnail: 'at7lau5r9eavee83.png',
+    thumbnail: 'atfc0khs6qu325cw.png',
     title: 'Pyrrhus et Cinéas',
   },
   {
@@ -593,7 +593,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1947,
     publicationLocation: 15,
-    thumbnail: 'at8gmij1j8ffa8ed.png',
+    thumbnail: 'at3518yfqja6735y.png',
     title: "Pour une morale de l'ambiguïté",
   },
   {
@@ -604,7 +604,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1954,
     publicationLocation: 15,
-    thumbnail: 'ath6y3j9029pvjq6.png',
+    thumbnail: 'at03y7d44yhgoqtp.png',
     title: 'Les Mandarins',
   },
   {
@@ -615,7 +615,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1958,
     publicationLocation: 15,
-    thumbnail: 'atvruxqng8c21uhl.png',
+    thumbnail: 'at6lid1innyoi3in.png',
     title: "Mémoires d'une jeune fille rangée",
   },
   {
@@ -626,7 +626,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1960,
     publicationLocation: 15,
-    thumbnail: 'athq7dakydrvu7n3.png',
+    thumbnail: 'atlaizj5sy04h5po.png',
     title: "La Force de l'âge",
   },
   {
@@ -637,7 +637,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1963,
     publicationLocation: 15,
-    thumbnail: 'ati6j2dq0c8vnhpf.png',
+    thumbnail: 'attp3kgx3rg20xeq.png',
     title: 'La Force des choses',
   },
   {
@@ -648,7 +648,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1970,
     publicationLocation: 15,
-    thumbnail: 'atxlvdmoji3bzmfi.png',
+    thumbnail: 'atc0ygvim04g8kio.png',
     title: 'La Vieillesse',
   },
   {
@@ -659,7 +659,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1972,
     publicationLocation: 15,
-    thumbnail: 'at6dw6oahimghohr.png',
+    thumbnail: 'ato5ri72sj2n4kxt.png',
     title: 'Tout compte fait',
   },
   {
@@ -680,7 +680,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1993,
     publicationLocation: 140,
-    thumbnail: 'atbgd69vmqpnzbvl.png',
+    thumbnail: 'atgtcka8x6c37yyb.png',
     title: 'The Fountain of Age',
   },
   {
@@ -701,7 +701,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 2000,
     publicationLocation: 140,
-    thumbnail: 'at182cz0y58xa7li.png',
+    thumbnail: 'atqmxusexatrlnvc.png',
     title: 'Life So Far: A Memoir',
   },
   {
@@ -712,7 +712,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1973,
     publicationLocation: 140,
-    thumbnail: 'at623rc04uwv1bv9.png',
+    thumbnail: 'attaiczmbhuylcec.png',
     title: 'The Prostitution Papers: A Candid Dialogue',
   },
   {
@@ -723,7 +723,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1974,
     publicationLocation: 140,
-    thumbnail: 'atjknwy491kxmyfj.png',
+    thumbnail: 'ato6u3lvq8ew6sir.png',
     title: 'Flying',
   },
   {
@@ -734,7 +734,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1977,
     publicationLocation: 140,
-    thumbnail: 'atbe9fn0h6qibkxh.png',
+    thumbnail: 'ati46zdh173rwjnq.png',
     title: 'Sita',
   },
   {
@@ -756,7 +756,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1982,
     publicationLocation: 140,
-    thumbnail: 'atenjyh077515uwm.png',
+    thumbnail: 'atxth7xncqd3wl7y.png',
     title: 'Going to Iran',
   },
   {
@@ -767,7 +767,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1990,
     publicationLocation: 140,
-    thumbnail: 'atcd1qlkz8cyl2um.png',
+    thumbnail: 'athrl441hde42k4z.png',
     title: 'The Loony-Bin Trip',
   },
   {
@@ -778,7 +778,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1994,
     publicationLocation: 140,
-    thumbnail: 'at97jadejyzbtzpw.png',
+    thumbnail: 'at201qsa6xta46ew.png',
     title: 'The Politics of Cruelty: An Essay on the Literature of Political Imprisonment',
   },
   {
@@ -789,7 +789,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1995,
     publicationLocation: 140,
-    thumbnail: 'atlyx36ubhk0bdrm.png',
+    thumbnail: 'atyl1199syicsbf1.png',
     title: 'A.D., A Memoir',
   },
   {
@@ -799,7 +799,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 2001,
     publicationLocation: 140,
-    thumbnail: 'ati8h86ngyzs5cb2.png',
+    thumbnail: 'ats2n6yf0ssfrb3d.png',
     title: 'Mother Millett',
   },
   {
@@ -843,7 +843,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1982,
     publicationLocation: 44,
-    thumbnail: 'at0btc3sobsfc613.png',
+    thumbnail: 'atzcrvy9gz9l1itf.png',
     title: 'Zami: A New Spelling of My Name',
   },
   {
@@ -854,7 +854,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1988,
     publicationLocation: 140,
-    thumbnail: 'atmgy6cbxz90xx24.png',
+    thumbnail: 'atvxdxwgikoqptqy.png',
     title: 'A Burst of Light: Essays',
   },
   {
@@ -865,7 +865,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1978,
     publicationLocation: 140,
-    thumbnail: 'at4v02s0nkkn7pqy.png',
+    thumbnail: 'at6u9fff1xzxyiyk.png',
     title: 'Uses of the Erotic: The Erotic as Power',
   },
   {
@@ -876,7 +876,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1976,
     publicationLocation: 140,
-    thumbnail: 'atj4gxpc4pe4kfso.png',
+    thumbnail: 'atfxxb31qe0elcz1.png',
     title: 'Coal',
   },
   {
@@ -887,7 +887,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1978,
     publicationLocation: 140,
-    thumbnail: 'ate47kk0i2vvxu5z.png',
+    thumbnail: 'at34h3dz9d6dwgf6.png',
     title: 'The Black Unicorn',
   },
   {
@@ -898,7 +898,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1985,
     publicationLocation: 140,
-    thumbnail: 'atuhuhy2em3vgfr8.png',
+    thumbnail: 'atnem3zrs0gjnkk7.png',
     title: 'I Am Your Sister: Black Women Organizing Across Sexualities',
   },
   {
@@ -909,7 +909,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1986,
     publicationLocation: 140,
-    thumbnail: 'at3csn620fub789o.png',
+    thumbnail: 'atggwqx179hg7cwk.png',
     title: 'Our Dead Behind Us',
   },
   {
@@ -931,7 +931,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1981,
     publicationLocation: 44,
-    thumbnail: 'at2tcah1ya1mxmrs.png',
+    thumbnail: 'at2sn62b1u0lckaa.png',
     title: 'Ain’t I a Woman?: Black Women and Feminism',
   },
   {
@@ -942,7 +942,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1989,
     publicationLocation: 44,
-    thumbnail: 'atccdso0a3fi618m.png',
+    thumbnail: 'atsjxygi1ctpp46w.png',
     title: 'Talking Back: Thinking Feminist, Thinking Black',
   },
   {
@@ -952,7 +952,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1990,
     publicationLocation: 44,
-    thumbnail: 'atmqqmlidc1sabth.png',
+    thumbnail: 'atje0fzhvktbk4jx.png',
     title: 'Yearning: Race, Gender, and Cultural Politics',
   },
   {
@@ -963,7 +963,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1992,
     publicationLocation: 44,
-    thumbnail: 'at5cyopz636ukf56.png',
+    thumbnail: 'at8fsjkirz5j0hws.png',
     title: 'Black Looks: Race and Representation',
   },
   {
@@ -974,7 +974,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1994,
     publicationLocation: 140,
-    thumbnail: 'atc27z90gr82r7ox.png',
+    thumbnail: 'at5xn1d0mnjl2tw0.png',
     title: 'Teaching to Transgress: Education as the Practice of Freedom',
   },
   {
@@ -985,7 +985,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1994,
     publicationLocation: 140,
-    thumbnail: 'atmyv2im3uhah6m3.png',
+    thumbnail: 'atxn88o7f8xoaaja.png',
     title: 'Outlaw Culture: Resisting Representations',
   },
   {
@@ -995,7 +995,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 2000,
     publicationLocation: -1,
-    thumbnail: 'atxd23jry3ls1342.png',
+    thumbnail: 'at0jc3ffrd1u2d04.png',
     title: 'Feminism Is for Everybody: Passionate Politics',
   },
   {
@@ -1006,7 +1006,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 2000,
     publicationLocation: 140,
-    thumbnail: 'atp9jvr472rozzsb.png',
+    thumbnail: 'atc81bp0fptgb6qi.png',
     title: 'All About Love: New Visions',
   },
   {
@@ -1017,7 +1017,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 2004,
     publicationLocation: 140,
-    thumbnail: 'atml2vohllu96gvv.png',
+    thumbnail: 'at7cku7kb6fkvmo9.png',
     title: 'The Will to Change: Men, Masculinity, and Love',
   },
   {
@@ -1028,7 +1028,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1987,
     publicationLocation: 140,
-    thumbnail: 'atorekyljodc2xkw.png',
+    thumbnail: 'at9yn92qni75ty2s.png',
     title: 'Subjects of Desire: Hegelian Reflections in Twentieth-Century France',
   },
   {
@@ -1039,7 +1039,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1997,
     publicationLocation: 140,
-    thumbnail: 'atghxy5x6wyw6ahh.png',
+    thumbnail: 'atq3pkww9jhrqil4.png',
     title: 'The Psychic Life of Power: Theories of Subjection',
   },
   {
@@ -1050,7 +1050,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1997,
     publicationLocation: 140,
-    thumbnail: 'atoaiafhd0p0en2p.png',
+    thumbnail: 'ataz32gzts68cs07.png',
     title: 'Excitable Speech: A Politics of the Performative',
   },
   {
@@ -1060,7 +1060,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 2000,
     publicationLocation: 140,
-    thumbnail: 'atornithtb3fgqdd.png',
+    thumbnail: 'atcm2fwtahzte20o.png',
     title: 'Antigone’s Claim: Kinship Between Life and Death',
   },
   {
@@ -1071,7 +1071,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 2004,
     publicationLocation: 140,
-    thumbnail: 'atf9tr5xcxh275ti.png',
+    thumbnail: 'atngiq8kmpqls3gp.png',
     title: 'Undoing Gender',
   },
   {
@@ -1081,7 +1081,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 2004,
     publicationLocation: 26,
-    thumbnail: 'aty80gx903843afn.png',
+    thumbnail: 'at3a38vz54ziifgi.png',
     title: 'Precarious Life: The Powers of Mourning and Violence',
   },
   {
@@ -1092,7 +1092,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 2009,
     publicationLocation: 26,
-    thumbnail: 'atwjb4sb5rce0sps.png',
+    thumbnail: 'atpqgcykrvq90hcs.png',
     title: 'Frames of War: When Is Life Grievable?',
   },
   {
@@ -1103,7 +1103,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 2015,
     publicationLocation: -1,
-    thumbnail: 'at02dcokhrh1ak5h.png',
+    thumbnail: 'atw4ex06rume2ntp.png',
     title: 'Notes Toward a Performative Theory of Assembly',
   },
   {
@@ -1114,7 +1114,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1971,
     publicationLocation: 140,
-    thumbnail: 'atonl7yn7hwegdgl.png',
+    thumbnail: 'atf30o55cjuoxjsm.png',
     title: 'If They Come in the Morning: Voices of Resistance',
   },
   {
@@ -1124,7 +1124,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1974,
     publicationLocation: 140,
-    thumbnail: 'athfcbfmfxlgwjst.png',
+    thumbnail: 'atryyp041ujukxtj.png',
     title: 'Angela Davis: An Autobiography',
   },
   {
@@ -1134,7 +1134,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1998,
     publicationLocation: 140,
-    thumbnail: 'atugyxogo7b781c8.png',
+    thumbnail: 'at1oqcvu6h4ugnck.png',
     title: 'The Angela Y. Davis Reader',
   },
   {
@@ -1144,7 +1144,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 1998,
     publicationLocation: 140,
-    thumbnail: 'atlfailh4l7fa0pr.png',
+    thumbnail: 'atbylq5d8pqmn8qe.png',
     title: 'Blues Legacies and Black Feminism: Gertrude “Ma” Rainey, Bessie Smith, and Billie Holiday',
   },
   {
@@ -1154,7 +1154,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 2003,
     publicationLocation: 140,
-    thumbnail: 'atvt2hzfavshlwp6.png',
+    thumbnail: 'atp8swhunbmt70io.png',
     title: 'Are Prisons Obsolete?',
   },
   {
@@ -1164,7 +1164,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 2005,
     publicationLocation: 140,
-    thumbnail: 'atjn9sjv36abi9oz.png',
+    thumbnail: 'at6n4pr81ys5onvl.png',
     title: 'Abolition Democracy: Beyond Prisons, Torture, and Empire',
   },
   {
@@ -1174,7 +1174,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 2012,
     publicationLocation: 140,
-    thumbnail: 'atd0ocrrammydt3x.png',
+    thumbnail: 'atz0mf9dccrya1e0.png',
     title: 'The Meaning of Freedom: And Other Difficult Dialogues',
   },
   {
@@ -1184,7 +1184,7 @@ export const PublicationsListRaw = [
     isbn: null,
     publicationDate: 2015,
     publicationLocation: 140,
-    thumbnail: 'atg32rnzewyyl53m.png',
+    thumbnail: 'atehr1r4au6vumb5.png',
     title: 'Freedom Is a Constant Struggle: Ferguson, Palestine, and the Foundations of a Movement',
   },
 ]

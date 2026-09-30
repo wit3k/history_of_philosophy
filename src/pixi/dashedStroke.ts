@@ -90,7 +90,16 @@ export function strokeDashedVerticalLine(
   offset: number,
   style: StrokeStyle,
 ) {
-  strokeDashedPolyline(g, [{ x, y: y0 }, { x, y: y1 }], pattern, offset, style)
+  strokeDashedPolyline(
+    g,
+    [
+      { x, y: y0 },
+      { x, y: y1 },
+    ],
+    pattern,
+    offset,
+    style,
+  )
 }
 
 /** 50s linear dashoffset 2000 → 0, matching CSS animation. */

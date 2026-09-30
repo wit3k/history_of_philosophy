@@ -347,12 +347,7 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
       if (e.touches.length === 1) {
         executePageDrag(e.touches[0].pageX, e.touches[0].pageY)
       } else if (e.touches.length === 2) {
-        const pinchSize = calculateDelta(
-          e.touches[0].pageX,
-          e.touches[0].pageY,
-          e.touches[1].pageX,
-          e.touches[1].pageY,
-        )
+        const pinchSize = calculateDelta(e.touches[0].pageX, e.touches[0].pageY, e.touches[1].pageX, e.touches[1].pageY)
         const zoom = zoomRef.current
         const nextZoom = zoom - (pinchRef.current - pinchSize) / 100
         stopInertia()
@@ -499,11 +494,7 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
         />
 
         {props.displayAuthorRelations && props.displayAuthors && (
-          <PersonReferencesLayer
-            people={props.peopleList}
-            references={props.peopleReferenceList}
-            shared={shared}
-          />
+          <PersonReferencesLayer people={props.peopleList} references={props.peopleReferenceList} shared={shared} />
         )}
 
         {props.displayAuthors && <PeopleLayer people={props.peopleList} shared={shared} />}
@@ -518,19 +509,11 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
         )}
 
         {props.displayPublications && (
-          <PublicationsLayer
-            people={props.peopleList}
-            publications={props.publicationsList}
-            shared={shared}
-          />
+          <PublicationsLayer people={props.peopleList} publications={props.publicationsList} shared={shared} />
         )}
 
         {props.displayPersonHistoryEvents && props.displayAuthors && (
-          <PersonHistoryEventsLayer
-            events={props.peopleHistoryEvents}
-            people={props.peopleList}
-            shared={shared}
-          />
+          <PersonHistoryEventsLayer events={props.peopleHistoryEvents} people={props.peopleList} shared={shared} />
         )}
 
         <YearLabelsLayer

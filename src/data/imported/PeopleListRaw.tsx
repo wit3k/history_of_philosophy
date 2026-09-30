@@ -1335,7 +1335,7 @@ export const PeopleListRaw = [
     name: 'Kate Millett',
     nationality: 'Amerykanin',
     stillAlive: false,
-    thumbnail: 'atasxuyoj7fftlyc.png',
+    thumbnail: 'atknh5eacsx8mvhs.png',
   },
   {
     born: 1945,

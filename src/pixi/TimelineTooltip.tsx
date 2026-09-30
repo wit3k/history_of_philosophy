@@ -19,8 +19,7 @@ export type TimelineTooltipState =
       colorSeed: number
     }
 
-const MONO =
-  'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace'
+const MONO = 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace'
 
 const TimelineTooltip = ({ tooltip }: { tooltip: TimelineTooltipState | null }) => {
   if (!tooltip) return null

@@ -53,15 +53,15 @@ export function buildPublicationReferencePath(
   const extraSpacing = boxSize * 2
   const mostLeft = Math.min(positionStart, positionEnd)
   const mostRight = Math.max(positionStart, positionEnd)
-  const shrinkFactor = mostRight - mostLeft < extraSpacing ? ((mostRight - mostLeft) % extraSpacing) / extraSpacing : 1.0
+  const shrinkFactor =
+    mostRight - mostLeft < extraSpacing ? ((mostRight - mostLeft) % extraSpacing) / extraSpacing : 1.0
   const start = new Coordinates(positionStart, rowPositionFrom + boxSize / 2)
   const end = new Coordinates(positionEnd, rowPositionTo + boxSize / 2)
   const vdir = start.y > end.y ? -1 : 1
   const isEqual = start.y === end.y ? -1 : 1
   const hdir = start.x > end.x ? -1 : 1
   const cos05 = 0.877
-  const distanceFromFactor =
-    0.7 + (0.7 * ((publicationTo.publicationDate + publicationFrom.publicationDate) % 15)) / 15
+  const distanceFromFactor = 0.7 + (0.7 * ((publicationTo.publicationDate + publicationFrom.publicationDate) % 15)) / 15
   const distanceToFactor = 1.4 + (0.7 * ((publicationTo.publicationDate + publicationFrom.publicationDate) % 5)) / 5
   const points: Coordinates[] = []
   if (positionEnd === positionStart) {
