@@ -1,5 +1,5 @@
 import type { Graphics, StrokeStyle } from 'pixi.js'
-import { flattenPathData, type Point } from './pathBridge'
+import { flattenPathDataCached, type Point } from './pathBridge'
 
 const strokeDefaults: Partial<StrokeStyle> = {
   cap: 'butt',
@@ -78,7 +78,7 @@ export function strokeDashedPathData(
   offset: number,
   style: StrokeStyle,
 ) {
-  strokeDashedPolyline(g, flattenPathData(pathString), pattern, offset, style)
+  strokeDashedPolyline(g, flattenPathDataCached(pathString), pattern, offset, style)
 }
 
 export function strokeDashedVerticalLine(

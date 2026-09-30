@@ -62,6 +62,16 @@ type Camera = { x: number; y: number; zoom: number }
 
 const historyEventRowHeight = 15
 
+function displayQuality() {
+  if (typeof window === 'undefined') return { antialias: true, resolution: 1 }
+  const coarse = window.matchMedia('(pointer: coarse)').matches
+  const dpr = window.devicePixelRatio || 1
+  return {
+    antialias: !coarse,
+    resolution: Math.min(dpr, coarse ? 1.25 : 1.5),
+  }
+}
+
 /** Live camera → Pixi transform (pan + zoom scale). No React setState. */
 function CameraTransformDriver({
   liveCameraRef,
@@ -98,6 +108,7 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
   const [tooltip, setTooltip] = useState<TimelineTooltipState | null>(null)
   const [canvasOffset, setCanvasOffset] = useState({ left: 0, top: 0 })
   const [isDragged, setIsDragged] = useState(false)
+  const quality = useMemo(() => displayQuality(), [])
 
   // React layout camera: layers are positioned for this snapshot (re-render on zoom / data).
   const [layoutCamera, setLayoutCamera] = useState<Camera>({
@@ -632,7 +643,7 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
       }}
     >
       <Application
-        antialias
+        antialias={quality.antialias}
         autoDensity
         backgroundAlpha={0}
         height={props.windowHeight}
@@ -642,7 +653,7 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
         }}
         preference="webgl"
         resizeTo={hostRef}
-        resolution={typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1}
+        resolution={quality.resolution}
         width={props.windowWidth}
       >
         <CameraTransformDriver layoutCameraRef={layoutCameraRef} liveCameraRef={liveCameraRef} />
@@ -659,6 +670,7 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
               historyEventRowPosition={historyEventRowPosition}
               isVisibleRange={isVisibleRange}
               positionByYear={positionByYear}
+              windowHeight={props.windowHeight}
             />
           )}
 

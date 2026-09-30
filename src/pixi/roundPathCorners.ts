@@ -158,3 +158,20 @@ export function roundPathCorners(pathString: string, radius: number, useFraction
 
   return resultCommands.reduce((str, c) => str + c.join(' ') + ' ', '')
 }
+
+const roundCache = new Map<string, string>()
+const ROUND_CACHE_MAX = 400
+
+/** Cached corner rounding — hot when many relations re-render at same layout. */
+export function roundPathCornersCached(pathString: string, radius: number, useFractionalRadius: boolean) {
+  const key = `${radius}|${useFractionalRadius ? 1 : 0}|${pathString}`
+  const hit = roundCache.get(key)
+  if (hit) return hit
+  const out = roundPathCorners(pathString, radius, useFractionalRadius)
+  if (roundCache.size >= ROUND_CACHE_MAX) {
+    const first = roundCache.keys().next().value
+    if (first != null) roundCache.delete(first)
+  }
+  roundCache.set(key, out)
+  return out
+}

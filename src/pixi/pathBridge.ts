@@ -61,6 +61,23 @@ export function flattenPathData(pathString: string, samplesPerCurve = 20): Point
   return points
 }
 
+const flattenCache = new Map<string, Point[]>()
+const FLATTEN_CACHE_MAX = 400
+
+/** Cached flatten — same path string reuses polyline (dash animation hot path). */
+export function flattenPathDataCached(pathString: string, samplesPerCurve = 20): Point[] {
+  const key = samplesPerCurve === 20 ? pathString : `${samplesPerCurve}:${pathString}`
+  const hit = flattenCache.get(key)
+  if (hit) return hit
+  const points = flattenPathData(pathString, samplesPerCurve)
+  if (flattenCache.size >= FLATTEN_CACHE_MAX) {
+    const first = flattenCache.keys().next().value
+    if (first != null) flattenCache.delete(first)
+  }
+  flattenCache.set(key, points)
+  return points
+}
+
 function cubicPoint(
   x0: number,
   y0: number,

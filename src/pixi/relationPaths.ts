@@ -1,5 +1,5 @@
 import Coordinates from '../geometry/Coordinates'
-import { roundPathCorners } from './roundPathCorners'
+import { roundPathCornersCached } from './roundPathCorners'
 import { Attitude } from '../data/dto/PersonReference'
 import type Publication from '../data/dto/Publication'
 
@@ -37,7 +37,7 @@ export function buildPersonReferencePath(
   const pathPoints = [['M', points[0].x, points[0].y], ...points.map(p => ['L', p.x, p.y])]
     .map(p => p.join(' '))
     .join(' ')
-  return roundPathCorners(pathPoints, 15, false)
+  return roundPathCornersCached(pathPoints, 15, false)
 }
 
 export function buildPublicationReferencePath(
@@ -92,7 +92,7 @@ export function buildPublicationReferencePath(
   const pathPoints = [['M', points[0].x, points[0].y], ...points.map(p => ['L', p.x, p.y])]
     .map(p => p.join(' '))
     .join(' ')
-  return roundPathCorners(pathPoints, 5, false)
+  return roundPathCornersCached(pathPoints, 5, false)
 }
 
 export function wrapTitleWords(title: string, maxLettersColumns: number, maxLettersRows: number) {

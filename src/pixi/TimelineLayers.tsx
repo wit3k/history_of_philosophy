@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTick } from '@pixi/react'
 import type { FederatedPointerEvent, Graphics as PixiGraphics } from 'pixi.js'
 import { Assets, Texture } from 'pixi.js'
@@ -9,8 +9,8 @@ import type PersonReference from '../data/dto/PersonReference'
 import type Publication from '../data/dto/Publication'
 import type PublicationReference from '../data/dto/PublicationReference'
 import ColorsService from '../services/Colors'
-import { dashOffsetFromTime, strokeDashedPathData, strokeDashedVerticalLine } from './dashedStroke'
-import { strokePathData } from './pathBridge'
+import { dashOffsetFromTime, strokeDashedPolyline, strokeDashedVerticalLine } from './dashedStroke'
+import { flattenPathDataCached, strokePathData } from './pathBridge'
 import { attitudeColor, buildPersonReferencePath, buildPublicationReferencePath, wrapTitleWords } from './relationPaths'
 import type { TimelineTooltipState } from './TimelineTooltip'
 
@@ -182,6 +182,7 @@ export function HistoryEventsLayer({
   historyEventRowPosition,
   isVisibleRange,
   historyBox,
+  windowHeight,
 }: {
   events: HistoryEvent[]
   darkMode: boolean
@@ -189,6 +190,7 @@ export function HistoryEventsLayer({
   historyEventRowPosition: (r: number) => number
   isVisibleRange: (a: number, b: number) => boolean
   historyBox: number
+  windowHeight: number
 }) {
   return (
     <pixiContainer>
@@ -204,6 +206,9 @@ export function HistoryEventsLayer({
           const band = darkMode ? ColorsService.convertToGray(tamed) : ColorsService.convertToPale(tamed)
           const headerH = event.name.length * 8 + 20 + historyBox
           const headerY = row - event.name.length * 8 - 20
+          const bandTop = headerY + headerH
+          // Cover viewport + one screen of pan slack (was height 20000).
+          const bandHeight = Math.max(windowHeight - bandTop + windowHeight, windowHeight)
           return (
             <pixiContainer key={`he-${event.id}`}>
               <pixiGraphics
@@ -211,7 +216,7 @@ export function HistoryEventsLayer({
                   g.clear()
                   g.roundRect(x0, headerY, w, headerH, 4)
                   g.fill({ color: tamed })
-                  g.rect(x0, headerY + headerH, w, 20000)
+                  g.rect(x0, bandTop, w, bandHeight)
                   g.fill({ color: band })
                   g.rect(x0, row, x1 - x0 + 5, historyBox)
                   g.fill({ color: fixed })
@@ -323,21 +328,61 @@ function AnimatedPath({
   dashed: boolean
   dashPattern: number[]
 }) {
-  const [offset, setOffset] = useState(2000)
+  const gRef = useRef<PixiGraphics | null>(null)
+  const pointsRef = useRef(flattenPathDataCached(path))
+  const styleRef = useRef({ alpha, color, dashed, dashPattern, path, width })
+  styleRef.current = { alpha, color, dashed, dashPattern, path, width }
+  pointsRef.current = flattenPathDataCached(path)
+
+  const paint = useCallback(() => {
+    const g = gRef.current
+    if (!g) return
+    const s = styleRef.current
+    g.clear()
+    if (s.dashed) {
+      strokeDashedPolyline(g, pointsRef.current, s.dashPattern, dashOffsetFromTime(performance.now()), {
+        alpha: s.alpha,
+        cap: 'butt',
+        color: s.color,
+        join: 'miter',
+        width: s.width,
+      })
+    } else {
+      strokePathData(g, s.path, {
+        alpha: s.alpha,
+        cap: 'butt',
+        color: s.color,
+        join: 'miter',
+        width: s.width,
+      })
+    }
+  }, [])
+
   useTick(() => {
-    if (dashed) setOffset(dashOffsetFromTime(performance.now()))
+    if (styleRef.current.dashed) paint()
   })
+
+  // Static (or highlight toggle) redraw via React draw — no per-frame setState.
   const draw = useCallback(
     (g: PixiGraphics) => {
+      gRef.current = g
+      pointsRef.current = flattenPathDataCached(path)
       g.clear()
       if (dashed) {
-        strokeDashedPathData(g, path, dashPattern, offset, { alpha, cap: 'butt', color, join: 'miter', width })
+        strokeDashedPolyline(g, pointsRef.current, dashPattern, dashOffsetFromTime(performance.now()), {
+          alpha,
+          cap: 'butt',
+          color,
+          join: 'miter',
+          width,
+        })
       } else {
         strokePathData(g, path, { alpha, cap: 'butt', color, join: 'miter', width })
       }
     },
-    [path, color, width, alpha, dashed, dashPattern, offset],
+    [path, color, width, alpha, dashed, dashPattern],
   )
+
   return <pixiGraphics draw={draw} eventMode="none" />
 }
 
