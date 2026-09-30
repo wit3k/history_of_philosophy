@@ -1,5 +1,7 @@
 # History of philosophy visualised
 
+Interactive chronology of philosophy. The timeline diagram is rendered with **PixiJS**; menus and detail modals stay in HTML/React.
+
 To see a final result go to [https://wit3k.github.io/history_of_philosophy/](https://wit3k.github.io/history_of_philosophy/)
 
 ## Rebuild / PixiJS migration docs

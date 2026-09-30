@@ -17,25 +17,12 @@ import type PersonReference from '../../data/dto/PersonReference'
 import Publication from '../../data/dto/Publication'
 import type PublicationReference from '../../data/dto/PublicationReference'
 import Coordinates from '../../geometry/Coordinates'
-import type { HistoryEventNodeSettings } from '../historyEvents/HistoryEventNode'
-import HistoryEventsList from '../historyEvents/HistoryEventsList'
+import TimelineDiagram from '../../pixi/TimelineDiagram'
 import LocationDetails from '../location/LocationDetails'
-import PeopleList from '../person/PeopleList'
 import PersonDetails from '../person/PersonDetails'
-import type { PersonNodeSettings } from '../person/PersonNode'
 import PersonHistoryEventDetails from '../personHistoryEvents/PersonHistoryEventDetails'
-import type { PersonHistoryEventNodeSettings } from '../personHistoryEvents/PersonHistoryEventNode'
-import PersonHistoryEventsList from '../personHistoryEvents/PersonHistoryEventsList'
-import type { PersonReferenceSettings } from '../personReference/PersonReferenceNode'
-import PersonReferencesList from '../personReference/PersonReferencesList'
 import PublicationDetails from '../publication/PublicationDetails'
-import type { PublicationNodeSettings } from '../publication/PublicationNode'
-import PublicationsList from '../publication/PublicationsList'
-import type { PublicationReferenceSettings } from '../publicationReference/PublicationReferenceNode'
-import PublicationReferencesList from '../publicationReference/PublicationReferencesList'
 import Menu from '../ui/Menu'
-import ChronologyPad from './ChronologyPad'
-import ChronologyScale from './ChronologyScale'
 
 class ChronologyProperies {
   constructor(
@@ -140,12 +127,6 @@ const Chronology = () => {
   const [darkMode, setDarkMode] = React.useState(window?.matchMedia('(prefers-color-scheme: dark)').matches)
 
   const [zoom, setZoom] = React.useState(10)
-  const [pinchDelta, setPinchDelta] = React.useState(0)
-  const [drag, setDrag] = React.useState({
-    isDragged: false,
-    startDragPosition: { x: 0, y: 0 },
-    startViewPosition: { x: 0, y: 0 },
-  })
   const [highlightedAuthor, updateHighlightedAuthor] = React.useState('0')
   const [currentPublication, setCurrentPublication] = React.useState<Publication>(new Publication('', '', 0, 0, '', ''))
   const [currentAuthor, setCurrentAuthor] = React.useState(new Person('', '', 0, 0, true, '', '', '', 1, '', ''))
@@ -163,130 +144,6 @@ const Chronology = () => {
     to: 2101,
   })
 
-  const historyEventNodeSettings: HistoryEventNodeSettings = {
-    boxSize: 14,
-    rowHeight: 15,
-  }
-
-  const personNodesSettings: PersonNodeSettings = {
-    boxSize: 35,
-  }
-
-  const personReferenceSettings: PersonReferenceSettings = {
-    boxSize: 35,
-  }
-
-  const publicationNodeSettings: PublicationNodeSettings = {
-    boxSize: 35,
-    dotSize: 30,
-    maxLettersColumns: 25,
-    maxLettersRows: 3,
-  }
-
-  const personHistoryEventNodeSettings: PersonHistoryEventNodeSettings = {
-    barHeight: 10,
-    boxSize: 35,
-    dotRadius: 5,
-    maxLettersColumns: 28,
-    maxLettersRows: 3,
-  }
-
-  const publicationReferenceSettings: PublicationReferenceSettings = {
-    boxSize: 35,
-    dotSize: 15,
-  }
-
-  const yearsOnScale = [...Array(Math.ceil((yearSelection.to - yearSelection.from) / yearSelection.stepSize))].map(
-    (_, i) => yearSelection.from + i * yearSelection.stepSize,
-  )
-
-  const positionByYear = (year: number) => (year - viewPosition.x) * zoom
-  const isVisible = (year: number) =>
-    positionByYear(year) + prop.rowHeight > 0 && positionByYear(year) - prop.rowHeight < prop.windowSize.x
-  const isVisibleRange = (from: number, to: number) =>
-    positionByYear(to) + prop.rowHeight > 0 && positionByYear(from) - prop.rowHeight < prop.windowSize.x
-  const rowPosition = (rowNumber: number) => prop.rowHeight * rowNumber + viewPosition.y
-  const historyEventRowPosition = (rowNumber: number) =>
-    -historyEventNodeSettings.rowHeight * rowNumber + viewPosition.y
-
-  const startPageDrag = (button: number, pageX: number, pageY: number) => {
-    if (button === 0) {
-      setDrag({
-        isDragged: true,
-        startDragPosition: { x: pageX, y: pageY },
-        startViewPosition: viewPosition,
-      })
-    }
-  }
-  const stopPageDrag = () => setDrag(state => ({ ...state, isDragged: false }))
-  const executePageDrag = (pageX: number, pageY: number) => {
-    if (drag.isDragged) {
-      setPosition({
-        x: Math.min(
-          Math.max(
-            drag.startViewPosition.x - (pageX - drag.startDragPosition.x) / zoom,
-            yearSelection.from - prop.yearLabelWidth,
-          ),
-          yearSelection.to + prop.yearLabelWidth,
-        ),
-        y: drag.startViewPosition.y + (pageY - drag.startDragPosition.y),
-      })
-    }
-  }
-
-  const calculateDelta = (x1: number, y1: number, x2: number, y2: number) => Math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
-
-  const multitouchStart = (touches: React.TouchList) => {
-    switch (touches.length) {
-      case 1:
-        startPageDrag(0, touches[0].pageX, touches[0].pageY)
-        break
-      case 2:
-        startPageDrag(0, touches[0].pageX, touches[0].pageY)
-        setPinchDelta(calculateDelta(touches[0].pageX, touches[0].pageY, touches[1].pageX, touches[1].pageY))
-    }
-  }
-
-  const multitouchMove = (touches: React.TouchList) => {
-    switch (touches.length) {
-      case 1: {
-        executePageDrag(touches[0].pageX, touches[0].pageY)
-        break
-      }
-      case 2: {
-        const pinchSize: number = calculateDelta(touches[0].pageX, touches[0].pageY, touches[1].pageX, touches[1].pageY)
-        setZoom(zoom - (pinchDelta - pinchSize) / 100)
-        setPinchDelta(pinchSize)
-
-        if (zoom <= 10) {
-          setYearSelection(ys => ({ ...ys, stepSize: 100 }))
-        } else if (zoom <= 20) {
-          setYearSelection(ys => ({ ...ys, stepSize: 10 }))
-        } else {
-          setYearSelection(ys => ({ ...ys, stepSize: 5 }))
-        }
-
-        stopPageDrag()
-      }
-    }
-  }
-
-  const mouseWheel = (deltaY: number) => {
-    if (Math.max(1, zoom - deltaY / 100) <= 11.0) {
-      setYearSelection(ys => ({ ...ys, stepSize: 100 }))
-      setZoom(Math.max(1, zoom - deltaY / 100))
-    } else if (zoom - deltaY / 200 <= 22.0) {
-      setYearSelection(ys => ({ ...ys, stepSize: 10 }))
-      setZoom(zoom - deltaY / 200)
-    } else {
-      setYearSelection(ys => ({ ...ys, stepSize: 5 }))
-      setZoom(zoom - deltaY / 300)
-    }
-    setPosition({
-      x: viewPosition.x - deltaY / 100,
-      y: viewPosition.y,
-    })
-  }
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -314,135 +171,11 @@ const Chronology = () => {
         background: darkMode ? 'rgb(43, 44, 45)' : 'white',
         height: prop.windowSize.y,
         overflow: 'hidden',
+        position: 'relative',
         width: prop.windowSize.x,
       }}
     >
-      <svg
-        onMouseDown={e => startPageDrag(e.button, e.pageX, e.pageY)}
-        onMouseMove={e => executePageDrag(e.pageX, e.pageY)}
-        onMouseUp={_ => stopPageDrag()}
-        onTouchEnd={_ => stopPageDrag()}
-        onTouchMove={e => multitouchMove(e.touches)}
-        onTouchStart={e => multitouchStart(e.touches)}
-        onWheel={e => mouseWheel(e.deltaY)}
-        preserveAspectRatio="xMidYMid meet"
-        style={{
-          cursor: drag.isDragged ? 'grabbing' : 'grab',
-          height: prop.windowSize.y,
-          width: prop.windowSize.x,
-        }}
-        viewBox={`0 0 ${prop.windowSize.x} ${prop.windowSize.y}`}
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <title>Chronology</title>
-        {displayHistoryEvents && (
-          <HistoryEventsList
-            darkMode={darkMode}
-            historyEventNodeSettings={historyEventNodeSettings}
-            historyEvents={historyEvents}
-            isVisibleRange={isVisibleRange}
-            positionByYear={positionByYear}
-            rowPosition={historyEventRowPosition}
-          />
-        )}
-
-        <ChronologyPad
-          isVisible={isVisible}
-          padSize={new Coordinates(prop.windowSize.x, prop.windowSize.y)}
-          positionByYear={positionByYear}
-          stateResetHandler={() => {
-            updateHighlightedPublication('0')
-            updateHighlightedAuthor('0')
-          }}
-          yearsOnScale={yearsOnScale}
-        />
-
-        {displayAuthorRelations && displayAuthors && (
-          <PersonReferencesList
-            highlightedAuthor={highlightedAuthor}
-            isVisibleRange={isVisibleRange}
-            peopleList={peopleList}
-            peopleReferenceList={peopleReferenceList}
-            personReferenceSettings={personReferenceSettings}
-            positionByYear={positionByYear}
-            rowPosition={rowPosition}
-          />
-        )}
-
-        {displayAuthors && (
-          <PeopleList
-            authorCallback={id => {
-              setCurrentAuthor(_ => peopleList.find(p => p.id === id)!)
-              setDisplayLocationModal(false)
-              setDisplayPublicationModal(false)
-              setDisplayPersonHistoryEventModal(false)
-              setDisplayPersonModal(true)
-            }}
-            displayAuthorsTimeline={displayAuthorsTimeline}
-            highlightedAuthor={highlightedAuthor}
-            isVisibleRange={isVisibleRange}
-            peopleList={peopleList}
-            personNodesSettings={personNodesSettings}
-            positionByYear={positionByYear}
-            rowPosition={rowPosition}
-            updateHighlightedAuthor={updateHighlightedAuthor}
-          />
-        )}
-
-        {displayPublicationRelations && displayPublications && (
-          <PublicationReferencesList
-            highlightedAuthor={highlightedAuthor}
-            highlightedPublication={highlightedPublication}
-            isVisibleRange={isVisibleRange}
-            peopleList={peopleList}
-            positionByYear={positionByYear}
-            publicationReferenceList={publicationReferenceList}
-            publicationReferenceSettings={publicationReferenceSettings}
-            publicationsList={publicationsList}
-            rowPosition={rowPosition}
-          />
-        )}
-
-        {displayPublications && (
-          <PublicationsList
-            isVisible={isVisible}
-            modalHandle={setDisplayPublicationModal}
-            peopleList={peopleList}
-            positionByYear={positionByYear}
-            publicationNodeSettings={publicationNodeSettings}
-            publicationsList={publicationsList}
-            rowPosition={rowPosition}
-            setCurrentAuthor={setCurrentAuthor}
-            setCurrentPublication={setCurrentPublication}
-            updateHighlightedPublication={updateHighlightedPublication}
-          />
-        )}
-
-        {displayPersonHistoryEvents && displayAuthors && (
-          <PersonHistoryEventsList
-            events={peopleHistoryEvents}
-            isVisibleRange={isVisibleRange}
-            modalHandle={setDisplayPersonHistoryEventModal}
-            peopleList={peopleList}
-            personHistoryEventNodeSettings={personHistoryEventNodeSettings}
-            positionByYear={positionByYear}
-            rowPosition={rowPosition}
-            setCurrentEvent={setCurrentPersonHistoryEvent}
-            setCurrentPerson={setCurrentAuthor}
-          />
-        )}
-
-        <ChronologyScale
-          isVisible={isVisible}
-          padSize={new Coordinates(prop.windowSize.x, prop.windowSize.y)}
-          positionByYear={positionByYear}
-          yearLabelWidth={prop.yearLabelWidth}
-          yearsOnScale={yearsOnScale}
-        />
-      </svg>
-
-      <Menu
-        collectionsState={collectionsState}
+      <TimelineDiagram
         darkMode={darkMode}
         displayAuthorRelations={displayAuthorRelations}
         displayAuthors={displayAuthors}
@@ -451,16 +184,70 @@ const Chronology = () => {
         displayPersonHistoryEvents={displayPersonHistoryEvents}
         displayPublicationRelations={displayPublicationRelations}
         displayPublications={displayPublications}
-        setDarkMode={setDarkMode}
-        setDisplayAuthorRelations={setDisplayAuthorRelations}
-        setDisplayAuthors={setDisplayAuthors}
-        setDisplayAuthorsTimeline={setDisplayAuthorsTimeline}
-        setDisplayHistoryEvents={setDisplayHistoryEvents}
-        setDisplayPersonHistoryEvents={setDisplayPersonHistoryEvents}
-        setDisplayPublicationRelations={setDisplayPublicationRelations}
-        setDisplayPublications={setDisplayPublications}
-        toggleCollectionsState={toggleCollectionsState}
+        highlightedAuthor={highlightedAuthor}
+        highlightedPublication={highlightedPublication}
+        historyEvents={historyEvents}
+        onAuthorClick={id => {
+          setCurrentAuthor(_ => peopleList.find(p => p.id === id)!)
+          setDisplayLocationModal(false)
+          setDisplayPublicationModal(false)
+          setDisplayPersonHistoryEventModal(false)
+          setDisplayPersonModal(true)
+        }}
+        onPersonHistoryClick={(event, person) => {
+          setCurrentAuthor(person)
+          setCurrentPersonHistoryEvent(event)
+          setDisplayPersonHistoryEventModal(true)
+          setDisplayPersonModal(false)
+          setDisplayLocationModal(false)
+          setDisplayPublicationModal(false)
+        }}
+        onPublicationClick={(publication, author) => {
+          setCurrentAuthor(author)
+          setCurrentPublication(publication)
+          setDisplayPublicationModal(true)
+        }}
+        peopleHistoryEvents={peopleHistoryEvents}
+        peopleList={peopleList}
+        peopleReferenceList={peopleReferenceList}
+        publicationReferenceList={publicationReferenceList}
+        publicationsList={publicationsList}
+        rowHeight={prop.rowHeight}
+        setPosition={setPosition}
+        setYearSelection={setYearSelection}
+        setZoom={setZoom}
+        updateHighlightedAuthor={updateHighlightedAuthor}
+        updateHighlightedPublication={updateHighlightedPublication}
+        viewPosition={viewPosition}
+        windowHeight={prop.windowSize.y}
+        windowWidth={prop.windowSize.x}
+        yearLabelWidth={prop.yearLabelWidth}
+        yearSelection={yearSelection}
+        zoom={zoom}
       />
+
+      <div style={{ position: 'relative', zIndex: 50 }}>
+        <Menu
+          collectionsState={collectionsState}
+          darkMode={darkMode}
+          displayAuthorRelations={displayAuthorRelations}
+          displayAuthors={displayAuthors}
+          displayAuthorsTimeline={displayAuthorsTimeline}
+          displayHistoryEvents={displayHistoryEvents}
+          displayPersonHistoryEvents={displayPersonHistoryEvents}
+          displayPublicationRelations={displayPublicationRelations}
+          displayPublications={displayPublications}
+          setDarkMode={setDarkMode}
+          setDisplayAuthorRelations={setDisplayAuthorRelations}
+          setDisplayAuthors={setDisplayAuthors}
+          setDisplayAuthorsTimeline={setDisplayAuthorsTimeline}
+          setDisplayHistoryEvents={setDisplayHistoryEvents}
+          setDisplayPersonHistoryEvents={setDisplayPersonHistoryEvents}
+          setDisplayPublicationRelations={setDisplayPublicationRelations}
+          setDisplayPublications={setDisplayPublications}
+          toggleCollectionsState={toggleCollectionsState}
+        />
+      </div>
 
       <PublicationDetails
         authorCallback={id => {
