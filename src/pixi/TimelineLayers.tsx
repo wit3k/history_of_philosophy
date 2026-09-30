@@ -253,55 +253,57 @@ function PersonThumb({ url, x, y, size }: { url: string; x: number; y: number; s
 }
 
 export function PeopleLayer({ people, shared }: { people: Person[]; shared: SharedTimelineProps }) {
-  const { positionByYear, rowPosition, personBox, displayAuthorsTimeline, highlightedAuthor } = shared
+  const { positionByYear, rowPosition, personBox, displayAuthorsTimeline, highlightedAuthor, isVisibleRange } = shared
   return (
     <pixiContainer>
-      {people.map(person => {
-        const x0 = positionByYear(person.born)
-        const x1 = positionByYear(person.died)
-        const y = rowPosition(person.rowNumber)
-        const accent = ColorsService.getAccentColor(person.nationality)
-        const pale = ColorsService.convertToPale(accent)
-        const dark = ColorsService.convertToDark(accent)
-        const highlighted = highlightedAuthor === person.id
-        const maxTextW = x1 - x0 - personBox - 12
-        let label = person.name
-        if (person.name.length * 8 >= maxTextW) {
-          label = `${person.name.slice(0, Math.max(maxTextW / 8 - 4, 0))}...`
-        }
-        const thumbUrl = person.thumbnail ? `${APP_BASE}/assets/person/${person.thumbnail}` : null
-        return (
-          <pixiContainer
-            key={`p-${person.id}`}
-            cursor="pointer"
-            eventMode="static"
-            onPointerMove={() => shared.updateHighlightedAuthor(person.id)}
-            onPointerTap={() => {
-              shared.updateHighlightedAuthor(person.id)
-              shared.onAuthorClick(person.id)
-            }}
-          >
-            {displayAuthorsTimeline && (
-              <pixiGraphics
-                draw={g => {
-                  g.clear()
-                  g.rect(x0, y, x1 - x0, personBox)
-                  g.fill({ color: pale })
-                  g.stroke({ cap: 'butt', color: accent, join: 'miter', width: highlighted ? 3 : 1 })
-                }}
+      {people
+        .filter(person => isVisibleRange(person.born, person.died))
+        .map(person => {
+          const x0 = positionByYear(person.born)
+          const x1 = positionByYear(person.died)
+          const y = rowPosition(person.rowNumber)
+          const accent = ColorsService.getAccentColor(person.nationality)
+          const pale = ColorsService.convertToPale(accent)
+          const dark = ColorsService.convertToDark(accent)
+          const highlighted = highlightedAuthor === person.id
+          const maxTextW = x1 - x0 - personBox - 12
+          let label = person.name
+          if (person.name.length * 8 >= maxTextW) {
+            label = `${person.name.slice(0, Math.max(maxTextW / 8 - 4, 0))}...`
+          }
+          const thumbUrl = person.thumbnail ? `${APP_BASE}/assets/person/${person.thumbnail}` : null
+          return (
+            <pixiContainer
+              key={`p-${person.id}`}
+              cursor="pointer"
+              eventMode="static"
+              onPointerMove={() => shared.updateHighlightedAuthor(person.id)}
+              onPointerTap={() => {
+                shared.updateHighlightedAuthor(person.id)
+                shared.onAuthorClick(person.id)
+              }}
+            >
+              {displayAuthorsTimeline && (
+                <pixiGraphics
+                  draw={g => {
+                    g.clear()
+                    g.rect(x0, y, x1 - x0, personBox)
+                    g.fill({ color: pale })
+                    g.stroke({ cap: 'butt', color: accent, join: 'miter', width: highlighted ? 3 : 1 })
+                  }}
+                />
+              )}
+              {thumbUrl && <PersonThumb size={personBox} url={thumbUrl} x={x0} y={y} />}
+              <pixiText
+                alpha={highlighted ? 1 : 0.8}
+                style={{ fill: dark, fontFamily: MONO, fontSize: 14 }}
+                text={label}
+                x={x0 + personBox + 8}
+                y={y + 12}
               />
-            )}
-            {thumbUrl && <PersonThumb size={personBox} url={thumbUrl} x={x0} y={y} />}
-            <pixiText
-              alpha={highlighted ? 1 : 0.8}
-              style={{ fill: dark, fontFamily: MONO, fontSize: 14 }}
-              text={label}
-              x={x0 + personBox + 8}
-              y={y + 12}
-            />
-          </pixiContainer>
-        )
-      })}
+            </pixiContainer>
+          )
+        })}
     </pixiContainer>
   )
 }
@@ -348,7 +350,7 @@ export function PersonReferencesLayer({
   people: Person[]
   shared: SharedTimelineProps
 }) {
-  const { positionByYear, rowPosition, personBox, highlightedAuthor } = shared
+  const { positionByYear, rowPosition, personBox, highlightedAuthor, isVisibleRange } = shared
   const highlightsOn = highlightedAuthor !== '0'
   return (
     <pixiContainer>
@@ -356,6 +358,9 @@ export function PersonReferencesLayer({
         const personFrom = people.find(p => p.id === reference.from)
         const personTo = people.find(p => p.id === reference.to)
         if (!reference.from || !reference.to || !personFrom || !personTo) return null
+        if (!isVisibleRange(Math.min(personFrom.born, personTo.born), Math.max(personFrom.died, personTo.died))) {
+          return null
+        }
         const isHighlighted = highlightedAuthor === personFrom.id || highlightedAuthor === personTo.id
         const path = buildPersonReferencePath(
           positionByYear(personFrom.born),

@@ -108,6 +108,11 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
   const layoutCameraRef = useRef(layoutCamera)
   layoutCameraRef.current = layoutCamera
 
+  // Cull camera: throttled snapshot of live view for mounting/unmounting off-screen nodes.
+  const [cullCamera, setCullCamera] = useState<Camera>({ ...layoutCamera })
+  const cullCameraRef = useRef(cullCamera)
+  cullCameraRef.current = cullCamera
+
   // Live camera: updated every pan/inertia/zoom frame without React.
   const liveCameraRef = useRef<Camera>({ ...layoutCamera })
 
@@ -192,6 +197,7 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
       }
       liveCameraRef.current = { ...camera }
       setLayoutCamera(camera)
+      setCullCamera(camera)
       setPosition({ x: camera.x, y: camera.y })
       setZoom(camera.zoom)
       if (stepSize != null) setYearSelection(ys => ({ ...ys, stepSize }))
@@ -238,9 +244,25 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
     (year: number) => (year - layoutCamera.x) * layoutCamera.zoom,
     [layoutCamera.x, layoutCamera.zoom],
   )
-  // Always true: pan uses container offset, so culled items would never enter the viewport mid-gesture.
-  const isVisible = useCallback((_year: number) => true, [])
-  const isVisibleRange = useCallback((_from: number, _to: number) => true, [])
+
+  // Cull against throttled live view (screen X = (year - cull.x) * cull.zoom).
+  // Extra margin covers pan between cull refreshes without empty edges.
+  const cullMarginPx = props.windowWidth
+  const isVisible = useCallback(
+    (year: number) => {
+      const x = (year - cullCamera.x) * cullCamera.zoom
+      return x + cullMarginPx > 0 && x - cullMarginPx < props.windowWidth
+    },
+    [cullCamera.x, cullCamera.zoom, cullMarginPx, props.windowWidth],
+  )
+  const isVisibleRange = useCallback(
+    (from: number, to: number) => {
+      const x1 = (to - cullCamera.x) * cullCamera.zoom
+      const x0 = (from - cullCamera.x) * cullCamera.zoom
+      return x1 + cullMarginPx > 0 && x0 - cullMarginPx < props.windowWidth
+    },
+    [cullCamera.x, cullCamera.zoom, cullMarginPx, props.windowWidth],
+  )
   const rowPosition = useCallback(
     (rowNumber: number) => props.rowHeight * rowNumber + layoutCamera.y,
     [props.rowHeight, layoutCamera.y],
@@ -311,6 +333,20 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
     return Math.min(Math.max(x, from - labelW), to + labelW)
   }, [])
 
+  /** Refresh React cull window when live camera drifts far enough (not every pan frame). */
+  const maybeUpdateCull = useCallback(() => {
+    const live = liveCameraRef.current
+    const cull = cullCameraRef.current
+    const w = props.windowWidth
+    const h = props.windowHeight
+    const dxPx = Math.abs(live.x - cull.x) * Math.min(live.zoom, cull.zoom)
+    const dyPx = Math.abs(live.y - cull.y)
+    const zoomRatio = live.zoom / cull.zoom
+    if (dxPx > w * 0.4 || dyPx > h * 0.4 || zoomRatio > 1.2 || zoomRatio < 1 / 1.2) {
+      setCullCamera({ x: live.x, y: live.y, zoom: live.zoom })
+    }
+  }, [props.windowHeight, props.windowWidth])
+
   const setLiveCamera = useCallback(
     (next: Camera) => {
       liveCameraRef.current = {
@@ -319,8 +355,9 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
         zoom: next.zoom,
       }
       applyCameraTransform()
+      maybeUpdateCull()
     },
-    [applyCameraTransform, clampViewX],
+    [applyCameraTransform, clampViewX, maybeUpdateCull],
   )
 
   const startInertia = useCallback(
