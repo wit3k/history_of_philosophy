@@ -205,19 +205,9 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
   const yearTo = props.yearSelection.to
   const yearLabelWidth = props.yearLabelWidth
 
-  useEffect(() => {
-    const el = hostRef.current
-    if (!el) return
-
-    const onPointerDown = (e: PointerEvent) => {
-      if (e.button === 0) startPageDrag(0, e.pageX, e.pageY)
-    }
-    const onPointerMove = (e: PointerEvent) => executePageDrag(e.pageX, e.pageY)
-    const onPointerUp = () => stopPageDrag()
-    const onWheel = (e: WheelEvent) => {
-      e.preventDefault()
+  const applyZoomDelta = useCallback(
+    (deltaY: number) => {
       const zoom = zoomRef.current
-      const deltaY = e.deltaY
       if (Math.max(1, zoom - deltaY / 100) <= 11.0) {
         setYearSelection(ys => ({ ...ys, stepSize: 100 }))
         setZoom(Math.max(1, zoom - deltaY / 100))
@@ -232,6 +222,33 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
         x: viewRef.current.x - deltaY / 100,
         y: viewRef.current.y,
       })
+    },
+    [setPosition, setZoom, setYearSelection],
+  )
+
+  const applyPan = useCallback(
+    (dxYears: number, dyPx: number) => {
+      const view = viewRef.current
+      setPosition({
+        x: Math.min(Math.max(view.x + dxYears, yearFrom - yearLabelWidth), yearTo + yearLabelWidth),
+        y: view.y + dyPx,
+      })
+    },
+    [setPosition, yearFrom, yearTo, yearLabelWidth],
+  )
+
+  useEffect(() => {
+    const el = hostRef.current
+    if (!el) return
+
+    const onPointerDown = (e: PointerEvent) => {
+      if (e.button === 0) startPageDrag(0, e.pageX, e.pageY)
+    }
+    const onPointerMove = (e: PointerEvent) => executePageDrag(e.pageX, e.pageY)
+    const onPointerUp = () => stopPageDrag()
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault()
+      applyZoomDelta(e.deltaY)
     }
 
     const onTouchStart = (e: TouchEvent) => {
@@ -270,6 +287,68 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
     }
     const onTouchEnd = () => stopPageDrag()
 
+    const isTypingTarget = (target: EventTarget | null) => {
+      if (!(target instanceof HTMLElement)) return false
+      const tag = target.tagName
+      return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable
+    }
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (isTypingTarget(e.target)) return
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+
+      const panPx = 80
+      const zoom = zoomRef.current
+      const dx = panPx / zoom
+      const dy = 40
+      const key = e.key.length === 1 ? e.key.toLowerCase() : e.key
+
+      switch (key) {
+        case 'ArrowLeft':
+        case 'h':
+        case 'a':
+          e.preventDefault()
+          applyPan(-dx, 0)
+          break
+        case 'ArrowRight':
+        case 'l':
+        case 'd':
+          e.preventDefault()
+          applyPan(dx, 0)
+          break
+        case 'ArrowUp':
+        case 'k':
+        case 'w':
+          e.preventDefault()
+          applyPan(0, dy)
+          break
+        case 'ArrowDown':
+        case 'j':
+        case 's':
+          e.preventDefault()
+          applyPan(0, -dy)
+          break
+        case '+':
+        case '=':
+        case 'i':
+        case 'q':
+        case 'Add':
+          e.preventDefault()
+          applyZoomDelta(-100)
+          break
+        case '-':
+        case '_':
+        case 'o':
+        case 'e':
+        case 'Subtract':
+          e.preventDefault()
+          applyZoomDelta(100)
+          break
+        default:
+          break
+      }
+    }
+
     el.addEventListener('pointerdown', onPointerDown)
     window.addEventListener('pointermove', onPointerMove)
     window.addEventListener('pointerup', onPointerUp)
@@ -277,6 +356,7 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
     el.addEventListener('touchstart', onTouchStart, { passive: true })
     el.addEventListener('touchmove', onTouchMove, { passive: false })
     el.addEventListener('touchend', onTouchEnd)
+    window.addEventListener('keydown', onKeyDown)
 
     return () => {
       el.removeEventListener('pointerdown', onPointerDown)
@@ -286,8 +366,9 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
       el.removeEventListener('touchstart', onTouchStart)
       el.removeEventListener('touchmove', onTouchMove)
       el.removeEventListener('touchend', onTouchEnd)
+      window.removeEventListener('keydown', onKeyDown)
     }
-  }, [setPosition, setZoom, setYearSelection, yearFrom, yearTo, yearLabelWidth])
+  }, [applyPan, applyZoomDelta, setZoom, setYearSelection])
 
   return (
     <div
