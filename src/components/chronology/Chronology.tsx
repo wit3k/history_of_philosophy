@@ -1,4 +1,3 @@
-import './Chronology.css'
 import React from 'react'
 import CollectionsListService from '../../data/db/CollectionsListService'
 import HistoryEventsListService from '../../data/db/HistoryEventsListService'

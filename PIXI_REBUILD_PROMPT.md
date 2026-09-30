@@ -38,15 +38,14 @@ You are rebuilding the web app **„History of philosophy visualised”** (`chro
 - Before done: side-by-side screenshots at default camera, hover-with-relations, publication tooltip, zoom≈25, dark mode.
 ### What to keep from the original (copy behavior 1:1)
 
-Read and port logic from:
+Read and port logic from (current Pixi sources + data):
 
 - `src/components/chronology/Chronology.tsx` — state, filters, navigation, composition
-- `PersonNode`, `PublicationNode`, `HistoryEventNode`, `PersonHistoryEventNode`
-- `PersonReferenceNode`, `PublicationReferenceNode` + `geometry/PathRounding.ts` (`roundPathCorners`)
-- `ChronologyPad`, `ChronologyScale*` — year lines/labels
+- `src/pixi/TimelineDiagram.tsx`, `TimelineLayers.tsx`, `relationPaths.ts`
+- `src/pixi/roundPathCorners.ts` (`roundPathCorners`)
 - `services/Colors.ts`
-- All modal + Menu components (can stay React/HTML)
-- CSS animation semantics for highlighted relation paths (dash flow ~50s)
+- All modal + Menu components (HTML)
+- Dash animation semantics for highlighted relation paths (~50s)
 
 ### PixiJS implementation requirements
 
@@ -54,7 +53,7 @@ Read and port logic from:
 - Map pointer events: left-drag pan, wheel zoom, two-finger pinch; `touch-action: none` on page.
 - Implement hit-testing for: person bars/thumbnails, publication markers, person-history dots/bars, empty pad (clears highlights).
 - Tooltips for publications and person-history events: show on hover over the interactive marker (same sizes/wrapping rules as SVG version). Prefer Pixi text + Graphics, or a thin HTML tooltip positioned over canvas — must match layout specs in `SPEC.md`.
-- Draw rounded orthographic relation paths using the **same control points** as `PersonReferenceNode` / `PublicationReferenceNode`, then apply existing `roundPathCorners` (radius 15 for people, 5 for publications). Bridge path-data commands (`M`/`L`/`C`) to Pixi `Graphics` — not SVG DOM.
+- Draw rounded orthographic relation paths using `buildPersonReferencePath` / `buildPublicationReferencePath` in `relationPaths.ts`, then `roundPathCorners` (radius 15 for people, 5 for publications). Bridge path-data commands (`M`/`L`/`C`) to Pixi `Graphics`.
 - Follow SPEC §16 stack: `@pixi/react`, custom camera (no `pixi-viewport`), dashed-stroke util, HTML tooltips preferred.- Highlight animations: animate dash offset on highlighted relation strokes (~50s loop); dim non-related person-relations to opacity 0.1 when a person is highlighted.
 - Year label pills and vertical year lines must match colors, dash for current year (`white`, width 3, dash `4 1 1 6 1 1`), century vs non-century styles.
 - Load person thumbnails as Pixi textures from `/history_of_philosophy/assets/person/...`.

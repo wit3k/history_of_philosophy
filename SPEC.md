@@ -304,7 +304,7 @@ Highlight:
 
 Gdy highlighted (autor lub publikacja z/do): animowany dash `20 3`, offset 2000→0 / 50s.
 
-Algorytm punktów używa `shrinkFactor`, `distanceFromFactor`, `distanceToFactor` zależnych od dat publikacji (pseudolosowe rozłożenie łuków) — **musi być przeniesiony 1:1** (patrz kod `PublicationReferenceNode.tsx`).
+Algorytm punktów używa `shrinkFactor`, `distanceFromFactor`, `distanceToFactor` zależnych od dat publikacji (pseudolosowe rozłożenie łuków) — **musi być przeniesiony 1:1** (implementacja: `src/pixi/relationPaths.ts`).
 
 ### 8.7 Wydarzenie historyczne (`HistoryEventNode`) — `boxSize=14`, `rowHeight=15`
 
@@ -571,7 +571,7 @@ Dash do zreplikowania:
 
 ### 15.10 `roundPathCorners` — kopiuj 1:1
 
-Nie zamieniaj na proste `arcTo` „na oko”. Portuj `src/geometry/PathRounding.tsx` i rysuj wynikowe komendy `M/L/C`. Radius: osoby **15**, publikacje **5**, `useFractionalRadius=false`.
+Nie zamieniaj na proste `arcTo` „na oko”. Portuj `src/pixi/roundPathCorners.ts` i rysuj wynikowe komendy `M/L/C`. Radius: osoby **15**, publikacje **5**, `useFractionalRadius=false`.
 
 ### 15.11 Geometria PublicationReference — stałe magiczne
 
@@ -590,9 +590,9 @@ Drugi rect ma `height={20000}` — celowo „nieskończony” pas w dół pod ep
 
 Tekst: `writing-mode: sideways-lr` + `text-orientation: sideways` — w Pixi `rotation = ±π/2` + ręczny pivot; **wymaga porównania screenshotem** z live page.
 
-### 15.13 Quirk JSX w PersonNode (opcjonalnie)
+### 15.13 Quirk historyczny (pominięty w Pixi)
 
-W `PersonNode.tsx` wokół bloku timeline są dosłowne znaki tekstowe `(` i `)` w JSX — SVG je renderuje jako tekst przy pasku. To wygląda na wypadek; dla bit-exact można je pominąć. Nie są częścią zamierzonego designu.
+W starej wersji SVG `PersonNode` miały przypadkowe znaki `(` `)` w JSX. W porcie Pixi nie są renderowane.
 
 ### 15.14 `stillAlive` i rok śmierci
 
@@ -645,7 +645,7 @@ Decyzje pod **parity wizualną** i szybkość portu z obecnego React/SVG. Menu i
 |-----------|-----|
 | **`pixi.js` v8** | Renderer diagramu (canvas), tekstury miniaturek, hit-test, ticker |
 | **`@pixi/react`** (v8 / React 19) | Deklaratywny scene graph — port struktury `*List` / `*Node` bez ręcznego `addChild` / teardown |
-| **Istniejący `PathRounding` (`roundPathCorners`)** | Zaokrąglenia łuków relacji — bez przepisywania algorytmu |
+| **Istniejący `roundPathCorners`** (`src/pixi/roundPathCorners.ts`) | Zaokrąglenia łuków relacji — bez przepisywania algorytmu |
 | **Istniejący `ColorsService` + serwisy danych** | Kolory, packing wierszy, filtry kolekcji |
 | **Mały util dashed stroke** | Linia roku bieżącego + animowany highlight relacji (Pixi v8 nie ma CSS `stroke-dasharray`) |
 | **Bridge komend path → Pixi Graphics** | Wynik `roundPathCorners` to ciąg komend `M`/`L`/`C` (historyczny format path data, **nie** DOM SVG). Potrzebny translator do `moveTo` / `lineTo` / `bezierCurveTo` (własny kod albo lekki parser path-data, np. `svg-pathdata` / `svg-path-commander`). Nazwa „SVG” dotyczy tylko składni komend |

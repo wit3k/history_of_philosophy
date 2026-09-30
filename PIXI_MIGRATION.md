@@ -77,7 +77,7 @@ Dla wydajności: aktualizuj tylko widoczne obiekty / dirty flag; nie niszcz i tw
 
 ### PersonReference
 
-1. Zbuduj 4 punkty jak w `PersonReferenceNode.tsx` (`hdir`/`vdir`, offsety od `boxSize`).
+1. Zbuduj 4 punkty jak w `buildPersonReferencePath` (`src/pixi/relationPaths.ts`).
 2. Zrób SVG path string `M ... L ... L ...`.
 3. Przepuść przez `roundPathCorners(path, 15, false)`.
 4. W Pixi: narysuj wynikowy path przez **bridge komend** `M`/`L`/`C` → `moveTo` / `lineTo` / `bezierCurveTo` (własny kod lub lekki parser path-data). To nadal nie jest DOM SVG — tylko format pośredni z `roundPathCorners`.
@@ -93,7 +93,7 @@ Highlight:
 Analogicznie, radius **5**, opacity bazowa **0.7**, dash highlight `[20,3]`.  
 Skopiuj dokładnie formuły `shrinkFactor`, `distanceFromFactor`, `distanceToFactor`, `cos05=0.877`.
 
-Funkcję `roundPathCorners` można zostawić jako wspólny util (już jest w `src/geometry/PathRounding.tsx`).
+Funkcję `roundPathCorners` trzymaj jako util (`src/pixi/roundPathCorners.ts`).
 
 ### Dashed strokes w Pixi (blocker wizualny)
 
@@ -225,17 +225,16 @@ Pełna lista pułapek: **SPEC.md §15**.
 
 ---
 
-## 10. Pliki źródłowe „must-read” przed kodowaniem
+## 10. Pliki źródłowe „must-read”
 
 ```
 src/components/chronology/Chronology.tsx
-src/components/person/PersonNode.tsx
-src/components/personReference/PersonReferenceNode.tsx
-src/components/publication/PublicationNode.tsx
-src/components/publicationReference/PublicationReferenceNode.tsx
-src/components/historyEvents/HistoryEventNode.tsx
-src/components/personHistoryEvents/PersonHistoryEventNode.tsx
-src/geometry/PathRounding.tsx
+src/pixi/TimelineDiagram.tsx
+src/pixi/TimelineLayers.tsx
+src/pixi/relationPaths.ts
+src/pixi/roundPathCorners.ts
+src/pixi/pathBridge.ts
+src/pixi/dashedStroke.ts
 src/services/Colors.ts
 src/data/db/PeopleListService.tsx
 SPEC.md

@@ -1,5 +1,5 @@
 import Coordinates from '../geometry/Coordinates'
-import { roundPathCorners } from '../geometry/PathRounding'
+import { roundPathCorners } from './roundPathCorners'
 import { Attitude } from '../data/dto/PersonReference'
 import type Publication from '../data/dto/Publication'
 
