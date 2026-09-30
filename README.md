@@ -2,6 +2,13 @@
 
 To see a final result go to [https://wit3k.github.io/history_of_philosophy/](https://wit3k.github.io/history_of_philosophy/)
 
+## Rebuild / PixiJS migration docs
+
+Dokumentacja do odwzorowania aplikacji w innym stacku (docelowo diagram w **PixiJS** zamiast SVG):
+
+- [`SPEC.md`](./SPEC.md) — pełna specyfikacja zachowania, danych, layoutu, wyglądu oraz **rekomendowany stack** (§16)
+- [`PIXI_REBUILD_PROMPT.md`](./PIXI_REBUILD_PROMPT.md) — gotowy prompt do rebuildu
+- [`PIXI_MIGRATION.md`](./PIXI_MIGRATION.md) — mapowanie SVG → PixiJS i kolejność prac
 
 ## Setup
 
