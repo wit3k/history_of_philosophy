@@ -58,7 +58,7 @@ export type SharedTimelineProps = CameraFns &
     setTooltip: (t: TimelineTooltipState | null) => void
     displayAuthorsTimeline: boolean
     canvasOffset: { left: number; top: number }
-    getWorldOffset: () => { x: number; y: number }
+    layoutToScreen: (lx: number, ly: number) => { x: number; y: number }
   }
 
 export function YearLinesLayer({
@@ -397,7 +397,7 @@ export function PublicationsLayer({
     publicationMaxCols,
     publicationMaxRows,
     canvasOffset,
-    getWorldOffset,
+    layoutToScreen,
   } = shared
   return (
     <pixiContainer>
@@ -424,10 +424,10 @@ export function PublicationsLayer({
               eventMode="static"
               onPointerMove={() => {
                 shared.updateHighlightedPublication(publication.id)
-                const offset = getWorldOffset()
+                const screen = layoutToScreen(x, y + publicationBox / 2)
                 shared.setTooltip({
-                  clientX: canvasOffset.left + x + offset.x,
-                  clientY: canvasOffset.top + y + publicationBox / 2 + offset.y,
+                  clientX: canvasOffset.left + screen.x,
+                  clientY: canvasOffset.top + screen.y,
                   colorSeed: publication.publicationDate,
                   kind: 'publication',
                   titleLines: lines,
@@ -529,7 +529,7 @@ export function PersonHistoryEventsLayer({
     personHistoryMaxCols,
     personHistoryMaxRows,
     canvasOffset,
-    getWorldOffset,
+    layoutToScreen,
   } = shared
 
   return (
@@ -556,10 +556,10 @@ export function PersonHistoryEventsLayer({
           const yearLabel = instant || event.yearTo == null ? `${yearFrom}` : `${yearFrom}–${event.yearTo}`
 
           const showTip = () => {
-            const offset = getWorldOffset()
+            const screen = layoutToScreen(centerX, y + personHistoryBox / 2)
             shared.setTooltip({
-              clientX: canvasOffset.left + centerX + offset.x,
-              clientY: canvasOffset.top + y + personHistoryBox / 2 + offset.y,
+              clientX: canvasOffset.left + screen.x,
+              clientY: canvasOffset.top + screen.y,
               colorSeed: yearFrom,
               kind: 'personHistory',
               titleLines: lines,

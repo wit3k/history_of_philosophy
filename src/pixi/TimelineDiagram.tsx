@@ -1,6 +1,6 @@
 import { Application, useApplication, useTick } from '@pixi/react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { Application as PixiApplication, Container } from 'pixi.js'
+import type { Application as PixiApplication } from 'pixi.js'
 import type HistoryEvent from '../data/dto/HistoryEvent'
 import type Person from '../data/dto/Person'
 import type PersonHistoryEvent from '../data/dto/PersonHistoryEvent'
@@ -62,8 +62,8 @@ type Camera = { x: number; y: number; zoom: number }
 
 const historyEventRowHeight = 15
 
-/** Applies live camera as a pan offset — mutates Pixi containers, no React setState. */
-function WorldPanDriver({
+/** Live camera → Pixi transform (pan + zoom scale). No React setState. */
+function CameraTransformDriver({
   liveCameraRef,
   layoutCameraRef,
 }: {
@@ -75,12 +75,19 @@ function WorldPanDriver({
     if (!app) return
     const live = liveCameraRef.current
     const layout = layoutCameraRef.current
-    const ox = (layout.x - live.x) * layout.zoom
+    const sx = live.zoom / layout.zoom
+    const ox = (layout.x - live.x) * live.zoom
     const oy = live.y - layout.y
     const world = app.stage.getChildByLabel('hop-world', true)
-    if (world) world.position.set(ox, oy)
+    if (world) {
+      world.scale.set(sx, 1)
+      world.position.set(ox, oy)
+    }
     const years = app.stage.getChildByLabel('hop-years', true)
-    if (years) years.position.set(ox, 0)
+    if (years) {
+      years.scale.set(sx, 1)
+      years.position.set(ox, 0)
+    }
   })
   return null
 }
@@ -118,6 +125,7 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
   const velocityRef = useRef({ vx: 0, vy: 0 })
   const lastMoveRef = useRef({ x: 0, y: 0, t: 0 })
   const inertiaRafRef = useRef<number | null>(null)
+  const layoutCommitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   clampRef.current = {
     from: props.yearSelection.from,
     to: props.yearSelection.to,
@@ -145,46 +153,87 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
     }
   }, [updateOffset, props.windowWidth, props.windowHeight])
 
-  const applyWorldTransform = useCallback(() => {
+  const applyCameraTransform = useCallback(() => {
     const app = appRef.current
     if (!app) return
     const live = liveCameraRef.current
     const layout = layoutCameraRef.current
-    const ox = (layout.x - live.x) * layout.zoom
+    const sx = live.zoom / layout.zoom
+    const ox = (layout.x - live.x) * live.zoom
     const oy = live.y - layout.y
     const world = app.stage.getChildByLabel('hop-world', true)
-    if (world) world.position.set(ox, oy)
+    if (world) {
+      world.scale.set(sx, 1)
+      world.position.set(ox, oy)
+    }
     const years = app.stage.getChildByLabel('hop-years', true)
-    if (years) years.position.set(ox, 0)
+    if (years) {
+      years.scale.set(sx, 1)
+      years.position.set(ox, 0)
+    }
   }, [])
 
-  const getWorldOffset = useCallback(() => {
-    const app = appRef.current
-    const world = app?.stage.getChildByLabel('hop-world', true) as Container | null | undefined
-    return world ? { x: world.position.x, y: world.position.y } : { x: 0, y: 0 }
+  /** Map layout-local coords → screen (accounts for live pan/zoom transform). */
+  const layoutToScreen = useCallback((lx: number, ly: number) => {
+    const live = liveCameraRef.current
+    const layout = layoutCameraRef.current
+    const sx = live.zoom / layout.zoom
+    const ox = (layout.x - live.x) * live.zoom
+    const oy = live.y - layout.y
+    return { x: ox + lx * sx, y: oy + ly }
   }, [])
 
-  /** Commit live camera into React layout (zoom / resize / data) — resets pan offset. */
+  /** Rebuild scene at live camera (correct stroke widths / year step). Rare vs per-frame. */
   const commitLayoutCamera = useCallback(
     (camera: Camera, stepSize?: number) => {
+      if (layoutCommitTimerRef.current != null) {
+        clearTimeout(layoutCommitTimerRef.current)
+        layoutCommitTimerRef.current = null
+      }
       liveCameraRef.current = { ...camera }
       setLayoutCamera(camera)
       setPosition({ x: camera.x, y: camera.y })
       setZoom(camera.zoom)
       if (stepSize != null) setYearSelection(ys => ({ ...ys, stepSize }))
-      // next frame WorldPanDriver / applyWorldTransform will zero the offset
       requestAnimationFrame(() => {
         const app = appRef.current
         if (!app) return
         const world = app.stage.getChildByLabel('hop-world', true)
-        if (world) world.position.set(0, 0)
+        if (world) {
+          world.scale.set(1, 1)
+          world.position.set(0, 0)
+        }
         const years = app.stage.getChildByLabel('hop-years', true)
-        if (years) years.position.set(0, 0)
+        if (years) {
+          years.scale.set(1, 1)
+          years.position.set(0, 0)
+        }
       })
     },
     [setPosition, setZoom, setYearSelection],
   )
 
+  const stepSizeForZoom = (zoom: number) => {
+    if (zoom <= 11) return 100
+    if (zoom <= 22) return 10
+    return 5
+  }
+
+  const scheduleLayoutCommit = useCallback(() => {
+    if (layoutCommitTimerRef.current != null) clearTimeout(layoutCommitTimerRef.current)
+    layoutCommitTimerRef.current = setTimeout(() => {
+      layoutCommitTimerRef.current = null
+      const live = liveCameraRef.current
+      commitLayoutCamera(live, stepSizeForZoom(live.zoom))
+    }, 140)
+  }, [commitLayoutCamera])
+
+  useEffect(
+    () => () => {
+      if (layoutCommitTimerRef.current != null) clearTimeout(layoutCommitTimerRef.current)
+    },
+    [],
+  )
   const positionByYear = useCallback(
     (year: number) => (year - layoutCamera.x) * layoutCamera.zoom,
     [layoutCamera.x, layoutCamera.zoom],
@@ -219,7 +268,7 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
     clearHighlights,
     darkMode: props.darkMode,
     displayAuthorsTimeline: props.displayAuthorsTimeline,
-    getWorldOffset,
+    layoutToScreen,
     highlightedAuthor: props.highlightedAuthor,
     highlightedPublication: props.highlightedPublication,
     historyBox: 14,
@@ -269,9 +318,9 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
         y: next.y,
         zoom: next.zoom,
       }
-      applyWorldTransform()
+      applyCameraTransform()
     },
-    [applyWorldTransform, clampViewX],
+    [applyCameraTransform, clampViewX],
   )
 
   const startInertia = useCallback(
@@ -365,12 +414,6 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
 
   const calculateDelta = (x1: number, y1: number, x2: number, y2: number) => Math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
 
-  const stepSizeForZoom = (zoom: number) => {
-    if (zoom <= 11) return 100
-    if (zoom <= 22) return 10
-    return 5
-  }
-
   const applyZoomDelta = useCallback(
     (deltaY: number) => {
       stopInertia()
@@ -383,15 +426,14 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
       } else {
         nextZoom = zoom - deltaY / 300
       }
-      const next: Camera = {
+      setLiveCamera({
         x: liveCameraRef.current.x - deltaY / 100,
         y: liveCameraRef.current.y,
         zoom: nextZoom,
-      }
-      // Zoom changes layout math — one React commit (not per pan frame).
-      commitLayoutCamera(next, stepSizeForZoom(nextZoom))
+      })
+      scheduleLayoutCommit()
     },
-    [commitLayoutCamera, stopInertia],
+    [scheduleLayoutCommit, setLiveCamera, stopInertia],
   )
 
   const applyPan = useCallback(
@@ -441,17 +483,15 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
       } else if (e.touches.length === 2) {
         const pinchSize = calculateDelta(e.touches[0].pageX, e.touches[0].pageY, e.touches[1].pageX, e.touches[1].pageY)
         const zoom = liveCameraRef.current.zoom
-        const nextZoom = zoom - (pinchRef.current - pinchSize) / 100
+        const nextZoom = Math.max(1, zoom - (pinchRef.current - pinchSize) / 100)
         pinchRef.current = pinchSize
         stopPageDrag(false)
-        commitLayoutCamera(
-          {
-            x: liveCameraRef.current.x,
-            y: liveCameraRef.current.y,
-            zoom: nextZoom,
-          },
-          stepSizeForZoom(nextZoom),
-        )
+        setLiveCamera({
+          x: liveCameraRef.current.x,
+          y: liveCameraRef.current.y,
+          zoom: nextZoom,
+        })
+        scheduleLayoutCommit()
       }
     }
     const onTouchEnd = () => stopPageDrag()
@@ -538,7 +578,7 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
       window.removeEventListener('keydown', onKeyDown)
       stopInertia()
     }
-  }, [applyPan, applyZoomDelta, commitLayoutCamera, startInertia, stopInertia])
+  }, [applyPan, applyZoomDelta, scheduleLayoutCommit, setLiveCamera, startInertia, stopInertia])
 
   return (
     <div
@@ -568,7 +608,7 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
         resolution={typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1}
         width={props.windowWidth}
       >
-        <WorldPanDriver layoutCameraRef={layoutCameraRef} liveCameraRef={liveCameraRef} />
+        <CameraTransformDriver layoutCameraRef={layoutCameraRef} liveCameraRef={liveCameraRef} />
 
         <pixiContainer label="hop-world">
           {props.displayHistoryEvents && (
