@@ -1,6 +1,6 @@
 import { Application, useApplication, useTick } from '@pixi/react'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Application as PixiApplication } from 'pixi.js'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type HistoryEvent from '../data/dto/HistoryEvent'
 import type Person from '../data/dto/Person'
 import type PersonHistoryEvent from '../data/dto/PersonHistoryEvent'
@@ -29,6 +29,7 @@ export type TimelineDiagramProps = {
   windowHeight: number
   darkMode: boolean
   viewPosition: { x: number; y: number }
+  viewportFrame: { id: number; x: number; y: number; zoom: number } | null
   setPosition: React.Dispatch<React.SetStateAction<{ x: number; y: number }>>
   zoom: number
   setZoom: React.Dispatch<React.SetStateAction<number>>
@@ -133,14 +134,20 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
     startViewPosition: { x: 0, y: 0 },
   })
   const pinchRef = useRef(0)
+  const primaryTouchIdRef = useRef<number | null>(null)
+  const pointerClientXRef = useRef<number | null>(null)
   const clampRef = useRef({
     from: props.yearSelection.from,
     to: props.yearSelection.to,
     yearLabelWidth: props.yearLabelWidth,
   })
   const velocityRef = useRef({ vx: 0, vy: 0 })
-  const lastMoveRef = useRef({ x: 0, y: 0, t: 0 })
+  const lastMoveRef = useRef({ t: 0, x: 0, y: 0 })
   const inertiaRafRef = useRef<number | null>(null)
+  const frameAnimRef = useRef<number | null>(null)
+  const appliedFrameIdRef = useRef<number | null>(null)
+  const windowWidthRef = useRef(props.windowWidth)
+  windowWidthRef.current = props.windowWidth
   const layoutCommitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   clampRef.current = {
     from: props.yearSelection.from,
@@ -248,6 +255,7 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
   useEffect(
     () => () => {
       if (layoutCommitTimerRef.current != null) clearTimeout(layoutCommitTimerRef.current)
+      if (frameAnimRef.current != null) cancelAnimationFrame(frameAnimRef.current)
     },
     [],
   )
@@ -301,13 +309,13 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
     clearHighlights,
     darkMode: props.darkMode,
     displayAuthorsTimeline: props.displayAuthorsTimeline,
-    layoutToScreen,
     highlightedAuthor: props.highlightedAuthor,
     highlightedPublication: props.highlightedPublication,
     historyBox: 14,
     historyEventRowPosition,
     isVisible,
     isVisibleRange,
+    layoutToScreen,
     onAuthorClick: props.onAuthorClick,
     onPersonHistoryClick: props.onPersonHistoryClick,
     onPublicationClick: props.onPublicationClick,
@@ -344,6 +352,69 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
     return Math.min(Math.max(x, from - labelW), to + labelW)
   }, [])
 
+  useEffect(() => {
+    const frame = props.viewportFrame
+    if (!frame || appliedFrameIdRef.current === frame.id) return
+    appliedFrameIdRef.current = frame.id
+
+    if (inertiaRafRef.current != null) {
+      cancelAnimationFrame(inertiaRafRef.current)
+      inertiaRafRef.current = null
+    }
+    if (layoutCommitTimerRef.current != null) {
+      clearTimeout(layoutCommitTimerRef.current)
+      layoutCommitTimerRef.current = null
+    }
+    if (frameAnimRef.current != null) {
+      cancelAnimationFrame(frameAnimRef.current)
+      frameAnimRef.current = null
+    }
+
+    const width = windowWidthRef.current
+    if (width <= 0) return
+
+    const start = liveCameraRef.current
+    const left0 = start.x
+    const right0 = start.x + width / Math.max(start.zoom, 0.0001)
+    const left1 = frame.x
+    const right1 = frame.x + width / Math.max(frame.zoom, 0.0001)
+    const y0 = start.y
+    const y1 = frame.y
+    const coverLeft = Math.min(left0, left1)
+    const coverRight = Math.max(right0, right1)
+    const coverSpan = Math.max(coverRight - coverLeft, 1)
+    setCullCamera({ x: coverLeft, y: Math.min(y0, y1), zoom: width / coverSpan })
+
+    const startedAt = performance.now()
+    const duration = 720
+    const step = (now: number) => {
+      if (frameAnimRef.current == null) return
+      const t = Math.min(1, (now - startedAt) / duration)
+      const eased = t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2
+      const left = left0 + (left1 - left0) * eased
+      const right = right0 + (right1 - right0) * eased
+      const span = Math.max(right - left, 0.0001)
+      const next = {
+        x: clampViewX(left),
+        y: y0 + (y1 - y0) * eased,
+        zoom: width / span,
+      }
+      liveCameraRef.current = next
+      applyCameraTransform()
+      if (t < 1) {
+        frameAnimRef.current = requestAnimationFrame(step)
+        return
+      }
+      frameAnimRef.current = null
+      const zoom = next.zoom
+      let stepSize = 5
+      if (zoom <= 11) stepSize = 100
+      else if (zoom <= 22) stepSize = 10
+      commitLayoutCamera(next, stepSize)
+    }
+    frameAnimRef.current = requestAnimationFrame(step)
+  }, [applyCameraTransform, clampViewX, commitLayoutCamera, props.viewportFrame])
+
   /** Refresh React cull window when live camera drifts far enough (not every pan frame). */
   const maybeUpdateCull = useCallback(() => {
     const live = liveCameraRef.current
@@ -360,6 +431,10 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
 
   const setLiveCamera = useCallback(
     (next: Camera) => {
+      if (frameAnimRef.current != null) {
+        cancelAnimationFrame(frameAnimRef.current)
+        frameAnimRef.current = null
+      }
       liveCameraRef.current = {
         x: clampViewX(next.x),
         y: next.y,
@@ -409,13 +484,17 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
 
   const startPageDrag = (button: number, pageX: number, pageY: number) => {
     if (button === 0) {
+      if (frameAnimRef.current != null) {
+        cancelAnimationFrame(frameAnimRef.current)
+        frameAnimRef.current = null
+      }
       stopInertia()
       dragRef.current = {
         isDragged: true,
         startDragPosition: { x: pageX, y: pageY },
         startViewPosition: { ...liveCameraRef.current },
       }
-      lastMoveRef.current = { x: pageX, y: pageY, t: performance.now() }
+      lastMoveRef.current = { t: performance.now(), x: pageX, y: pageY }
       velocityRef.current = { vx: 0, vy: 0 }
       setIsDragged(true)
     }
@@ -451,7 +530,7 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
     } else if (dt >= 0.12) {
       velocityRef.current = { vx: 0, vy: 0 }
     }
-    lastMoveRef.current = { x: pageX, y: pageY, t: now }
+    lastMoveRef.current = { t: now, x: pageX, y: pageY }
 
     setLiveCamera({
       x: drag.startViewPosition.x - (pageX - drag.startDragPosition.x) / zoom,
@@ -462,9 +541,25 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
 
   const calculateDelta = (x1: number, y1: number, x2: number, y2: number) => Math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
 
-  const applyZoomDelta = useCallback(
-    (deltaY: number) => {
+  const zoomTo = useCallback(
+    (nextZoom: number, anchorPx: number) => {
       stopInertia()
+      const live = liveCameraRef.current
+      const currentZoom = Math.max(live.zoom, 0.0001)
+      const targetZoom = Math.max(nextZoom, 0.0001)
+      const anchorYear = live.x + anchorPx / currentZoom
+      setLiveCamera({
+        x: anchorYear - anchorPx / targetZoom,
+        y: live.y,
+        zoom: targetZoom,
+      })
+      scheduleLayoutCommit()
+    },
+    [scheduleLayoutCommit, setLiveCamera, stopInertia],
+  )
+
+  const applyZoomDelta = useCallback(
+    (deltaY: number, anchorPx: number) => {
       const zoom = liveCameraRef.current.zoom
       let nextZoom: number
       if (Math.max(1, zoom - deltaY / 100) <= 11.0) {
@@ -474,14 +569,9 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
       } else {
         nextZoom = zoom - deltaY / 300
       }
-      setLiveCamera({
-        x: liveCameraRef.current.x - deltaY / 100,
-        y: liveCameraRef.current.y,
-        zoom: nextZoom,
-      })
-      scheduleLayoutCommit()
+      zoomTo(nextZoom, anchorPx)
     },
-    [scheduleLayoutCommit, setLiveCamera, stopInertia],
+    [zoomTo],
   )
 
   const applyPan = useCallback(
@@ -504,14 +594,44 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
     const onPointerDown = (e: PointerEvent) => {
       if (e.button === 0) startPageDrag(0, e.pageX, e.pageY)
     }
-    const onPointerMove = (e: PointerEvent) => executePageDrag(e.pageX, e.pageY)
+    const onPointerMove = (e: PointerEvent) => {
+      pointerClientXRef.current = e.clientX
+      executePageDrag(e.pageX, e.pageY)
+    }
     const onPointerUp = () => stopPageDrag()
+    const anchorPxFromClientX = (clientX: number) => clientX - el.getBoundingClientRect().left
+    const keyboardAnchorPx = () => {
+      const rect = el.getBoundingClientRect()
+      return anchorPxFromClientX(pointerClientXRef.current ?? rect.left + rect.width / 2)
+    }
     const onWheel = (e: WheelEvent) => {
       e.preventDefault()
-      applyZoomDelta(e.deltaY)
+      applyZoomDelta(e.deltaY, anchorPxFromClientX(e.clientX))
+    }
+
+    const rememberPrimaryTouch = (e: TouchEvent) => {
+      if (primaryTouchIdRef.current == null && e.touches.length > 0) {
+        primaryTouchIdRef.current = e.touches[0].identifier
+      }
+    }
+    const primaryTouchX = (e: TouchEvent) => {
+      const id = primaryTouchIdRef.current
+      for (let i = 0; i < e.touches.length; i++) {
+        if (e.touches[i].identifier === id) return e.touches[i].clientX
+      }
+      return e.touches.length > 0 ? e.touches[0].clientX : null
+    }
+    const releasePrimaryTouch = (e: TouchEvent) => {
+      const id = primaryTouchIdRef.current
+      if (id == null) return
+      for (let i = 0; i < e.touches.length; i++) {
+        if (e.touches[i].identifier === id) return
+      }
+      primaryTouchIdRef.current = e.touches.length > 0 ? e.touches[0].identifier : null
     }
 
     const onTouchStart = (e: TouchEvent) => {
+      rememberPrimaryTouch(e)
       if (e.touches.length === 1) {
         startPageDrag(0, e.touches[0].pageX, e.touches[0].pageY)
       } else if (e.touches.length === 2) {
@@ -534,15 +654,14 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
         const nextZoom = Math.max(1, zoom - (pinchRef.current - pinchSize) / 100)
         pinchRef.current = pinchSize
         stopPageDrag(false)
-        setLiveCamera({
-          x: liveCameraRef.current.x,
-          y: liveCameraRef.current.y,
-          zoom: nextZoom,
-        })
-        scheduleLayoutCommit()
+        const clientX = primaryTouchX(e)
+        if (clientX != null) zoomTo(nextZoom, anchorPxFromClientX(clientX))
       }
     }
-    const onTouchEnd = () => stopPageDrag()
+    const onTouchEnd = (e: TouchEvent) => {
+      releasePrimaryTouch(e)
+      stopPageDrag()
+    }
 
     const isTypingTarget = (target: EventTarget | null) => {
       if (!(target instanceof HTMLElement)) return false
@@ -591,7 +710,7 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
         case 'q':
         case 'Add':
           e.preventDefault()
-          applyZoomDelta(-100)
+          applyZoomDelta(-100, keyboardAnchorPx())
           break
         case '-':
         case '_':
@@ -599,7 +718,7 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
         case 'e':
         case 'Subtract':
           e.preventDefault()
-          applyZoomDelta(100)
+          applyZoomDelta(100, keyboardAnchorPx())
           break
         default:
           break
@@ -626,7 +745,7 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
       window.removeEventListener('keydown', onKeyDown)
       stopInertia()
     }
-  }, [applyPan, applyZoomDelta, scheduleLayoutCommit, setLiveCamera, startInertia, stopInertia])
+  }, [applyPan, applyZoomDelta, startInertia, stopInertia, zoomTo])
 
   return (
     <div

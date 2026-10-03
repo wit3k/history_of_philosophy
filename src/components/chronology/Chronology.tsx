@@ -5,10 +5,10 @@ import CollectionsListService, {
 } from '../../data/db/CollectionsListService'
 import HistoryEventsListService from '../../data/db/HistoryEventsListService'
 import LocationListService from '../../data/db/LocationListService'
+import PeopleHistoryEventsListService from '../../data/db/PeopleHistoryEventsListService'
 import PeopleListService from '../../data/db/PeopleListService'
 import PersonReferenceListService from '../../data/db/PersonReferenceListService'
 import PublicationReferenceListService from '../../data/db/PublicationReferenceListService'
-import PeopleHistoryEventsListService from '../../data/db/PeopleHistoryEventsListService'
 import PublicationsListService from '../../data/db/PublicationsListService'
 import type Collection from '../../data/dto/Collection'
 import type HistoryEvent from '../../data/dto/HistoryEvent'
@@ -109,6 +109,22 @@ const Chronology = () => {
     setPeopleReferenceList(PersonReferenceListService.getAll().filter(itemsFilter(c => c.includedPeopleRelations)))
     const visiblePersonIds = new Set(filteredPeople.map(p => p.id))
     setPeopleHistoryEvents(PeopleHistoryEventsListService.getAll().filter(e => visiblePersonIds.has(e.personId)))
+    return filteredPeople
+  }
+
+  const frameViewportToPeople = (people: Person[]) => {
+    const width = dimenstions.x
+    if (people.length === 0 || width <= 0) return
+    const born = Math.min(...people.map(person => person.born))
+    const died = Math.max(...people.map(person => person.died))
+    const span = Math.max(died - born, 1)
+    setViewportFrame({
+      id: viewportFrameId.current + 1,
+      x: born,
+      y: 0,
+      zoom: width / span,
+    })
+    viewportFrameId.current += 1
   }
 
   const selectCollection = (collectionId: string) => {
@@ -117,7 +133,8 @@ const Chronology = () => {
       isActive: c.id === collectionId,
     }))
     setCollectionsState(newCollectionsState)
-    applyCollectionFilter(collectionId, newCollectionsState)
+    const visiblePeople = applyCollectionFilter(collectionId, newCollectionsState)
+    frameViewportToPeople(visiblePeople)
   }
 
   const [displayPublicationModal, setDisplayPublicationModal] = React.useState<boolean>(false)
@@ -147,6 +164,13 @@ const Chronology = () => {
     x: 1588,
     y: 0,
   })
+  const viewportFrameId = React.useRef(0)
+  const [viewportFrame, setViewportFrame] = React.useState<{
+    id: number
+    x: number
+    y: number
+    zoom: number
+  } | null>(null)
   const [yearSelection, setYearSelection] = React.useState({
     from: -1200,
     stepSize: 100,
@@ -228,6 +252,7 @@ const Chronology = () => {
         updateHighlightedAuthor={updateHighlightedAuthor}
         updateHighlightedPublication={updateHighlightedPublication}
         viewPosition={viewPosition}
+        viewportFrame={viewportFrame}
         windowHeight={prop.windowSize.y}
         windowWidth={prop.windowSize.x}
         yearLabelWidth={prop.yearLabelWidth}
@@ -246,6 +271,7 @@ const Chronology = () => {
           displayPersonHistoryEvents={displayPersonHistoryEvents}
           displayPublicationRelations={displayPublicationRelations}
           displayPublications={displayPublications}
+          selectCollection={selectCollection}
           setDarkMode={setDarkMode}
           setDisplayAuthorRelations={setDisplayAuthorRelations}
           setDisplayAuthors={setDisplayAuthors}
@@ -254,7 +280,6 @@ const Chronology = () => {
           setDisplayPersonHistoryEvents={setDisplayPersonHistoryEvents}
           setDisplayPublicationRelations={setDisplayPublicationRelations}
           setDisplayPublications={setDisplayPublications}
-          selectCollection={selectCollection}
         />
       </div>
 
