@@ -1,8 +1,9 @@
 import HistoryEvent from '../dto/HistoryEvent'
 import { HistoryEventsListRaw } from '../imported/HistoryEventsListRaw'
+import { unhackNocoYear } from '../../utils/years'
 
 const HistoryEventsList = HistoryEventsListRaw.map(
-  c => new HistoryEvent(c.id + '', c.name, c.yearFrom, c.yearTo, 0),
+  c => new HistoryEvent(c.id + '', c.name, unhackNocoYear(c.yearFrom), unhackNocoYear(c.yearTo), 0),
 ).sort((p1, p2) => p1.yearFrom - p2.yearFrom)
 
 const HistoryEventsListService = {

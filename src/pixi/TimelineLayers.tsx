@@ -9,6 +9,7 @@ import type PersonReference from '../data/dto/PersonReference'
 import type Publication from '../data/dto/Publication'
 import type PublicationReference from '../data/dto/PublicationReference'
 import ColorsService from '../services/Colors'
+import { formatYearRange, mod } from '../utils/years'
 import { dashOffsetFromTime, strokeDashedPolyline, strokeDashedVerticalLine } from './dashedStroke'
 import { flattenPathDataCached, strokePathData } from './pathBridge'
 import { attitudeColor, buildPersonReferencePath, buildPublicationReferencePath, wrapTitleWords } from './relationPaths'
@@ -82,7 +83,7 @@ export function YearLinesLayer({
         g.lineTo(x, height)
         g.stroke({
           width: 1,
-          color: year % 100 === 0 ? 'rgba(193, 236, 236, 0.85)' : 'rgba(61, 224, 224, 0.2)',
+          color: mod(year, 100) === 0 ? 'rgba(193, 236, 236, 0.85)' : 'rgba(61, 224, 224, 0.2)',
           cap: 'butt',
           join: 'miter',
         })
@@ -119,7 +120,7 @@ export function YearLabelsLayer({
       {visible.map(year => {
         const x = positionByYear(year)
         const y = windowHeight - 30
-        const century = year % 100 === 0
+        const century = mod(year, 100) === 0
         return (
           <pixiContainer key={`yl-${year}`}>
             <pixiGraphics
@@ -463,7 +464,7 @@ export function PublicationsLayer({
           const lines = slices.map((s, i) => (i === slices.length - 1 && truncated ? `${s}...` : s))
           return (
             <pixiGraphics
-              key={`pub-${publication.id}`}
+              key={`pub-${publication.id}-${publication.authorId}`}
               cursor="pointer"
               draw={g => {
                 g.clear()
@@ -603,7 +604,7 @@ export function PersonHistoryEventsLayer({
           const barY = y + personHistoryBox - personHistoryBar - 2
           const { slices, truncated } = wrapTitleWords(event.name, personHistoryMaxCols, personHistoryMaxRows)
           const lines = slices.map((s, i) => (i === slices.length - 1 && truncated ? `${s}...` : s))
-          const yearLabel = instant || event.yearTo == null ? `${yearFrom}` : `${yearFrom}–${event.yearTo}`
+          const yearLabel = formatYearRange(yearFrom, event.yearTo)
 
           const showTip = () => {
             const screen = layoutToScreen(centerX, y + personHistoryBox / 2)

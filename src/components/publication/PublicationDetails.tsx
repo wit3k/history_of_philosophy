@@ -2,6 +2,7 @@ import type React from 'react'
 import type Location from '../../data/dto/Location'
 import type Person from '../../data/dto/Person'
 import type Publication from '../../data/dto/Publication'
+import { formatYear } from '../../utils/years'
 import Modal from '../ui/Modal'
 
 class PublicationDetailsProps {
@@ -32,7 +33,7 @@ const PublicationDetails = (props: PublicationDetailsProps) => {
           >
             {props.currentAuthor.name}
           </span>{' '}
-          - {props.currentPublication.publicationDate}
+          - {formatYear(props.currentPublication.publicationDate)}
           {props.currentPublication.publicationLocation && (
             <span>
               ,

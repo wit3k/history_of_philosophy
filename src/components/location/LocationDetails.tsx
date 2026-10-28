@@ -2,6 +2,7 @@ import PeopleListService from '../../data/db/PeopleListService'
 import PublicationsListService from '../../data/db/PublicationsListService'
 import type Location from '../../data/dto/Location'
 import type Person from '../../data/dto/Person'
+import { formatYear } from '../../utils/years'
 import Modal from '../ui/Modal'
 
 class LocationDetailsProps {
@@ -119,7 +120,7 @@ const LocationDetails = (props: LocationDetailsProps) => {
               const author = props.peopleList.find(p => p.id == historyItem.publication.authorId)
               content = (
                 <small className="mt-2 font-sans text-sm text-slate-300 antialiased">
-                  <span className="text-slate-100 -ml-3">{historyItem.date}</span> -{' '}
+                  <span className="text-slate-100 -ml-3">{formatYear(historyItem.date)}</span> -{' '}
                   <span
                     className="italic hover:text-pink-700 underline cursor-pointer"
                     onClick={() => props.publicationCallback(historyItem.publication.id)}
@@ -161,7 +162,7 @@ const LocationDetails = (props: LocationDetailsProps) => {
               )
               content = (
                 <small className="mt-2 font-sans text-sm text-slate-300 antialiased">
-                  <span className="text-slate-100 -ml-3">{historyItem.date}</span> - Urodził się:{' '}
+                  <span className="text-slate-100 -ml-3">{formatYear(historyItem.date)}</span> - Urodził się:{' '}
                   <span
                     className="font-black hover:text-pink-700 hover:underline cursor-pointer"
                     onClick={() => props.authorCallback(historyItem.personBorn.id)}
@@ -195,7 +196,7 @@ const LocationDetails = (props: LocationDetailsProps) => {
               )
               content = (
                 <small className="mt-2 font-sans text-sm text-slate-300 antialiased">
-                  <span className="text-slate-100 -ml-3">{historyItem.date}</span> - Zmarł:{' '}
+                  <span className="text-slate-100 -ml-3">{formatYear(historyItem.date)}</span> - Zmarł:{' '}
                   <span
                     className="font-black hover:text-pink-700 hover:underline cursor-pointer"
                     onClick={() => props.authorCallback(historyItem.personDied.id)}

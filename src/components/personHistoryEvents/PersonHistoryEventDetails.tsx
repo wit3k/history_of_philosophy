@@ -2,6 +2,7 @@ import type React from 'react'
 import LocationListService from '../../data/db/LocationListService'
 import type Person from '../../data/dto/Person'
 import type PersonHistoryEvent from '../../data/dto/PersonHistoryEvent'
+import { formatYearRange } from '../../utils/years'
 import Modal from '../ui/Modal'
 
 class PersonHistoryEventDetailsProps {
@@ -17,8 +18,7 @@ class PersonHistoryEventDetailsProps {
 
 const formatYears = (event: PersonHistoryEvent) => {
   if (event.yearFrom == null) return ''
-  if (event.yearTo == null || event.yearTo === event.yearFrom) return `${event.yearFrom}`
-  return `${event.yearFrom}–${event.yearTo}`
+  return formatYearRange(event.yearFrom, event.yearTo)
 }
 
 const PersonHistoryEventDetails = (props: PersonHistoryEventDetailsProps) => {

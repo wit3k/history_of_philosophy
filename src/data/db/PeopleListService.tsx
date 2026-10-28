@@ -1,5 +1,6 @@
 import Person from '../dto/Person'
 import { PeopleListRaw } from '../imported/PeopleListRaw'
+import { unhackNocoYear } from '../../utils/years'
 
 function groupBy<S, K>(list: S[], keyGetter: (e: S) => K) {
   const map = new Map()
@@ -38,15 +39,28 @@ class CategoryBlock {
     return Math.max(...this.rows.map(p => p.endsAt()))
   }
 }
-const PeopleList = PeopleListRaw.filter(
-  p => p.born !== undefined, // && p.died != undefined,
-).map(
-  p =>
-    new Person(
+/** Noco ±30xx unhack + drop still-invalid spans. */
+function sanitizeLifespan(born: number, died: number | undefined): { born: number; died: number } | null {
+  const b = unhackNocoYear(born)
+  const d = died != null ? unhackNocoYear(died) : new Date().getFullYear()
+  if (b > d) {
+    return null
+  }
+  return { born: b, died: d }
+}
+
+const PeopleList = PeopleListRaw.filter(p => p.born !== undefined)
+  .map(p => {
+    const span = sanitizeLifespan(p.born as number, p.died)
+    if (!span) {
+      console.warn(`Skipping person with invalid lifespan: ${p.name} (${p.born}–${p.died})`)
+      return null
+    }
+    return new Person(
       p.id,
       p.name,
-      p.born,
-      p.died ? p.died : new Date().getFullYear() * 1,
+      span.born,
+      span.died,
       p.stillAlive,
       p.bornLocation + '',
       p.diedLocation + '',
@@ -54,8 +68,9 @@ const PeopleList = PeopleListRaw.filter(
       0,
       p.thumbnail,
       p.category,
-    ),
-)
+    )
+  })
+  .filter((p): p is Person => p != null)
 
 const PeopleListService = {
   getAll: () => PeopleList,

@@ -5,6 +5,7 @@ import PublicationsListService from '../../data/db/PublicationsListService'
 import type Person from '../../data/dto/Person'
 import type PersonHistoryEvent from '../../data/dto/PersonHistoryEvent'
 import type Publication from '../../data/dto/Publication'
+import { formatYear, formatYearRange } from '../../utils/years'
 import Modal from '../ui/Modal'
 
 class PersonDetailsProps {
@@ -55,7 +56,7 @@ const PersonDetails = (props: PersonDetailsProps) => {
               width={200}
             />
           )}
-          Urodzony: {props.currentPerson.born} -{' '}
+          Urodzony: {formatYear(props.currentPerson.born)} -{' '}
           <span
             className="hover:text-pink-700 underline cursor-pointer"
             onClick={() => props.locationCallback(props.currentPerson.bornLocation)}
@@ -68,7 +69,7 @@ const PersonDetails = (props: PersonDetailsProps) => {
             <span>Wciąż żyje</span>
           ) : (
             <span>
-              Zmarł: {props.currentPerson.died} -{' '}
+              Zmarł: {formatYear(props.currentPerson.died)} -{' '}
               <span
                 className="hover:text-pink-700 underline cursor-pointer"
                 onClick={() => props.locationCallback(props.currentPerson.diedLocation)}
@@ -110,7 +111,7 @@ const PersonDetails = (props: PersonDetailsProps) => {
               )
               content = (
                 <small className="mt-2 font-sans text-sm text-slate-300 antialiased">
-                  <span className="text-slate-100 -ml-3">{historyItem.date}</span> -{' '}
+                  <span className="text-slate-100 -ml-3">{formatYear(historyItem.date)}</span> -{' '}
                   <span
                     className="italic hover:text-pink-700 underline cursor-pointer"
                     onClick={() => props.publicationCallback(historyItem.publication.id)}
@@ -134,10 +135,7 @@ const PersonDetails = (props: PersonDetailsProps) => {
             }
 
             if (historyItem.kind === 'event') {
-              const yearLabel =
-                historyItem.event.yearTo == null || historyItem.event.yearTo === historyItem.event.yearFrom
-                  ? `${historyItem.event.yearFrom}`
-                  : `${historyItem.event.yearFrom}–${historyItem.event.yearTo}`
+              const yearLabel = formatYearRange(historyItem.event.yearFrom!, historyItem.event.yearTo)
               icon = (
                 <span className="relative z-10 grid h-8 w-8 place-items-center rounded-full bg-slate-500 text-slate-100">
                   <svg

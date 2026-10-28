@@ -57,6 +57,8 @@ export type TimelineDiagramProps = {
   onAuthorClick: (id: string) => void
   onPublicationClick: (publication: Publication, author: Person) => void
   onPersonHistoryClick: (event: PersonHistoryEvent, person: Person) => void
+  /** Fired when live camera is committed to React layout state (after pan/zoom/frame). */
+  onCameraCommit?: (camera: { x: number; y: number; zoom: number }) => void
 }
 
 type Camera = { x: number; y: number; zoom: number }
@@ -136,10 +138,15 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
   const pinchRef = useRef(0)
   const primaryTouchIdRef = useRef<number | null>(null)
   const pointerClientXRef = useRef<number | null>(null)
+  const personBox = 35
   const clampRef = useRef({
     from: props.yearSelection.from,
     to: props.yearSelection.to,
-    yearLabelWidth: props.yearLabelWidth,
+    windowHeight: props.windowHeight,
+    rowHeight: props.rowHeight,
+    personBox,
+    firstRow: 1,
+    lastRow: 1,
   })
   const velocityRef = useRef({ vx: 0, vy: 0 })
   const lastMoveRef = useRef({ t: 0, x: 0, y: 0 })
@@ -149,15 +156,34 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
   const windowWidthRef = useRef(props.windowWidth)
   windowWidthRef.current = props.windowWidth
   const layoutCommitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const rowExtent = useMemo(() => {
+    if (props.peopleList.length === 0) return { firstRow: 1, lastRow: 1 }
+    let firstRow = Number.POSITIVE_INFINITY
+    let lastRow = Number.NEGATIVE_INFINITY
+    for (const p of props.peopleList) {
+      if (p.rowNumber < firstRow) firstRow = p.rowNumber
+      if (p.rowNumber > lastRow) lastRow = p.rowNumber
+    }
+    return { firstRow, lastRow }
+  }, [props.peopleList])
+
   clampRef.current = {
     from: props.yearSelection.from,
     to: props.yearSelection.to,
-    yearLabelWidth: props.yearLabelWidth,
+    windowHeight: props.windowHeight,
+    rowHeight: props.rowHeight,
+    personBox,
+    firstRow: rowExtent.firstRow,
+    lastRow: rowExtent.lastRow,
   }
 
   const setZoom = props.setZoom
   const setPosition = props.setPosition
   const setYearSelection = props.setYearSelection
+  const onCameraCommit = props.onCameraCommit
+  const onCameraCommitRef = useRef(onCameraCommit)
+  onCameraCommitRef.current = onCameraCommit
 
   const updateOffset = useCallback(() => {
     const el = hostRef.current
@@ -219,6 +245,7 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
       setPosition({ x: camera.x, y: camera.y })
       setZoom(camera.zoom)
       if (stepSize != null) setYearSelection(ys => ({ ...ys, stepSize }))
+      onCameraCommitRef.current?.(camera)
       requestAnimationFrame(() => {
         const app = appRef.current
         if (!app) return
@@ -319,7 +346,7 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
     onAuthorClick: props.onAuthorClick,
     onPersonHistoryClick: props.onPersonHistoryClick,
     onPublicationClick: props.onPublicationClick,
-    personBox: 35,
+    personBox,
     personHistoryBar: 10,
     personHistoryBox: 35,
     personHistoryDot: 5,
@@ -347,9 +374,26 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
     }
   }, [])
 
-  const clampViewX = useCallback((x: number) => {
-    const { from, to, yearLabelWidth: labelW } = clampRef.current
-    return Math.min(Math.max(x, from - labelW), to + labelW)
+  /** Left edge year `x`: -3000 at left screen edge … 3001 at right screen edge. */
+  const clampViewX = useCallback((x: number, zoom: number) => {
+    const { from, to } = clampRef.current
+    const w = windowWidthRef.current
+    const z = Math.max(zoom, 0.0001)
+    const xMin = from
+    const xMax = to + 1 - w / z
+    if (xMin > xMax) return (xMin + xMax) / 2
+    return Math.min(Math.max(x, xMin), xMax)
+  }, [])
+
+  /** Screen Y of a people row with live camera: live.y + rowHeight * rowNumber. */
+  const clampViewY = useCallback((y: number) => {
+    const { windowHeight, rowHeight, personBox: box, firstRow, lastRow } = clampRef.current
+    // Max y: first row sits on the bottom edge (can't pan further toward diagram top).
+    const yMax = windowHeight - box - rowHeight * firstRow
+    // Min y: last row sits on the top edge (can't pan further toward diagram bottom).
+    const yMin = -rowHeight * lastRow
+    if (yMin > yMax) return (yMin + yMax) / 2
+    return Math.min(Math.max(y, yMin), yMax)
   }, [])
 
   useEffect(() => {
@@ -394,10 +438,11 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
       const left = left0 + (left1 - left0) * eased
       const right = right0 + (right1 - right0) * eased
       const span = Math.max(right - left, 0.0001)
+      const zoom = width / span
       const next = {
-        x: clampViewX(left),
-        y: y0 + (y1 - y0) * eased,
-        zoom: width / span,
+        x: clampViewX(left, zoom),
+        y: clampViewY(y0 + (y1 - y0) * eased),
+        zoom,
       }
       liveCameraRef.current = next
       applyCameraTransform()
@@ -406,14 +451,13 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
         return
       }
       frameAnimRef.current = null
-      const zoom = next.zoom
       let stepSize = 5
-      if (zoom <= 11) stepSize = 100
-      else if (zoom <= 22) stepSize = 10
+      if (next.zoom <= 11) stepSize = 100
+      else if (next.zoom <= 22) stepSize = 10
       commitLayoutCamera(next, stepSize)
     }
     frameAnimRef.current = requestAnimationFrame(step)
-  }, [applyCameraTransform, clampViewX, commitLayoutCamera, props.viewportFrame])
+  }, [applyCameraTransform, clampViewX, clampViewY, commitLayoutCamera, props.viewportFrame])
 
   /** Refresh React cull window when live camera drifts far enough (not every pan frame). */
   const maybeUpdateCull = useCallback(() => {
@@ -436,15 +480,33 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
         frameAnimRef.current = null
       }
       liveCameraRef.current = {
-        x: clampViewX(next.x),
-        y: next.y,
+        x: clampViewX(next.x, next.zoom),
+        y: clampViewY(next.y),
         zoom: next.zoom,
       }
       applyCameraTransform()
       maybeUpdateCull()
     },
-    [applyCameraTransform, clampViewX, maybeUpdateCull],
+    [applyCameraTransform, clampViewX, clampViewY, maybeUpdateCull],
   )
+
+  // Re-apply pan limits when viewport, zoom, or people rows change.
+  useEffect(() => {
+    const live = liveCameraRef.current
+    const cy = clampViewY(live.y)
+    const cx = clampViewX(live.x, live.zoom)
+    if (cy !== live.y || cx !== live.x) {
+      setLiveCamera({ ...live, x: cx, y: cy })
+    }
+  }, [
+    clampViewX,
+    clampViewY,
+    props.windowHeight,
+    props.windowWidth,
+    props.rowHeight,
+    rowExtent,
+    setLiveCamera,
+  ])
 
   const startInertia = useCallback(
     (vxYearsPerSec: number, vyPxPerSec: number) => {

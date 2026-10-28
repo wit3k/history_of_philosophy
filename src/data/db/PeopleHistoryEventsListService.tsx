@@ -1,5 +1,6 @@
 import PersonHistoryEvent from '../dto/PersonHistoryEvent'
 import { PeopleHistoryEventsListRaw } from '../imported/PeopleHistoryEventsListRaw'
+import { unhackNocoYear } from '../../utils/years'
 
 const PeopleHistoryEventsList = PeopleHistoryEventsListRaw.filter(event => event.yearFrom != null)
   .map(
@@ -10,8 +11,8 @@ const PeopleHistoryEventsList = PeopleHistoryEventsListRaw.filter(event => event
         event.type,
         event.personId + '',
         event.locationId,
-        event.yearFrom,
-        event.yearTo,
+        event.yearFrom != null ? unhackNocoYear(event.yearFrom) : null,
+        event.yearTo != null ? unhackNocoYear(event.yearTo) : null,
       ),
   )
   .sort((a, b) => (a.yearFrom ?? 0) - (b.yearFrom ?? 0))

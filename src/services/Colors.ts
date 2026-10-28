@@ -50,8 +50,9 @@ const ColorsService = {
       ColorsService.blendColors(ColorsService.hexToRgb('#ffffff'), ColorsService.hexToRgb(hex), 0.3),
     ),
   getAccentColor: (name: string | null): string => {
+    // Must be hex — convertToPale/Dark/Gray use hexToRgb (Pixi also rejects rgba here).
     if (name == null) {
-      return 'rgba(27, 100, 27, 1)'
+      return '#1b641b'
     }
     const fixedColors = new Map<string, string>()
     fixedColors.set('Amerykanin', '#0379dfff')
@@ -78,10 +79,12 @@ const ColorsService = {
     return color ? color : '#c71717ff'
   },
   getFixedColor: (number: number) => {
-    return palette[number % tamedPalette.length]
+    const len = palette.length
+    return palette[((number % len) + len) % len]
   },
   getTamedColor: (number: number) => {
-    return tamedPalette[number % tamedPalette.length]
+    const len = tamedPalette.length
+    return tamedPalette[((number % len) + len) % len]
   },
 
   hexToRgb: (hex: string): RGB => {

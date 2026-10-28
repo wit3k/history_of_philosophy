@@ -20,6 +20,7 @@ import Publication from '../../data/dto/Publication'
 import type PublicationReference from '../../data/dto/PublicationReference'
 import Coordinates from '../../geometry/Coordinates'
 import TimelineDiagram from '../../pixi/TimelineDiagram'
+import { parseViewHash, visibleYearRange, writeViewHash } from '../../utils/viewHash'
 import LocationDetails from '../location/LocationDetails'
 import PersonDetails from '../person/PersonDetails'
 import PersonHistoryEventDetails from '../personHistoryEvents/PersonHistoryEventDetails'
@@ -77,6 +78,47 @@ const Chronology = () => {
     PeopleHistoryEventsListService.getAll(),
   )
   const [collectionsState, setCollectionsState] = React.useState<Collection[]>(CollectionsListService.getAll())
+  const activeCollectionIdRef = React.useRef(
+    CollectionsListService.getAll().find(c => c.isActive)?.id ?? ALL_COLLECTIONS_ID,
+  )
+  const viewportFrameId = React.useRef(0)
+  const [viewportFrame, setViewportFrame] = React.useState<{
+    id: number
+    x: number
+    y: number
+    zoom: number
+  } | null>(null)
+  const [zoom, setZoom] = React.useState(10)
+  const [viewPosition, setPosition] = React.useState({ x: 1588, y: 0 })
+  const [yearSelection, setYearSelection] = React.useState({
+    from: -3000,
+    stepSize: 100,
+    to: 3000,
+  })
+
+  const [displayPublicationModal, setDisplayPublicationModal] = React.useState<boolean>(false)
+  const [displayLocationModal, setDisplayLocationModal] = React.useState<boolean>(false)
+  const [displayPersonModal, setDisplayPersonModal] = React.useState<boolean>(false)
+  const [displayPersonHistoryEventModal, setDisplayPersonHistoryEventModal] = React.useState<boolean>(false)
+  const [currentLocation, setCurrentLocation] = React.useState(new Location('', '', new Coordinates(0, 0), ''))
+
+  const [displayAuthors, setDisplayAuthors] = React.useState(true)
+  const [displayAuthorsTimeline, setDisplayAuthorsTimeline] = React.useState(true)
+  const [displayAuthorRelations, setDisplayAuthorRelations] = React.useState(true)
+  const [displayPublications, setDisplayPublications] = React.useState(true)
+  const [displayPublicationRelations, setDisplayPublicationRelations] = React.useState(true)
+  const [displayHistoryEvents, setDisplayHistoryEvents] = React.useState(true)
+  const [displayPersonHistoryEvents, setDisplayPersonHistoryEvents] = React.useState(true)
+  const [darkMode, setDarkMode] = React.useState(window?.matchMedia('(prefers-color-scheme: dark)').matches)
+
+  const [highlightedAuthor, updateHighlightedAuthor] = React.useState('0')
+  const [currentPublication, setCurrentPublication] = React.useState<Publication>(new Publication('', '', 0, 0, '', ''))
+  const [currentAuthor, setCurrentAuthor] = React.useState(new Person('', '', 0, 0, true, '', '', '', 1, '', ''))
+  const [currentPersonHistoryEvent, setCurrentPersonHistoryEvent] = React.useState<PersonHistoryEvent>(
+    new PersonHistoryEvent('', '', '', '', null, null, null),
+  )
+  const [highlightedPublication, updateHighlightedPublication] = React.useState('0')
+
   interface HasId {
     id: string
   }
@@ -112,70 +154,101 @@ const Chronology = () => {
     return filteredPeople
   }
 
-  const frameViewportToPeople = (people: Person[]) => {
-    const width = dimenstions.x
-    if (people.length === 0 || width <= 0) return
-    const born = Math.min(...people.map(person => person.born))
-    const died = Math.max(...people.map(person => person.died))
-    const span = Math.max(died - born, 1)
+  const currentWindowWidth = () => dimenstions.x || (hasWindow ? window.innerWidth : 0)
+
+  const frameViewportToRange = React.useCallback((from: number, to: number) => {
+    const width = hasWindow ? window.innerWidth : 0
+    if (width <= 0) return
+    const span = Math.max(to - from, 1)
+    viewportFrameId.current += 1
     setViewportFrame({
-      id: viewportFrameId.current + 1,
-      x: born,
+      id: viewportFrameId.current,
+      x: from,
       y: 0,
       zoom: width / span,
     })
-    viewportFrameId.current += 1
-  }
+  }, [])
+
+  const frameViewportToPeople = React.useCallback(
+    (people: Person[]) => {
+      if (people.length === 0) return
+      const born = Math.min(...people.map(person => person.born))
+      const died = Math.max(...people.map(person => person.died))
+      frameViewportToRange(born, died)
+    },
+    [frameViewportToRange],
+  )
 
   const selectCollection = (collectionId: string) => {
     const newCollectionsState = collectionsState.map((c: Collection) => ({
       ...c,
       isActive: c.id === collectionId,
     }))
+    activeCollectionIdRef.current = collectionId
     setCollectionsState(newCollectionsState)
     const visiblePeople = applyCollectionFilter(collectionId, newCollectionsState)
-    frameViewportToPeople(visiblePeople)
+    if (visiblePeople.length > 0) {
+      const start = Math.min(...visiblePeople.map(person => person.born))
+      const end = Math.max(...visiblePeople.map(person => person.died))
+      frameViewportToRange(start, end)
+      writeViewHash({ collection: collectionId, start, end })
+      return
+    }
+    const width = currentWindowWidth()
+    if (width > 0) {
+      const { start, end } = visibleYearRange(viewPosition.x, zoom, width)
+      writeViewHash({ collection: collectionId, start, end })
+    }
   }
 
-  const [displayPublicationModal, setDisplayPublicationModal] = React.useState<boolean>(false)
-  const [displayLocationModal, setDisplayLocationModal] = React.useState<boolean>(false)
-  const [displayPersonModal, setDisplayPersonModal] = React.useState<boolean>(false)
-  const [displayPersonHistoryEventModal, setDisplayPersonHistoryEventModal] = React.useState<boolean>(false)
-  const [currentLocation, setCurrentLocation] = React.useState(new Location('', '', new Coordinates(0, 0), ''))
+  const applyViewFromHash = React.useCallback(
+    (hash: string) => {
+      const parsed = parseViewHash(hash)
+      const rangeStart = parsed.start
+      const rangeEnd = parsed.end
+      const hasRange = rangeStart != null && rangeEnd != null && rangeEnd > rangeStart
 
-  const [displayAuthors, setDisplayAuthors] = React.useState(true)
-  const [displayAuthorsTimeline, setDisplayAuthorsTimeline] = React.useState(true)
-  const [displayAuthorRelations, setDisplayAuthorRelations] = React.useState(true)
-  const [displayPublications, setDisplayPublications] = React.useState(true)
-  const [displayPublicationRelations, setDisplayPublicationRelations] = React.useState(true)
-  const [displayHistoryEvents, setDisplayHistoryEvents] = React.useState(true)
-  const [displayPersonHistoryEvents, setDisplayPersonHistoryEvents] = React.useState(true)
-  const [darkMode, setDarkMode] = React.useState(window?.matchMedia('(prefers-color-scheme: dark)').matches)
+      if (parsed.collection) {
+        const known = CollectionsListService.getAll().some(c => c.id === parsed.collection)
+        if (!known) return
+        const newCollectionsState = CollectionsListService.getAll().map(c => ({
+          ...c,
+          isActive: c.id === parsed.collection,
+        }))
+        activeCollectionIdRef.current = parsed.collection
+        setCollectionsState(newCollectionsState)
+        const visiblePeople = applyCollectionFilter(parsed.collection, newCollectionsState)
+        if (hasRange) {
+          frameViewportToRange(rangeStart, rangeEnd)
+        } else {
+          frameViewportToPeople(visiblePeople)
+        }
+        return
+      }
 
-  const [zoom, setZoom] = React.useState(10)
-  const [highlightedAuthor, updateHighlightedAuthor] = React.useState('0')
-  const [currentPublication, setCurrentPublication] = React.useState<Publication>(new Publication('', '', 0, 0, '', ''))
-  const [currentAuthor, setCurrentAuthor] = React.useState(new Person('', '', 0, 0, true, '', '', '', 1, '', ''))
-  const [currentPersonHistoryEvent, setCurrentPersonHistoryEvent] = React.useState<PersonHistoryEvent>(
-    new PersonHistoryEvent('', '', '', '', null, null, null),
+      if (hasRange) {
+        frameViewportToRange(rangeStart, rangeEnd)
+      }
+    },
+    [frameViewportToPeople, frameViewportToRange],
   )
-  const [highlightedPublication, updateHighlightedPublication] = React.useState('0')
-  const [viewPosition, setPosition] = React.useState({
-    x: 1588,
-    y: 0,
-  })
-  const viewportFrameId = React.useRef(0)
-  const [viewportFrame, setViewportFrame] = React.useState<{
-    id: number
-    x: number
-    y: number
-    zoom: number
-  } | null>(null)
-  const [yearSelection, setYearSelection] = React.useState({
-    from: -1200,
-    stepSize: 100,
-    to: 2101,
-  })
+
+  const onCameraCommit = React.useCallback(
+    (camera: { x: number; y: number; zoom: number }) => {
+      const width = currentWindowWidth()
+      if (width <= 0) return
+      const { start, end } = visibleYearRange(camera.x, camera.zoom, width)
+      writeViewHash({ collection: activeCollectionIdRef.current, start, end })
+    },
+    [dimenstions.x],
+  )
+
+  React.useEffect(() => {
+    applyViewFromHash(window.location.hash)
+    const onHashChange = () => applyViewFromHash(window.location.hash)
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [applyViewFromHash])
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -240,6 +313,7 @@ const Chronology = () => {
           setCurrentPublication(publication)
           setDisplayPublicationModal(true)
         }}
+        onCameraCommit={onCameraCommit}
         peopleHistoryEvents={peopleHistoryEvents}
         peopleList={peopleList}
         peopleReferenceList={peopleReferenceList}

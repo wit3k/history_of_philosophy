@@ -4,6 +4,7 @@ import * as path from 'node:path'
 import sharp from 'sharp'
 import { Attitude } from '../data/dto/PersonReference'
 import Coordinates from '../geometry/Coordinates'
+import { unhackNocoYear } from '../utils/years'
 
 const nocoUrl = (process.env.NOCO_URL ?? '').replace(/\/+$/, '')
 const projectRoot = path.resolve(import.meta.dir, '../..')
@@ -128,6 +129,26 @@ const runImageJobs = async (concurrency: number) => {
   await Promise.all(Array.from({ length: Math.min(concurrency, imageJobs.length) }, () => worker()))
 }
 
+const yearFromNoco = (date: string | undefined, era: string | undefined): number | undefined => {
+  if (!date) return undefined
+  const year = Number(date.slice(0, 4))
+  if (Number.isNaN(year)) return undefined
+  // Missing era → treat as N.E. (same as people/events UI default).
+  const signed = year * (era === 'P.N.E.' ? -1 : 1)
+  return unhackNocoYear(signed)
+}
+
+const sanitizePersonYears = (
+  born: number | undefined,
+  died: number | undefined,
+  name: string,
+): { born: number | undefined; died: number | undefined } => {
+  if (born != null && died != null && born > died) {
+    console.warn(`Invalid lifespan left as-is: ${name} ${born}–${died}`)
+  }
+  return { born, died }
+}
+
 const people = (await getTable('people')).list
   .filter((person: any) => person['Imię i nazwisko'])
   .map((person: any, i: number) => {
@@ -147,18 +168,16 @@ const people = (await getTable('people')).list
         10,
       )
     }
+    const years = sanitizePersonYears(
+      yearFromNoco(person['Urodzony'], person['Urodzony Era']),
+      yearFromNoco(person['Zmarł'], person['Zmarł Era']),
+      person['Imię i nazwisko'],
+    )
     return {
-      born: person['Urodzony']
-        ? (person['Urodzony']?.slice(0, 1) === '3'
-            ? person['Urodzony']?.slice(2, 4)
-            : person['Urodzony']?.slice(0, 4)) * (person['Urodzony Era'] === 'N.E.' ? 1 : -1)
-        : undefined,
+      born: years.born,
       bornLocation: person['Urodzony w'] ? person['Urodzony w'].Id : null,
       category: person['Kategoria'],
-      died: person['Zmarł']
-        ? (person['Zmarł']?.slice(0, 1) === '3' ? person['Zmarł']?.slice(2, 4) : person['Zmarł']?.slice(0, 4)) *
-          (person['Zmarł Era'] === 'N.E.' ? 1 : -1)
-        : undefined,
+      died: years.died,
       diedLocation: person['Zmarł w'] ? person['Zmarł w'].Id : null,
       id: person.Id + '',
       name: person['Imię i nazwisko'],
@@ -225,18 +244,23 @@ const publications = (
         return await getLinkedRecords('publications', 'c5yt6jo8jpe04bk', book.Id).then(authors => ({ authors, book }))
       }),
   )
-).flatMap(({ book, authors }) =>
-  authors.list.map((author: any) => ({
+).flatMap(({ book, authors }) => {
+  const publicationDate = yearFromNoco(book['Rok wydania'], book['Rok wydania Era'])
+  if (publicationDate == null) {
+    console.warn(`Skipping publication without year: ${book['Tytuł']}`)
+    return []
+  }
+  return authors.list.map((author: any) => ({
     authorId: author.Id + '',
     description: book['Opis'],
     id: book.Id + '',
     isbn: book['ISBN'],
-    publicationDate: book['Rok wydania'].slice(0, 4) * 1,
+    publicationDate,
     publicationLocation: book['Miejsce wydania'] !== null ? book['Miejsce wydania'].Id : -1,
     thumbnail: book['Okładka'] != null && book['Okładka'][0] != null ? book['Okładka'][0].id + '.png' : '',
     title: book['Tytuł'],
-  })),
-)
+  }))
+})
 
 fs.writeFileSync(
   './src/data/imported/PublicationsListRaw.tsx',
@@ -284,34 +308,41 @@ fs.writeFileSync(
   'utf8',
 )
 
-const collections = (await getTable('collections')).list
-  .filter((collection: any) => collection['Pokaż w menu'] && collection['_nc_m2m_Kolekcje_Osobies'].length > 0)
-  .map((collection: any, i: number) => {
-    return {
+// Nested `_nc_m2m_*` arrays from list/get are capped at 25 by NocoDB — use Links API instead.
+const collectionLinkFields = {
+  includedEvents: 'c2zpvv7ofdgevrk',
+  includedLocations: 'cy6isfx4ugvrqxf',
+  includedPeople: 'co4aoa57ymhyeel',
+  includedPeopleRelations: 'cxbbw7rhf356dct',
+  includedPublications: 'cd8whqtauso5nrn',
+  includedReferences: 'coesuqspapto2gy',
+} as const
+
+const linkedIds = async (linkFieldId: string, recordId: number | string): Promise<number[]> => {
+  const res = await getLinkedRecords('collections', linkFieldId, String(recordId))
+  return (res?.list ?? []).map((row: { Id: number }) => row.Id)
+}
+
+const collections = await Promise.all(
+  (await getTable('collections')).list
+    .filter((collection: any) => collection['Pokaż w menu'] && collection['Osoby'] > 0)
+    .map(async (collection: any) => ({
       id: collection['Id'],
-      includedEvents: collection['_nc_m2m_Kolekcje_Wydarzenia'].map((o: any) => o['Wydarzenia_id']),
-      includedLocations: collection['_nc_m2m_Kolekcje_Lokacjes'].map((o: any) => o['Lokacje_id']),
-      includedPeople: collection['_nc_m2m_Kolekcje_Osobies'].map((o: any) => o['Osoby_id']),
-      includedPeopleRelations: collection['_nc_m2m_Kolekcje_Relacje międzyls'].map(
-        (o: any) => o['Relacje międzyludzkie_id'],
-      ),
-      includedPublications: collection['_nc_m2m_Kolekcje_Publikacjes'].map((o: any) => o['Publikacje_id']),
-      includedReferences: collection['_nc_m2m_Kolekcje_Odniesienia'].map((o: any) => o['Odniesienia_id']),
+      includedEvents: await linkedIds(collectionLinkFields.includedEvents, collection.Id),
+      includedLocations: await linkedIds(collectionLinkFields.includedLocations, collection.Id),
+      includedPeople: await linkedIds(collectionLinkFields.includedPeople, collection.Id),
+      includedPeopleRelations: await linkedIds(collectionLinkFields.includedPeopleRelations, collection.Id),
+      includedPublications: await linkedIds(collectionLinkFields.includedPublications, collection.Id),
+      includedReferences: await linkedIds(collectionLinkFields.includedReferences, collection.Id),
       name: collection['Title'],
-    }
-  })
+    })),
+)
 
 fs.writeFileSync(
   './src/data/imported/CollectionsListRaw.tsx',
   'export const CollectionsListRaw = ' + JSON.stringify(collections),
   'utf8',
 )
-
-const yearFromNoco = (date: string | undefined, era: string | undefined): number | undefined => {
-  if (!date) return undefined
-  const yearText = date.slice(0, 1) === '3' ? date.slice(2, 4) : date.slice(0, 4)
-  return Number(yearText) * (era === 'N.E.' ? 1 : -1)
-}
 
 const allHistoryEvents = (await getTable('historyEvents')).list
 

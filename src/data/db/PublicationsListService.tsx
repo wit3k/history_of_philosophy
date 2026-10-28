@@ -1,12 +1,13 @@
 import Publication from '../dto/Publication'
 import { PublicationsListRaw } from '../imported/PublicationsListRaw'
+import { unhackNocoYear } from '../../utils/years'
 
 const PublicationsListDB = PublicationsListRaw.map(
   pub =>
     new Publication(
       pub.id,
       pub.title,
-      pub.publicationDate,
+      unhackNocoYear(pub.publicationDate),
       pub.publicationLocation,
       pub.authorId,
       pub.isbn!,

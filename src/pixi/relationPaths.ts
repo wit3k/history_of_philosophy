@@ -61,8 +61,10 @@ export function buildPublicationReferencePath(
   const isEqual = start.y === end.y ? -1 : 1
   const hdir = start.x > end.x ? -1 : 1
   const cos05 = 0.877
-  const distanceFromFactor = 0.7 + (0.7 * ((publicationTo.publicationDate + publicationFrom.publicationDate) % 15)) / 15
-  const distanceToFactor = 1.4 + (0.7 * ((publicationTo.publicationDate + publicationFrom.publicationDate) % 5)) / 5
+  const dateSum = publicationTo.publicationDate + publicationFrom.publicationDate
+  const posMod = (n: number, m: number) => ((n % m) + m) % m
+  const distanceFromFactor = 0.7 + (0.7 * posMod(dateSum, 15)) / 15
+  const distanceToFactor = 1.4 + (0.7 * posMod(dateSum, 5)) / 5
   const points: Coordinates[] = []
   if (positionEnd === positionStart) {
     points.push(new Coordinates(start.x, start.y))
