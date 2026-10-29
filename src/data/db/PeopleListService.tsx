@@ -1,6 +1,6 @@
 import Person from '../dto/Person'
 import { PeopleListRaw } from '../imported/PeopleListRaw'
-import { unhackNocoYear } from '../../utils/years'
+import { parseDateAccuracy, unhackNocoYear } from '../../utils/years'
 
 function groupBy<S, K>(list: S[], keyGetter: (e: S) => K) {
   const map = new Map()
@@ -68,6 +68,8 @@ const PeopleList = PeopleListRaw.filter(p => p.born !== undefined)
       0,
       p.thumbnail,
       p.category,
+      parseDateAccuracy(p.bornAccuracy),
+      parseDateAccuracy(p.diedAccuracy),
     )
   })
   .filter((p): p is Person => p != null)

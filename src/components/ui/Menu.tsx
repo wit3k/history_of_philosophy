@@ -25,6 +25,9 @@ class MenuProps {
     public setDarkMode: Dispatch<SetStateAction<boolean>>,
     public collectionsState: Collection[],
     public selectCollection: (collectionId: string) => void,
+    public searchOpen: boolean,
+    public onOpenSearch: () => void,
+    public onCloseSearch: () => void,
   ) {}
 }
 
@@ -106,21 +109,34 @@ const DarkModeIcon = () => (
 
 const FiltersIcon = () => (
   <Icon>
+    <path d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
+  </Icon>
+)
+
+const SearchIcon = () => (
+  <Icon>
     <path d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
   </Icon>
 )
 
-const BarDivider = () => <span aria-hidden="true" className="mx-0.5 h-4 w-px shrink-0 bg-white/25" />
+const BarDivider = ({ darkMode }: { darkMode: boolean }) => (
+  <span
+    aria-hidden="true"
+    className={'mx-0.5 h-4 w-px shrink-0 ' + (darkMode ? 'bg-white/25' : 'bg-black/15')}
+  />
+)
 
 const ToggleButton = ({
   active,
   children,
+  darkMode,
   disabled,
   label,
   onChange,
 }: {
   active: boolean
   children: ReactNode
+  darkMode: boolean
   disabled?: boolean
   label: string
   onChange: (checked: boolean) => void
@@ -133,10 +149,14 @@ const ToggleButton = ({
       className={
         'flex size-7 items-center justify-center rounded-md transition ' +
         (disabled
-          ? 'cursor-not-allowed text-gray-500'
+          ? darkMode
+            ? 'cursor-not-allowed text-gray-500'
+            : 'cursor-not-allowed text-gray-400'
           : active
             ? 'text-white'
-            : 'text-gray-300 hover:bg-white/10 hover:text-white')
+            : darkMode
+              ? 'text-gray-300 hover:bg-white/10 hover:text-white'
+              : 'text-gray-600 hover:bg-black/5 hover:text-gray-900')
       }
       onClick={event => {
         if (!disabled) onChange(!active)
@@ -148,7 +168,14 @@ const ToggleButton = ({
     >
       {children}
     </button>
-    <span className="pointer-events-none absolute top-full left-1/2 z-50 mt-1.5 -translate-x-1/2 rounded-md bg-gray-950 px-2 py-1 text-xs font-medium whitespace-nowrap text-gray-100 opacity-0 shadow-lg ring-1 ring-white/10 group-hover:opacity-100 group-has-[:focus-visible]:opacity-100 group-first:left-0 group-first:translate-x-0 group-last:left-auto group-last:translate-x-0 group-last:right-0">
+    <span
+      className={
+        'pointer-events-none absolute top-full left-1/2 z-50 mt-1.5 -translate-x-1/2 rounded-md px-2 py-1 text-xs font-medium whitespace-nowrap opacity-0 shadow-lg group-hover:opacity-100 group-has-[:focus-visible]:opacity-100 group-first:left-0 group-first:translate-x-0 group-last:left-auto group-last:right-0 group-last:translate-x-0 ' +
+        (darkMode
+          ? 'bg-gray-950 text-gray-100 ring-1 ring-white/10'
+          : 'bg-white text-gray-800 ring-1 ring-black/10')
+      }
+    >
       {label}
     </span>
   </span>
@@ -218,6 +245,15 @@ const Menu = (props: MenuProps) => {
     ],
     [
       {
+        active: props.searchOpen,
+        icon: <SearchIcon />,
+        label: 'Szukaj (Ctrl+F)',
+        onChange: checked => {
+          if (checked) props.onOpenSearch()
+          else props.onCloseSearch()
+        },
+      },
+      {
         active: props.darkMode,
         icon: <DarkModeIcon />,
         label: 'Tryb ciemny',
@@ -236,7 +272,10 @@ const Menu = (props: MenuProps) => {
       >
         <div
           aria-label="Widok"
-          className="flex flex-wrap items-center gap-0.5 rounded-lg border border-white/10 bg-gray-900/75 p-1 shadow-lg backdrop-blur-md"
+          className={
+            'flex flex-wrap items-center gap-0.5 rounded-lg border p-1 shadow-lg backdrop-blur-md ' +
+            (props.darkMode ? 'border-white/10 bg-gray-900/75' : 'border-black/10 bg-white/80')
+          }
           role="toolbar"
           style={{ maxWidth: toolbarShifted ? 'calc(100vw - 320px)' : 'calc(100vw - 1rem)' }}
         >
@@ -255,19 +294,27 @@ const Menu = (props: MenuProps) => {
                 >
                   <FiltersIcon />
                 </button>
-                <span className="pointer-events-none absolute top-full left-0 z-50 mt-1.5 rounded-md bg-gray-950 px-2 py-1 text-xs font-medium whitespace-nowrap text-gray-100 opacity-0 shadow-lg ring-1 ring-white/10 group-hover:opacity-100 group-has-[:focus-visible]:opacity-100">
+                <span
+                  className={
+                    'pointer-events-none absolute top-full left-0 z-50 mt-1.5 rounded-md px-2 py-1 text-xs font-medium whitespace-nowrap opacity-0 shadow-lg group-hover:opacity-100 group-has-[:focus-visible]:opacity-100 ' +
+                    (props.darkMode
+                      ? 'bg-gray-950 text-gray-100 ring-1 ring-white/10'
+                      : 'bg-white text-gray-800 ring-1 ring-black/10')
+                  }
+                >
                   Filtry
                 </span>
               </span>
-              <BarDivider />
+              <BarDivider darkMode={props.darkMode} />
             </>
           )}
           {groups.map((group, groupIndex) => (
             <React.Fragment key={group[0].label}>
-              {groupIndex > 0 && <BarDivider />}
+              {groupIndex > 0 && <BarDivider darkMode={props.darkMode} />}
               {group.map(item => (
                 <ToggleButton
                   active={item.active}
+                  darkMode={props.darkMode}
                   disabled={item.disabled}
                   key={item.label}
                   label={item.label}
@@ -282,9 +329,13 @@ const Menu = (props: MenuProps) => {
       </div>
 
       <div
-        className={`sidebar fixed top-0 bottom-0 left-0 z-30 h-screen w-full bg-black/75 p-2 shadow backdrop-blur-xs md:w-[300px] ${filtersVisible ? '' : 'hidden'}`}
+        className={
+          'sidebar fixed top-0 bottom-0 left-0 z-30 h-screen w-full p-2 shadow backdrop-blur-xs md:w-[300px] ' +
+          (props.darkMode ? 'bg-black/75 ' : 'bg-white/85 ') +
+          (filtersVisible ? '' : 'hidden')
+        }
       >
-        <div className="h-full text-xl text-gray-100">
+        <div className={'h-full text-xl ' + (props.darkMode ? 'text-gray-100' : 'text-gray-800')}>
           <div className="mt-1 flex items-center rounded-md p-2.5">
             <button
               aria-label="Ukryj filtry"
@@ -298,7 +349,7 @@ const Menu = (props: MenuProps) => {
             <h1 className="ml-3 text-xl font-bold text-[#fe27be]">Filtry</h1>
           </div>
 
-          <hr className="my-2 text-gray-600"></hr>
+          <hr className={'my-2 ' + (props.darkMode ? 'text-gray-600' : 'text-gray-300')}></hr>
 
           <div className="scrollable-area">
             <h1 className="ml-3 text-xl font-bold text-[#fe27be]">Widoczna kolekcja</h1>

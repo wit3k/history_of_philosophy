@@ -4,6 +4,7 @@ import type Person from '../../data/dto/Person'
 import type Publication from '../../data/dto/Publication'
 import { formatYear } from '../../utils/years'
 import Modal from '../ui/Modal'
+import { modalTone } from '../ui/modalTheme'
 
 class PublicationDetailsProps {
   constructor(
@@ -14,17 +15,19 @@ class PublicationDetailsProps {
     public setDisplayModal: React.Dispatch<React.SetStateAction<boolean>>,
     public locationCallback: (id: string) => void,
     public authorCallback: (id: string) => void,
+    public darkMode: boolean = true,
   ) {}
 }
 
 const PublicationDetails = (props: PublicationDetailsProps) => {
   const appBasePath = '/history_of_philosophy/'
   const locations = props.locationsList.find(l => l.id === props.currentPublication.publicationLocation + '')
+  const tone = modalTone(props.darkMode)
 
   return (
-    <Modal displayModal={props.displayModal} setDisplayModal={props.setDisplayModal}>
+    <Modal darkMode={props.darkMode} displayModal={props.displayModal} setDisplayModal={props.setDisplayModal}>
       <div>
-        <div className="text-3xl text-white italic p-5">&bdquo;{props.currentPublication.title}&rdquo;</div>
+        <div className={`text-3xl italic p-5 ${tone.title}`}>&bdquo;{props.currentPublication.title}&rdquo;</div>
         <div className="p-5">
           <span
             className="text-pink-700 underline cursor-pointer"

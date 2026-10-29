@@ -4,6 +4,7 @@ import type Location from '../../data/dto/Location'
 import type Person from '../../data/dto/Person'
 import { formatYear } from '../../utils/years'
 import Modal from '../ui/Modal'
+import { modalTone } from '../ui/modalTheme'
 
 class LocationDetailsProps {
   constructor(
@@ -13,11 +14,13 @@ class LocationDetailsProps {
     public setDisplayModal: React.Dispatch<React.SetStateAction<boolean>>,
     public publicationCallback: (id: string) => void,
     public authorCallback: (id: string) => void,
+    public darkMode: boolean = true,
   ) {}
 }
 
 const LocationDetails = (props: LocationDetailsProps) => {
   const appBasePath = '/history_of_philosophy/'
+  const tone = modalTone(props.darkMode)
 
   const allPublications = PublicationsListService.getAllByLocationId(props.currentLocation.id).map(p => ({
     date: p.publicationDate,
@@ -47,9 +50,9 @@ const LocationDetails = (props: LocationDetailsProps) => {
   const historyComplete = [...allPublications, ...allBirths, ...allDeaths].sort((p1, p2) => p1.date - p2.date)
 
   return (
-    <Modal displayModal={props.displayModal} setDisplayModal={props.setDisplayModal}>
+    <Modal darkMode={props.darkMode} displayModal={props.displayModal} setDisplayModal={props.setDisplayModal}>
       <div>
-        <div className="text-3xl text-white p-5 ">
+        <div className={`text-3xl p-5 ${tone.title}`}>
           <a
             className="relative z-10 grid h-8 w-8 place-items-center rounded-md text-slate-900 hover:text-white float-left"
             href={
@@ -119,8 +122,8 @@ const LocationDetails = (props: LocationDetailsProps) => {
               )
               const author = props.peopleList.find(p => p.id == historyItem.publication.authorId)
               content = (
-                <small className="mt-2 font-sans text-sm text-slate-300 antialiased">
-                  <span className="text-slate-100 -ml-3">{formatYear(historyItem.date)}</span> -{' '}
+                <small className={`mt-2 font-sans text-sm antialiased ${tone.body}`}>
+                  <span className={`${tone.strong} -ml-3`}>{formatYear(historyItem.date)}</span> -{' '}
                   <span
                     className="italic hover:text-pink-700 underline cursor-pointer"
                     onClick={() => props.publicationCallback(historyItem.publication.id)}
@@ -129,7 +132,7 @@ const LocationDetails = (props: LocationDetailsProps) => {
                     &bdquo;{historyItem.publication.title}&rdquo;
                   </span>{' '}
                   <span
-                    className="text-slate-100 font-black hover:text-pink-700 hover:underline cursor-pointer"
+                    className={`${tone.strong} font-black hover:text-pink-700 hover:underline cursor-pointer`}
                     onClick={() => props.authorCallback(author!.id)}
                     onKeyDown={() => props.authorCallback(author!.id)}
                   >
@@ -161,8 +164,8 @@ const LocationDetails = (props: LocationDetailsProps) => {
                 </span>
               )
               content = (
-                <small className="mt-2 font-sans text-sm text-slate-300 antialiased">
-                  <span className="text-slate-100 -ml-3">{formatYear(historyItem.date)}</span> - Urodził się:{' '}
+                <small className={`mt-2 font-sans text-sm antialiased ${tone.body}`}>
+                  <span className={`${tone.strong} -ml-3`}>{formatYear(historyItem.date)}</span> - Urodził się:{' '}
                   <span
                     className="font-black hover:text-pink-700 hover:underline cursor-pointer"
                     onClick={() => props.authorCallback(historyItem.personBorn.id)}
@@ -195,8 +198,8 @@ const LocationDetails = (props: LocationDetailsProps) => {
                 </span>
               )
               content = (
-                <small className="mt-2 font-sans text-sm text-slate-300 antialiased">
-                  <span className="text-slate-100 -ml-3">{formatYear(historyItem.date)}</span> - Zmarł:{' '}
+                <small className={`mt-2 font-sans text-sm antialiased ${tone.body}`}>
+                  <span className={`${tone.strong} -ml-3`}>{formatYear(historyItem.date)}</span> - Zmarł:{' '}
                   <span
                     className="font-black hover:text-pink-700 hover:underline cursor-pointer"
                     onClick={() => props.authorCallback(historyItem.personDied.id)}

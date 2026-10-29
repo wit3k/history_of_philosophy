@@ -9,7 +9,7 @@ import type PersonReference from '../data/dto/PersonReference'
 import type Publication from '../data/dto/Publication'
 import type PublicationReference from '../data/dto/PublicationReference'
 import ColorsService from '../services/Colors'
-import { formatYearRange, mod } from '../utils/years'
+import { formatYearRange, isApproximateAccuracy, mod } from '../utils/years'
 import { dashOffsetFromTime, strokeDashedPolyline, strokeDashedVerticalLine } from './dashedStroke'
 import { flattenPathDataCached, strokePathData } from './pathBridge'
 import { attitudeColor, buildPersonReferencePath, buildPublicationReferencePath, wrapTitleWords } from './relationPaths'
@@ -60,6 +60,8 @@ export type SharedTimelineProps = CameraFns &
     displayAuthorsTimeline: boolean
     canvasOffset: { left: number; top: number }
     layoutToScreen: (lx: number, ly: number) => { x: number; y: number }
+    /** Case-insensitive substring; empty = no search highlight. */
+    searchQuery: string
   }
 
 export function YearLinesLayer({
@@ -259,7 +261,17 @@ function PersonThumb({ url, x, y, size }: { url: string; x: number; y: number; s
 }
 
 export function PeopleLayer({ people, shared }: { people: Person[]; shared: SharedTimelineProps }) {
-  const { positionByYear, rowPosition, personBox, displayAuthorsTimeline, highlightedAuthor, isVisibleRange } = shared
+  const {
+    positionByYear,
+    rowPosition,
+    personBox,
+    displayAuthorsTimeline,
+    highlightedAuthor,
+    isVisibleRange,
+    searchQuery,
+  } = shared
+  const needle = searchQuery.trim().toLowerCase()
+  const searchActive = needle.length > 0
   return (
     <pixiContainer>
       {people
@@ -271,16 +283,21 @@ export function PeopleLayer({ people, shared }: { people: Person[]; shared: Shar
           const accent = ColorsService.getAccentColor(person.nationality)
           const pale = ColorsService.convertToPale(accent)
           const dark = ColorsService.convertToDark(accent)
-          const highlighted = highlightedAuthor === person.id
+          const searchMatch = searchActive && person.name.toLowerCase().includes(needle)
+          const highlighted = highlightedAuthor === person.id || searchMatch
+          const dimmed = searchActive && !searchMatch
+          const approximate =
+            isApproximateAccuracy(person.bornAccuracy) || isApproximateAccuracy(person.diedAccuracy)
           const maxTextW = x1 - x0 - personBox - 12
-          let label = person.name
-          if (person.name.length * 8 >= maxTextW) {
-            label = `${person.name.slice(0, Math.max(maxTextW / 8 - 4, 0))}...`
+          let label = approximate ? `~${person.name}` : person.name
+          if (label.length * 8 >= maxTextW) {
+            label = `${label.slice(0, Math.max(maxTextW / 8 - 4, 0))}...`
           }
           const thumbUrl = person.thumbnail ? `${APP_BASE}/assets/person/${person.thumbnail}` : null
           return (
             <pixiContainer
               key={`p-${person.id}`}
+              alpha={dimmed ? 0.22 : 1}
               cursor="pointer"
               eventMode="static"
               onPointerMove={() => shared.updateHighlightedAuthor(person.id)}
@@ -294,14 +311,20 @@ export function PeopleLayer({ people, shared }: { people: Person[]; shared: Shar
                   draw={g => {
                     g.clear()
                     g.rect(x0, y, x1 - x0, personBox)
-                    g.fill({ color: pale })
-                    g.stroke({ cap: 'butt', color: accent, join: 'miter', width: highlighted ? 3 : 1 })
+                    g.fill({ color: pale, alpha: approximate ? 0.55 : 1 })
+                    g.stroke({
+                      cap: 'butt',
+                      color: accent,
+                      join: 'miter',
+                      width: highlighted ? 3 : 1,
+                      alpha: approximate ? 0.75 : 1,
+                    })
                   }}
                 />
               )}
               {thumbUrl && <PersonThumb size={personBox} url={thumbUrl} x={x0} y={y} />}
               <pixiText
-                alpha={highlighted ? 1 : 0.8}
+                alpha={highlighted ? 1 : approximate ? 0.65 : 0.8}
                 style={{ fill: dark, fontFamily: MONO, fontSize: 14 }}
                 text={label}
                 x={x0 + personBox + 8}
@@ -449,7 +472,10 @@ export function PublicationsLayer({
     publicationMaxRows,
     canvasOffset,
     layoutToScreen,
+    searchQuery,
   } = shared
+  const needle = searchQuery.trim().toLowerCase()
+  const searchActive = needle.length > 0
   return (
     <pixiContainer>
       {publications
@@ -460,17 +486,25 @@ export function PublicationsLayer({
           const x = positionByYear(publication.publicationDate)
           const y = rowPosition(author.rowNumber)
           const color = ColorsService.getFixedColor(publication.publicationDate)
+          const searchMatch = searchActive && publication.title.toLowerCase().includes(needle)
+          const dimmed = searchActive && !searchMatch
           const { slices, truncated } = wrapTitleWords(publication.title, publicationMaxCols, publicationMaxRows)
           const lines = slices.map((s, i) => (i === slices.length - 1 && truncated ? `${s}...` : s))
           return (
             <pixiGraphics
               key={`pub-${publication.id}-${publication.authorId}`}
+              alpha={dimmed ? 0.22 : 1}
               cursor="pointer"
               draw={g => {
                 g.clear()
                 g.moveTo(x, y)
                 g.lineTo(x, y + publicationBox)
-                g.stroke({ cap: 'butt', color, join: 'miter', width: 10 })
+                g.stroke({
+                  cap: 'butt',
+                  color: searchMatch ? '#fe27be' : color,
+                  join: 'miter',
+                  width: searchMatch ? 14 : 10,
+                })
               }}
               eventMode="static"
               onPointerMove={() => {

@@ -20,12 +20,19 @@ import Publication from '../../data/dto/Publication'
 import type PublicationReference from '../../data/dto/PublicationReference'
 import Coordinates from '../../geometry/Coordinates'
 import TimelineDiagram from '../../pixi/TimelineDiagram'
-import { parseViewHash, visibleYearRange, writeViewHash } from '../../utils/viewHash'
+import {
+  cameraYFromTopRow,
+  parseViewHash,
+  topRowFromCameraY,
+  visibleYearRange,
+  writeViewHash,
+} from '../../utils/viewHash'
 import LocationDetails from '../location/LocationDetails'
 import PersonDetails from '../person/PersonDetails'
 import PersonHistoryEventDetails from '../personHistoryEvents/PersonHistoryEventDetails'
 import PublicationDetails from '../publication/PublicationDetails'
 import Menu from '../ui/Menu'
+import SearchBar from '../ui/SearchBar'
 
 class ChronologyProperies {
   constructor(
@@ -118,6 +125,16 @@ const Chronology = () => {
     new PersonHistoryEvent('', '', '', '', null, null, null),
   )
   const [highlightedPublication, updateHighlightedPublication] = React.useState('0')
+  const [searchOpen, setSearchOpen] = React.useState(false)
+  const [searchQuery, setSearchQuery] = React.useState('')
+
+  const openSearch = React.useCallback(() => {
+    setSearchOpen(true)
+  }, [])
+  const closeSearch = React.useCallback(() => {
+    setSearchOpen(false)
+    setSearchQuery('')
+  }, [])
 
   interface HasId {
     id: string
@@ -145,7 +162,17 @@ const Chronology = () => {
     const filteredPeople = PeopleListService.getAll().filter(itemsFilter(c => c.includedPeople))
     setPeopleList(PeopleListService.withRowNumbers(filteredPeople))
     setLocationsList(LocationListService.getAll().filter(itemsFilter(c => c.includedLocations)))
-    setHistoryEvents(HistoryEventsListService.getAll().filter(itemsFilter(c => c.includedEvents)))
+
+    // World history events with no collection stay visible for every selection.
+    const realCollections = collections.filter(c => c.id !== ALL_COLLECTIONS_ID && c.id !== UNASSIGNED_COLLECTION_ID)
+    const eventsInAnyCollection = new Set(realCollections.flatMap(c => c.includedEvents).map(id => `${id}`))
+    const eventInSelected = itemsFilter(c => c.includedEvents)
+    setHistoryEvents(
+      HistoryEventsListService.getAll().filter(
+        (event, i) => eventInSelected(event, i) || !eventsInAnyCollection.has(event.id),
+      ),
+    )
+
     setPublicationsList(PublicationsListService.getAll().filter(itemsFilter(c => c.includedPublications)))
     setPublicationReferenceList(PublicationReferenceListService.getAll().filter(itemsFilter(c => c.includedReferences)))
     setPeopleReferenceList(PersonReferenceListService.getAll().filter(itemsFilter(c => c.includedPeopleRelations)))
@@ -156,7 +183,7 @@ const Chronology = () => {
 
   const currentWindowWidth = () => dimenstions.x || (hasWindow ? window.innerWidth : 0)
 
-  const frameViewportToRange = React.useCallback((from: number, to: number) => {
+  const frameViewportToRange = React.useCallback((from: number, to: number, row = 0) => {
     const width = hasWindow ? window.innerWidth : 0
     if (width <= 0) return
     const span = Math.max(to - from, 1)
@@ -164,17 +191,17 @@ const Chronology = () => {
     setViewportFrame({
       id: viewportFrameId.current,
       x: from,
-      y: 0,
+      y: cameraYFromTopRow(row, prop.rowHeight),
       zoom: width / span,
     })
-  }, [])
+  }, [prop.rowHeight])
 
   const frameViewportToPeople = React.useCallback(
-    (people: Person[]) => {
+    (people: Person[], row = 0) => {
       if (people.length === 0) return
       const born = Math.min(...people.map(person => person.born))
       const died = Math.max(...people.map(person => person.died))
-      frameViewportToRange(born, died)
+      frameViewportToRange(born, died, row)
     },
     [frameViewportToRange],
   )
@@ -190,14 +217,15 @@ const Chronology = () => {
     if (visiblePeople.length > 0) {
       const start = Math.min(...visiblePeople.map(person => person.born))
       const end = Math.max(...visiblePeople.map(person => person.died))
-      frameViewportToRange(start, end)
-      writeViewHash({ collection: collectionId, start, end })
+      frameViewportToRange(start, end, 0)
+      writeViewHash({ collection: collectionId, start, end, row: 0 })
       return
     }
     const width = currentWindowWidth()
     if (width > 0) {
       const { start, end } = visibleYearRange(viewPosition.x, zoom, width)
-      writeViewHash({ collection: collectionId, start, end })
+      const row = topRowFromCameraY(viewPosition.y, prop.rowHeight)
+      writeViewHash({ collection: collectionId, start, end, row })
     }
   }
 
@@ -206,6 +234,7 @@ const Chronology = () => {
       const parsed = parseViewHash(hash)
       const rangeStart = parsed.start
       const rangeEnd = parsed.end
+      const row = parsed.row ?? 0
       const hasRange = rangeStart != null && rangeEnd != null && rangeEnd > rangeStart
 
       if (parsed.collection) {
@@ -219,15 +248,15 @@ const Chronology = () => {
         setCollectionsState(newCollectionsState)
         const visiblePeople = applyCollectionFilter(parsed.collection, newCollectionsState)
         if (hasRange) {
-          frameViewportToRange(rangeStart, rangeEnd)
+          frameViewportToRange(rangeStart, rangeEnd, row)
         } else {
-          frameViewportToPeople(visiblePeople)
+          frameViewportToPeople(visiblePeople, row)
         }
         return
       }
 
       if (hasRange) {
-        frameViewportToRange(rangeStart, rangeEnd)
+        frameViewportToRange(rangeStart, rangeEnd, row)
       }
     },
     [frameViewportToPeople, frameViewportToRange],
@@ -238,9 +267,10 @@ const Chronology = () => {
       const width = currentWindowWidth()
       if (width <= 0) return
       const { start, end } = visibleYearRange(camera.x, camera.zoom, width)
-      writeViewHash({ collection: activeCollectionIdRef.current, start, end })
+      const row = topRowFromCameraY(camera.y, prop.rowHeight)
+      writeViewHash({ collection: activeCollectionIdRef.current, start, end, row })
     },
-    [dimenstions.x],
+    [dimenstions.x, prop.rowHeight],
   )
 
   React.useEffect(() => {
@@ -251,25 +281,38 @@ const Chronology = () => {
   }, [applyViewFromHash])
 
   React.useEffect(() => {
+    document.documentElement.classList.toggle('light-mode', !darkMode)
+  }, [darkMode])
+
+  React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+        e.preventDefault()
+        openSearch()
+        return
+      }
       if (e.key === 'Escape') {
+        if (searchOpen) {
+          closeSearch()
+          return
+        }
         setDisplayPublicationModal(false)
         setDisplayLocationModal(false)
         setDisplayPersonModal(false)
         setDisplayPersonHistoryEventModal(false)
       }
     }
-    document.addEventListener('keydown', handleKeyDown)
+    document.addEventListener('keydown', handleKeyDown, true)
     const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
     const darkModeEventHandler = (event: MediaQueryListEvent) => {
       setDarkMode(event.matches)
     }
     darkModeMediaQuery.addEventListener('change', darkModeEventHandler)
     return () => {
-      document.removeEventListener('keydown', handleKeyDown)
+      document.removeEventListener('keydown', handleKeyDown, true)
       darkModeMediaQuery.removeEventListener('change', darkModeEventHandler)
     }
-  }, [])
+  }, [closeSearch, openSearch, searchOpen])
 
   return (
     <div
@@ -320,9 +363,16 @@ const Chronology = () => {
         publicationReferenceList={publicationReferenceList}
         publicationsList={publicationsList}
         rowHeight={prop.rowHeight}
+        searchQuery={searchQuery}
         setPosition={setPosition}
         setYearSelection={setYearSelection}
         setZoom={setZoom}
+        suspended={
+          displayPublicationModal ||
+          displayLocationModal ||
+          displayPersonModal ||
+          displayPersonHistoryEventModal
+        }
         updateHighlightedAuthor={updateHighlightedAuthor}
         updateHighlightedPublication={updateHighlightedPublication}
         viewPosition={viewPosition}
@@ -345,6 +395,9 @@ const Chronology = () => {
           displayPersonHistoryEvents={displayPersonHistoryEvents}
           displayPublicationRelations={displayPublicationRelations}
           displayPublications={displayPublications}
+          onCloseSearch={closeSearch}
+          onOpenSearch={openSearch}
+          searchOpen={searchOpen}
           selectCollection={selectCollection}
           setDarkMode={setDarkMode}
           setDisplayAuthorRelations={setDisplayAuthorRelations}
@@ -357,6 +410,14 @@ const Chronology = () => {
         />
       </div>
 
+      <SearchBar
+        darkMode={darkMode}
+        onClose={closeSearch}
+        onQueryChange={setSearchQuery}
+        open={searchOpen}
+        query={searchQuery}
+      />
+
       <PublicationDetails
         authorCallback={id => {
           setCurrentAuthor(peopleList.find(p => p.id === id)!)
@@ -367,6 +428,7 @@ const Chronology = () => {
         }}
         currentAuthor={currentAuthor}
         currentPublication={currentPublication}
+        darkMode={darkMode}
         displayModal={displayPublicationModal}
         locationCallback={id => {
           setCurrentLocation(LocationListService.getById(id)!)
@@ -382,6 +444,7 @@ const Chronology = () => {
       <PersonHistoryEventDetails
         currentEvent={currentPersonHistoryEvent}
         currentPerson={currentAuthor}
+        darkMode={darkMode}
         displayModal={displayPersonHistoryEventModal}
         locationCallback={id => {
           setCurrentLocation(LocationListService.getById(id)!)
@@ -391,7 +454,9 @@ const Chronology = () => {
           setDisplayPersonModal(false)
         }}
         personCallback={id => {
-          setCurrentAuthor(peopleList.find(p => p.id === id)!)
+          const person = peopleList.find(p => p.id === id) ?? PeopleListService.getAll().find(p => p.id === id)
+          if (!person) return
+          setCurrentAuthor(person)
           setDisplayPersonModal(true)
           setDisplayLocationModal(false)
           setDisplayPublicationModal(false)
@@ -402,17 +467,23 @@ const Chronology = () => {
 
       <LocationDetails
         authorCallback={id => {
-          setCurrentAuthor(peopleList.find(p => p.id === id)!)
+          const person = peopleList.find(p => p.id === id) ?? PeopleListService.getAll().find(p => p.id === id)
+          if (!person) return
+          setCurrentAuthor(person)
           setDisplayPersonModal(true)
           setDisplayLocationModal(false)
           setDisplayPublicationModal(false)
           setDisplayPersonHistoryEventModal(false)
         }}
         currentLocation={currentLocation}
+        darkMode={darkMode}
         displayModal={displayLocationModal}
         peopleList={peopleList}
         publicationCallback={id => {
-          setCurrentPublication(publicationsList.find(p => p.id === id)!)
+          const publication =
+            publicationsList.find(p => p.id === id) ?? PublicationsListService.getAll().find(p => p.id === id)
+          if (!publication) return
+          setCurrentPublication(publication)
           setDisplayPublicationModal(true)
           setDisplayLocationModal(false)
           setDisplayPersonModal(false)
@@ -423,9 +494,12 @@ const Chronology = () => {
 
       <PersonDetails
         currentPerson={currentAuthor}
+        darkMode={darkMode}
         displayModal={displayPersonModal}
         locationCallback={id => {
-          setCurrentLocation(locationsList.find(l => l.id === id)!)
+          const location = locationsList.find(l => l.id === id) ?? LocationListService.getById(id)
+          if (!location) return
+          setCurrentLocation(location)
           setDisplayLocationModal(true)
           setDisplayPersonModal(false)
           setDisplayPublicationModal(false)
@@ -442,7 +516,10 @@ const Chronology = () => {
           setDisplayPublicationModal(false)
         }}
         publicationCallback={id => {
-          setCurrentPublication(publicationsList.find(p => p.id === id)!)
+          const publication =
+            publicationsList.find(p => p.id === id) ?? PublicationsListService.getAll().find(p => p.id === id)
+          if (!publication) return
+          setCurrentPublication(publication)
           setDisplayPublicationModal(true)
           setDisplayPersonModal(false)
           setDisplayLocationModal(false)

@@ -1,3 +1,6 @@
+/** NocoDB „Dokładność urodzenia/śmierci” — od najdokładniejszej. */
+export type DateAccuracy = 'godziny' | 'dni' | 'tygodnie' | 'miesiące' | 'lata' | 'dekady' | 'stulecia'
+
 class Person {
   constructor(
     public id: string,
@@ -16,6 +19,9 @@ class Person {
     public thumbnail: string | null,
 
     public category: string | null,
+
+    public bornAccuracy: DateAccuracy | null = null,
+    public diedAccuracy: DateAccuracy | null = null,
   ) {}
 }
 

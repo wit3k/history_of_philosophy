@@ -4,7 +4,7 @@ import * as path from 'node:path'
 import sharp from 'sharp'
 import { Attitude } from '../data/dto/PersonReference'
 import Coordinates from '../geometry/Coordinates'
-import { unhackNocoYear } from '../utils/years'
+import { parseDateAccuracy, unhackNocoYear } from '../utils/years'
 
 const nocoUrl = (process.env.NOCO_URL ?? '').replace(/\/+$/, '')
 const projectRoot = path.resolve(import.meta.dir, '../..')
@@ -175,9 +175,11 @@ const people = (await getTable('people')).list
     )
     return {
       born: years.born,
+      bornAccuracy: parseDateAccuracy(person['Dokładność urodzenia']),
       bornLocation: person['Urodzony w'] ? person['Urodzony w'].Id : null,
       category: person['Kategoria'],
       died: years.died,
+      diedAccuracy: parseDateAccuracy(person['Dokładność śmierci']),
       diedLocation: person['Zmarł w'] ? person['Zmarł w'].Id : null,
       id: person.Id + '',
       name: person['Imię i nazwisko'],

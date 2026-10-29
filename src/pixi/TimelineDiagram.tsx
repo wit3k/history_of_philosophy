@@ -1,6 +1,6 @@
 import { Application, useApplication, useTick } from '@pixi/react'
 import type { Application as PixiApplication } from 'pixi.js'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type HistoryEvent from '../data/dto/HistoryEvent'
 import type Person from '../data/dto/Person'
 import type PersonHistoryEvent from '../data/dto/PersonHistoryEvent'
@@ -54,11 +54,14 @@ export type TimelineDiagramProps = {
   updateHighlightedAuthor: React.Dispatch<React.SetStateAction<string>>
   highlightedPublication: string
   updateHighlightedPublication: React.Dispatch<React.SetStateAction<string>>
+  searchQuery: string
   onAuthorClick: (id: string) => void
   onPublicationClick: (publication: Publication, author: Person) => void
   onPersonHistoryClick: (event: PersonHistoryEvent, person: Person) => void
   /** Fired when live camera is committed to React layout state (after pan/zoom/frame). */
   onCameraCommit?: (camera: { x: number; y: number; zoom: number }) => void
+  /** Modal open: drop pointer/touch/keyboard input and pause Pixi ticker until close or resize. */
+  suspended?: boolean
 }
 
 type Camera = { x: number; y: number; zoom: number }
@@ -122,6 +125,9 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
   const layoutCameraRef = useRef(layoutCamera)
   layoutCameraRef.current = layoutCamera
 
+  // Keep year-step local so zoom commits don't re-render Chronology (avoids flicker).
+  const [yearStepSize, setYearStepSize] = useState(props.yearSelection.stepSize)
+
   // Cull camera: throttled snapshot of live view for mounting/unmounting off-screen nodes.
   const [cullCamera, setCullCamera] = useState<Camera>({ ...layoutCamera })
   const cullCameraRef = useRef(cullCamera)
@@ -132,9 +138,12 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
 
   const dragRef = useRef({
     isDragged: false,
+    didPan: false,
     startDragPosition: { x: 0, y: 0 },
     startViewPosition: { x: 0, y: 0 },
   })
+  /** After a real pan, ignore the pointertap that lands on people/pubs under the cursor. */
+  const suppressItemClickRef = useRef(false)
   const pinchRef = useRef(0)
   const primaryTouchIdRef = useRef<number | null>(null)
   const pointerClientXRef = useRef<number | null>(null)
@@ -156,6 +165,7 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
   const windowWidthRef = useRef(props.windowWidth)
   windowWidthRef.current = props.windowWidth
   const layoutCommitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const cameraSyncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const rowExtent = useMemo(() => {
     if (props.peopleList.length === 0) return { firstRow: 1, lastRow: 1 }
@@ -178,12 +188,11 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
     lastRow: rowExtent.lastRow,
   }
 
-  const setZoom = props.setZoom
-  const setPosition = props.setPosition
-  const setYearSelection = props.setYearSelection
   const onCameraCommit = props.onCameraCommit
   const onCameraCommitRef = useRef(onCameraCommit)
   onCameraCommitRef.current = onCameraCommit
+  const yearStepSizeRef = useRef(yearStepSize)
+  yearStepSizeRef.current = yearStepSize
 
   const updateOffset = useCallback(() => {
     const el = hostRef.current
@@ -233,36 +242,31 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
   }, [])
 
   /** Rebuild scene at live camera (correct stroke widths / year step). Rare vs per-frame. */
-  const commitLayoutCamera = useCallback(
-    (camera: Camera, stepSize?: number) => {
-      if (layoutCommitTimerRef.current != null) {
-        clearTimeout(layoutCommitTimerRef.current)
-        layoutCommitTimerRef.current = null
+  const commitLayoutCamera = useCallback((camera: Camera, stepSize?: number) => {
+    if (layoutCommitTimerRef.current != null) {
+      clearTimeout(layoutCommitTimerRef.current)
+      layoutCommitTimerRef.current = null
+    }
+    liveCameraRef.current = { ...camera }
+    // Do not call setPosition/setZoom — parent re-render remounts Pixi and flickers.
+    setLayoutCamera(camera)
+    setCullCamera(camera)
+    if (stepSize != null) setYearStepSize(prev => (prev === stepSize ? prev : stepSize))
+    onCameraCommitRef.current?.(camera)
+  }, [])
+
+  // After React/Pixi apply new layout positions, drop live pan/zoom transform before paint.
+  useLayoutEffect(() => {
+    const app = appRef.current
+    if (!app) return
+    for (const label of ['hop-world', 'hop-years'] as const) {
+      const node = app.stage.getChildByLabel(label, true)
+      if (node) {
+        node.scale.set(1, 1)
+        node.position.set(0, 0)
       }
-      liveCameraRef.current = { ...camera }
-      setLayoutCamera(camera)
-      setCullCamera(camera)
-      setPosition({ x: camera.x, y: camera.y })
-      setZoom(camera.zoom)
-      if (stepSize != null) setYearSelection(ys => ({ ...ys, stepSize }))
-      onCameraCommitRef.current?.(camera)
-      requestAnimationFrame(() => {
-        const app = appRef.current
-        if (!app) return
-        const world = app.stage.getChildByLabel('hop-world', true)
-        if (world) {
-          world.scale.set(1, 1)
-          world.position.set(0, 0)
-        }
-        const years = app.stage.getChildByLabel('hop-years', true)
-        if (years) {
-          years.scale.set(1, 1)
-          years.position.set(0, 0)
-        }
-      })
-    },
-    [setPosition, setZoom, setYearSelection],
-  )
+    }
+  }, [layoutCamera])
 
   const stepSizeForZoom = (zoom: number) => {
     if (zoom <= 11) return 100
@@ -275,13 +279,33 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
     layoutCommitTimerRef.current = setTimeout(() => {
       layoutCommitTimerRef.current = null
       const live = liveCameraRef.current
-      commitLayoutCamera(live, stepSizeForZoom(live.zoom))
+      const step = stepSizeForZoom(live.zoom)
+      const layout = layoutCameraRef.current
+      const ratio = live.zoom / Math.max(layout.zoom, 0.0001)
+      const panPx = Math.abs(live.x - layout.x) * live.zoom
+      const needsRebuild =
+        step !== yearStepSizeRef.current ||
+        ratio > 1.2 ||
+        ratio < 1 / 1.2 ||
+        panPx > windowWidthRef.current * 0.35
+      // URL is handled by scheduleCameraSync; rebuild only when strokes/step need it.
+      if (needsRebuild) commitLayoutCamera(live, step)
     }, 140)
   }, [commitLayoutCamera])
+
+  /** Sync URL after pan/zoom — no React/Pixi rebuild (avoids flicker). */
+  const scheduleCameraSync = useCallback(() => {
+    if (cameraSyncTimerRef.current != null) clearTimeout(cameraSyncTimerRef.current)
+    cameraSyncTimerRef.current = setTimeout(() => {
+      cameraSyncTimerRef.current = null
+      onCameraCommitRef.current?.(liveCameraRef.current)
+    }, 140)
+  }, [])
 
   useEffect(
     () => () => {
       if (layoutCommitTimerRef.current != null) clearTimeout(layoutCommitTimerRef.current)
+      if (cameraSyncTimerRef.current != null) clearTimeout(cameraSyncTimerRef.current)
       if (frameAnimRef.current != null) cancelAnimationFrame(frameAnimRef.current)
     },
     [],
@@ -320,10 +344,10 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
 
   const yearsOnScale = useMemo(
     () =>
-      [...Array(Math.ceil((props.yearSelection.to - props.yearSelection.from) / props.yearSelection.stepSize))].map(
-        (_, i) => props.yearSelection.from + i * props.yearSelection.stepSize,
+      [...Array(Math.ceil((props.yearSelection.to - props.yearSelection.from) / yearStepSize))].map(
+        (_, i) => props.yearSelection.from + i * yearStepSize,
       ),
-    [props.yearSelection],
+    [props.yearSelection.from, props.yearSelection.to, yearStepSize],
   )
 
   const clearHighlights = useCallback(() => {
@@ -331,9 +355,20 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
     props.updateHighlightedPublication('0')
   }, [props.updateHighlightedAuthor, props.updateHighlightedPublication])
 
+  const suspended = !!props.suspended
+  const suspendedRef = useRef(suspended)
+  suspendedRef.current = suspended
+
+  const unlessClickSuppressed = useCallback(<T extends unknown[]>(fn: (...args: T) => void) => {
+    return (...args: T) => {
+      if (suspendedRef.current || suppressItemClickRef.current) return
+      fn(...args)
+    }
+  }, [])
+
   const shared: SharedTimelineProps = {
     canvasOffset,
-    clearHighlights,
+    clearHighlights: unlessClickSuppressed(clearHighlights),
     darkMode: props.darkMode,
     displayAuthorsTimeline: props.displayAuthorsTimeline,
     highlightedAuthor: props.highlightedAuthor,
@@ -343,9 +378,9 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
     isVisible,
     isVisibleRange,
     layoutToScreen,
-    onAuthorClick: props.onAuthorClick,
-    onPersonHistoryClick: props.onPersonHistoryClick,
-    onPublicationClick: props.onPublicationClick,
+    onAuthorClick: unlessClickSuppressed(props.onAuthorClick),
+    onPersonHistoryClick: unlessClickSuppressed(props.onPersonHistoryClick),
+    onPublicationClick: unlessClickSuppressed(props.onPublicationClick),
     personBox,
     personHistoryBar: 10,
     personHistoryBox: 35,
@@ -359,9 +394,19 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
     pubRefBox: 35,
     pubRefDot: 15,
     rowPosition,
-    setTooltip,
-    updateHighlightedAuthor: id => props.updateHighlightedAuthor(id),
-    updateHighlightedPublication: id => props.updateHighlightedPublication(id),
+    setTooltip: t => {
+      if (suspendedRef.current) return
+      setTooltip(t)
+    },
+    updateHighlightedAuthor: id => {
+      if (suspendedRef.current) return
+      props.updateHighlightedAuthor(id)
+    },
+    updateHighlightedPublication: id => {
+      if (suspendedRef.current) return
+      props.updateHighlightedPublication(id)
+    },
+    searchQuery: props.searchQuery,
     windowHeight: props.windowHeight,
     windowWidth: props.windowWidth,
     yearLabelWidth: props.yearLabelWidth,
@@ -527,6 +572,7 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
         const zoom = liveCameraRef.current.zoom
         if (Math.hypot(vx * zoom, vy) < minSpeedPx) {
           inertiaRafRef.current = null
+          scheduleCameraSync()
           return
         }
 
@@ -541,8 +587,10 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
 
       inertiaRafRef.current = requestAnimationFrame(tick)
     },
-    [setLiveCamera, stopInertia],
+    [scheduleCameraSync, setLiveCamera, stopInertia],
   )
+
+  const PAN_CLICK_THRESHOLD_PX = 8
 
   const startPageDrag = (button: number, pageX: number, pageY: number) => {
     if (button === 0) {
@@ -551,8 +599,10 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
         frameAnimRef.current = null
       }
       stopInertia()
+      suppressItemClickRef.current = false
       dragRef.current = {
         isDragged: true,
+        didPan: false,
         startDragPosition: { x: pageX, y: pageY },
         startViewPosition: { ...liveCameraRef.current },
       }
@@ -564,20 +614,33 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
 
   const stopPageDrag = (releaseInertia = true) => {
     const wasDragging = dragRef.current.isDragged
+    const didPan = dragRef.current.didPan
     dragRef.current.isDragged = false
     setIsDragged(false)
-    if (releaseInertia && wasDragging) {
+    if (didPan) suppressItemClickRef.current = true
+    let startedInertia = false
+    if (releaseInertia && wasDragging && didPan) {
       const { vx, vy } = velocityRef.current
       const speedPx = Math.hypot(vx * liveCameraRef.current.zoom, vy)
-      if (speedPx > 80) startInertia(vx, vy)
+      if (speedPx > 80) {
+        startInertia(vx, vy)
+        startedInertia = true
+      }
     }
     velocityRef.current = { vx: 0, vy: 0 }
+    if (wasDragging && didPan && !startedInertia) scheduleCameraSync()
   }
 
   const executePageDrag = (pageX: number, pageY: number) => {
     const drag = dragRef.current
     if (!drag.isDragged) return
     const zoom = liveCameraRef.current.zoom
+    const movedPx = Math.hypot(pageX - drag.startDragPosition.x, pageY - drag.startDragPosition.y)
+    if (!drag.didPan) {
+      if (movedPx < PAN_CLICK_THRESHOLD_PX) return
+      drag.didPan = true
+      suppressItemClickRef.current = true
+    }
     const now = performance.now()
     const dt = (now - lastMoveRef.current.t) / 1000
     if (dt > 0 && dt < 0.12) {
@@ -615,9 +678,10 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
         y: live.y,
         zoom: targetZoom,
       })
+      scheduleCameraSync()
       scheduleLayoutCommit()
     },
-    [scheduleLayoutCommit, setLiveCamera, stopInertia],
+    [scheduleCameraSync, scheduleLayoutCommit, setLiveCamera, stopInertia],
   )
 
   const applyZoomDelta = useCallback(
@@ -645,13 +709,48 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
         y: live.y + dyPx,
         zoom: live.zoom,
       })
+      scheduleCameraSync()
     },
-    [setLiveCamera, stopInertia],
+    [scheduleCameraSync, setLiveCamera, stopInertia],
   )
+
+  // Pause Pixi drawing + diagram input while a modal covers the view.
+  useEffect(() => {
+    const app = appRef.current
+    const canvas = app?.canvas
+    if (canvas instanceof HTMLElement) {
+      canvas.style.pointerEvents = suspended ? 'none' : ''
+    }
+    if (app) {
+      app.stage.eventMode = suspended ? 'none' : 'passive'
+    }
+    if (suspended) {
+      stopInertia()
+      if (frameAnimRef.current != null) {
+        cancelAnimationFrame(frameAnimRef.current)
+        frameAnimRef.current = null
+      }
+      dragRef.current.isDragged = false
+      dragRef.current.didPan = false
+      setIsDragged(false)
+      setTooltip(null)
+      if (app) app.ticker.stop()
+      return
+    }
+    if (app) app.ticker.start()
+  }, [suspended, stopInertia])
+
+  // One redraw on window resize even while ticker is stopped for the modal.
+  useEffect(() => {
+    if (!suspended) return
+    const app = appRef.current
+    if (!app) return
+    app.render()
+  }, [suspended, props.windowWidth, props.windowHeight])
 
   useEffect(() => {
     const el = hostRef.current
-    if (!el) return
+    if (!el || suspended) return
 
     const onPointerDown = (e: PointerEvent) => {
       if (e.button === 0) startPageDrag(0, e.pageX, e.pageY)
@@ -807,15 +906,16 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
       window.removeEventListener('keydown', onKeyDown)
       stopInertia()
     }
-  }, [applyPan, applyZoomDelta, startInertia, stopInertia, zoomTo])
+  }, [applyPan, applyZoomDelta, startInertia, stopInertia, suspended, zoomTo])
 
   return (
     <div
       ref={hostRef}
       style={{
-        cursor: isDragged ? 'grabbing' : 'grab',
+        cursor: suspended ? 'default' : isDragged ? 'grabbing' : 'grab',
         height: props.windowHeight,
         left: 0,
+        pointerEvents: suspended ? 'none' : 'auto',
         position: 'absolute',
         top: 0,
         touchAction: 'none',
@@ -830,6 +930,7 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
         height={props.windowHeight}
         onInit={app => {
           appRef.current = app
+          if (suspended) app.ticker.stop()
           updateOffset()
         }}
         preference="webgl"
@@ -896,7 +997,7 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
         </pixiContainer>
       </Application>
 
-      <TimelineTooltip tooltip={tooltip} />
+      {!suspended && <TimelineTooltip tooltip={tooltip} />}
     </div>
   )
 }

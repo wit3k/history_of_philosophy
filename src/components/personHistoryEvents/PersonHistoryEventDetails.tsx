@@ -4,6 +4,7 @@ import type Person from '../../data/dto/Person'
 import type PersonHistoryEvent from '../../data/dto/PersonHistoryEvent'
 import { formatYearRange } from '../../utils/years'
 import Modal from '../ui/Modal'
+import { modalTone } from '../ui/modalTheme'
 
 class PersonHistoryEventDetailsProps {
   constructor(
@@ -13,6 +14,7 @@ class PersonHistoryEventDetailsProps {
     public setDisplayModal: React.Dispatch<React.SetStateAction<boolean>>,
     public locationCallback: (id: string) => void,
     public personCallback: (id: string) => void,
+    public darkMode: boolean = true,
   ) {}
 }
 
@@ -24,13 +26,14 @@ const formatYears = (event: PersonHistoryEvent) => {
 const PersonHistoryEventDetails = (props: PersonHistoryEventDetailsProps) => {
   const location =
     props.currentEvent.locationId != null ? LocationListService.getById(props.currentEvent.locationId + '') : undefined
+  const tone = modalTone(props.darkMode)
 
   return (
-    <Modal displayModal={props.displayModal} setDisplayModal={props.setDisplayModal}>
+    <Modal darkMode={props.darkMode} displayModal={props.displayModal} setDisplayModal={props.setDisplayModal}>
       <div>
-        <div className="text-3xl text-white italic p-5">{props.currentEvent.name}</div>
+        <div className={`text-3xl italic p-5 ${tone.title}`}>{props.currentEvent.name}</div>
         <div className="p-5">
-          <div className="mb-3 text-slate-300">{props.currentEvent.type}</div>
+          <div className={`mb-3 ${tone.body}`}>{props.currentEvent.type}</div>
           <div className="mb-2">{formatYears(props.currentEvent)}</div>
           <div className="mb-2">
             <span

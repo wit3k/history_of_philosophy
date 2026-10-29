@@ -5,8 +5,9 @@ import PublicationsListService from '../../data/db/PublicationsListService'
 import type Person from '../../data/dto/Person'
 import type PersonHistoryEvent from '../../data/dto/PersonHistoryEvent'
 import type Publication from '../../data/dto/Publication'
-import { formatYear, formatYearRange } from '../../utils/years'
+import { formatDateAccuracy, formatYear, formatYearRange } from '../../utils/years'
 import Modal from '../ui/Modal'
+import { modalTone } from '../ui/modalTheme'
 
 class PersonDetailsProps {
   constructor(
@@ -16,6 +17,7 @@ class PersonDetailsProps {
     public locationCallback: (id: string) => void,
     public publicationCallback: (id: string) => void,
     public personHistoryEventCallback: (id: string) => void,
+    public darkMode: boolean = true,
   ) {}
 }
 
@@ -25,6 +27,7 @@ type TimelineItem =
 
 const PersonDetails = (props: PersonDetailsProps) => {
   const appBasePath = '/history_of_philosophy/'
+  const tone = modalTone(props.darkMode)
 
   const publicationItems: TimelineItem[] = PublicationsListService.getAllByAuthor(props.currentPerson.id).map(p => ({
     date: p.publicationDate,
@@ -43,9 +46,9 @@ const PersonDetails = (props: PersonDetailsProps) => {
   const historyComplete = [...publicationItems, ...eventItems].sort((p1, p2) => p1.date - p2.date)
 
   return (
-    <Modal displayModal={props.displayModal} setDisplayModal={props.setDisplayModal}>
+    <Modal darkMode={props.darkMode} displayModal={props.displayModal} setDisplayModal={props.setDisplayModal}>
       <div>
-        <div className="text-3xl text-white italic p-5 pb-0">{props.currentPerson.name}</div>
+        <div className={`text-3xl italic p-5 pb-0 ${tone.title}`}>{props.currentPerson.name}</div>
         <div className="p-5">
           {props.currentPerson.thumbnail && (
             <img
@@ -56,7 +59,11 @@ const PersonDetails = (props: PersonDetailsProps) => {
               width={200}
             />
           )}
-          Urodzony: {formatYear(props.currentPerson.born)} -{' '}
+          Urodzony: {formatYear(props.currentPerson.born)}
+          {formatDateAccuracy(props.currentPerson.bornAccuracy) && (
+            <span className={tone.muted}> ({formatDateAccuracy(props.currentPerson.bornAccuracy)})</span>
+          )}{' '}
+          -{' '}
           <span
             className="hover:text-pink-700 underline cursor-pointer"
             onClick={() => props.locationCallback(props.currentPerson.bornLocation)}
@@ -69,7 +76,11 @@ const PersonDetails = (props: PersonDetailsProps) => {
             <span>Wciąż żyje</span>
           ) : (
             <span>
-              Zmarł: {formatYear(props.currentPerson.died)} -{' '}
+              Zmarł: {formatYear(props.currentPerson.died)}
+              {formatDateAccuracy(props.currentPerson.diedAccuracy) && (
+                <span className={tone.muted}> ({formatDateAccuracy(props.currentPerson.diedAccuracy)})</span>
+              )}{' '}
+              -{' '}
               <span
                 className="hover:text-pink-700 underline cursor-pointer"
                 onClick={() => props.locationCallback(props.currentPerson.diedLocation)}
@@ -110,8 +121,8 @@ const PersonDetails = (props: PersonDetailsProps) => {
                 </span>
               )
               content = (
-                <small className="mt-2 font-sans text-sm text-slate-300 antialiased">
-                  <span className="text-slate-100 -ml-3">{formatYear(historyItem.date)}</span> -{' '}
+                <small className={`mt-2 font-sans text-sm antialiased ${tone.body}`}>
+                  <span className={`${tone.strong} -ml-3`}>{formatYear(historyItem.date)}</span> -{' '}
                   <span
                     className="italic hover:text-pink-700 underline cursor-pointer"
                     onClick={() => props.publicationCallback(historyItem.publication.id)}
@@ -122,7 +133,7 @@ const PersonDetails = (props: PersonDetailsProps) => {
                   {' / '}
                   {historyItem.publication.publicationLocation && (
                     <span
-                      className="text-slate-100 hover:text-pink-700 underline cursor-pointer"
+                      className={`${tone.strong} hover:text-pink-700 underline cursor-pointer`}
                       onClick={() => props.locationCallback(historyItem.publication.publicationLocation + '')}
                       onKeyDown={() => props.locationCallback(historyItem.publication.publicationLocation + '')}
                     >
@@ -156,9 +167,9 @@ const PersonDetails = (props: PersonDetailsProps) => {
                 </span>
               )
               content = (
-                <small className="mt-2 font-sans text-sm text-slate-300 antialiased">
-                  <span className="text-slate-100 -ml-3">{yearLabel}</span> -{' '}
-                  <span className="text-slate-400">{historyItem.event.type}</span>:{' '}
+                <small className={`mt-2 font-sans text-sm antialiased ${tone.body}`}>
+                  <span className={`${tone.strong} -ml-3`}>{yearLabel}</span> -{' '}
+                  <span className={tone.muted}>{historyItem.event.type}</span>:{' '}
                   <span
                     className="italic hover:text-pink-700 underline cursor-pointer"
                     onClick={() => props.personHistoryEventCallback(historyItem.event.id)}
@@ -170,7 +181,7 @@ const PersonDetails = (props: PersonDetailsProps) => {
                     <>
                       {' / '}
                       <span
-                        className="text-slate-100 hover:text-pink-700 underline cursor-pointer"
+                        className={`${tone.strong} hover:text-pink-700 underline cursor-pointer`}
                         onClick={() => props.locationCallback(historyItem.event.locationId + '')}
                         onKeyDown={() => props.locationCallback(historyItem.event.locationId + '')}
                       >

@@ -6,3 +6,7 @@ html {
   color: white;
   touch-action: none;
 }
+
+html.light-mode {
+  color: #111827;
+}
