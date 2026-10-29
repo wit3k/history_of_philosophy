@@ -4,6 +4,7 @@ import * as path from 'node:path'
 import sharp from 'sharp'
 import { Attitude } from '../data/dto/PersonReference'
 import Coordinates from '../geometry/Coordinates'
+import { parsePublicationType } from '../utils/publicationType'
 import { parseDateAccuracy, unhackNocoYear } from '../utils/years'
 
 const nocoUrl = (process.env.NOCO_URL ?? '').replace(/\/+$/, '')
@@ -257,10 +258,12 @@ const publications = (
     description: book['Opis'],
     id: book.Id + '',
     isbn: book['ISBN'],
+    link: typeof book['Link do publikacji'] === 'string' ? book['Link do publikacji'] : null,
     publicationDate,
     publicationLocation: book['Miejsce wydania'] !== null ? book['Miejsce wydania'].Id : -1,
     thumbnail: book['Okładka'] != null && book['Okładka'][0] != null ? book['Okładka'][0].id + '.png' : '',
     title: book['Tytuł'],
+    type: parsePublicationType(book['Typ publikacji']),
   }))
 })
 

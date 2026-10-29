@@ -6,6 +6,7 @@ import type Person from '../../data/dto/Person'
 import type PersonHistoryEvent from '../../data/dto/PersonHistoryEvent'
 import type Publication from '../../data/dto/Publication'
 import { formatDateAccuracy, formatYear, formatYearRange } from '../../utils/years'
+import PublicationTypeIcon from '../publication/PublicationTypeIcon'
 import Modal from '../ui/Modal'
 import { modalTone } from '../ui/modalTheme'
 
@@ -102,23 +103,10 @@ const PersonDetails = (props: PersonDetailsProps) => {
 
             if (historyItem.kind === 'publication') {
               icon = (
-                <span className="relative z-10 grid h-8 w-8 place-items-center rounded-full bg-slate-400 text-slate-800">
-                  <svg
-                    className="size-5"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={1.5}
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <title>Publication icon</title>
-                    <path
-                      d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </span>
+                <PublicationTypeIcon
+                  label={historyItem.publication.type ?? 'Publikacja'}
+                  type={historyItem.publication.type}
+                />
               )
               content = (
                 <small className={`mt-2 font-sans text-sm antialiased ${tone.body}`}>

@@ -1,3 +1,7 @@
+export const PUBLICATION_TYPES = ['Książka', 'Artykuł', 'Film', 'Dramat', 'Wiersz', 'Esej'] as const
+
+export type PublicationType = (typeof PUBLICATION_TYPES)[number]
+
 class Publication {
   constructor(
     public id: string,
@@ -8,6 +12,8 @@ class Publication {
     public isbn?: string,
     public description?: string,
     public thumbnail?: string,
+    public type: PublicationType | null = null,
+    public link: string | null = null,
   ) {}
 }
 

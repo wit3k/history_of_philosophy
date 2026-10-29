@@ -1,5 +1,6 @@
 import Publication from '../dto/Publication'
 import { PublicationsListRaw } from '../imported/PublicationsListRaw'
+import { parsePublicationType } from '../../utils/publicationType'
 import { unhackNocoYear } from '../../utils/years'
 
 const PublicationsListDB = PublicationsListRaw.map(
@@ -13,6 +14,8 @@ const PublicationsListDB = PublicationsListRaw.map(
       pub.isbn!,
       pub.description!,
       pub.thumbnail!,
+      parsePublicationType((pub as { type?: unknown }).type),
+      typeof (pub as { link?: unknown }).link === 'string' ? ((pub as { link: string }).link || null) : null,
     ),
 ).sort((p1, p2) => p1.publicationDate - p2.publicationDate)
 
