@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "rsbuild build",
-    "github": "rsbuild build --config rsbuild.github.config.ts && bun run scripts/spa-fallback.ts",
+    "compress-assets": "bun run scripts/compress-page-assets.ts",
+    "github": "bun run compress-assets && rsbuild build --config rsbuild.github.config.ts && bun run scripts/spa-fallback.ts",
     "check": "biome check --write",
     "dev": "rsbuild dev --open",
     "format": "biome format --write",
