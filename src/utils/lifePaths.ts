@@ -3,6 +3,8 @@ import type Person from '../data/dto/Person'
 import type PersonHistoryEvent from '../data/dto/PersonHistoryEvent'
 import type Publication from '../data/dto/Publication'
 import ColorsService from '../services/Colors'
+import { segmentOpacity, temporalOpacity, type TemporalState } from './mapTemporal'
+import { curvedSegmentCoords, mapAccentForBasemap } from './mapVisual'
 
 export type LifePointKind = 'birth' | 'personal' | 'publication' | 'death'
 
@@ -147,36 +149,58 @@ export function lifePathsToGeoJson(
     showLifelines: boolean
     showPublications: boolean
     showPersonal: boolean
+    temporal?: TemporalState | null
+    darkMode?: boolean
   },
 ): LifePathGeoJson {
   const features: GeoJsonFeature[] = []
   if (!opts.showAuthors) return { type: 'FeatureCollection', features }
+  const temporal = opts.temporal ?? null
+  const dark = opts.darkMode === true
 
   for (const path of paths) {
-    const visiblePoints = path.points.filter(p => {
+    const accent = mapAccentForBasemap(path.accent, dark)
+    const layerPoints = path.points.filter(p => {
       if (p.kind === 'publication') return opts.showPublications
       if (p.kind === 'personal') return opts.showPersonal
       return true
     })
-    if (visiblePoints.length === 0) continue
+    if (layerPoints.length === 0) continue
 
-    if (opts.showLifelines && visiblePoints.length >= 2) {
-      features.push({
-        type: 'Feature',
-        properties: {
-          kind: 'path',
-          personId: path.personId,
-          name: path.name,
-          accent: path.accent,
-        },
-        geometry: {
-          type: 'LineString',
-          coordinates: visiblePoints.map(p => [p.lng, p.lat]),
-        },
-      })
+    if (opts.showLifelines && layerPoints.length >= 2) {
+      for (let i = 0; i < layerPoints.length - 1; i++) {
+        const a = layerPoints[i]
+        const b = layerPoints[i + 1]
+        // Keep zero-opacity segments in the collection so MapLibre does not
+        // constantly add/remove features while the playhead moves (flicker).
+        const opacity = temporal ? segmentOpacity(a, b, temporal) : 0.85
+        features.push({
+          type: 'Feature',
+          properties: {
+            kind: 'path',
+            personId: path.personId,
+            segment: i,
+            name: path.name,
+            accent,
+            opacity,
+          },
+          geometry: {
+            type: 'LineString',
+            coordinates: curvedSegmentCoords(
+              a.lng,
+              a.lat,
+              b.lng,
+              b.lat,
+              `${path.personId}:${i}`,
+            ),
+          },
+        })
+      }
     }
 
-    for (const p of visiblePoints) {
+    for (const p of layerPoints) {
+      const opacity = temporal ? temporalOpacity(p.year, temporal) : 0.95
+      if (opacity <= 0) continue
       features.push({
         type: 'Feature',
         properties: {
@@ -185,8 +209,9 @@ export function lifePathsToGeoJson(
           personName: path.name,
           label: p.label,
           year: p.year,
-          accent: p.accent,
+          accent: mapAccentForBasemap(p.accent, dark),
           refId: p.refId ?? null,
+          opacity,
         },
         geometry: {
           type: 'Point',

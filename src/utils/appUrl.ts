@@ -22,6 +22,12 @@ export type AppUrlState = {
   lat?: number
   lng?: number
   zoom?: number
+  /** Map temporal playhead (integer year). */
+  year?: number
+  /** Map temporal range start (integer year). */
+  yearFrom?: number
+  /** Map temporal range end (integer year). */
+  yearTo?: number
 }
 
 export const DEFAULT_LAYERS: LayerFlags = {
@@ -101,6 +107,9 @@ export function readAppUrl(
     lat: parseNumber(params.get('lat')),
     lng: parseNumber(params.get('lng')),
     zoom: parseNumber(params.get('zoom')),
+    year: parseNumber(params.get('year')),
+    yearFrom: parseNumber(params.get('yearFrom')),
+    yearTo: parseNumber(params.get('yearTo')),
   }
 }
 
@@ -115,6 +124,9 @@ export type WriteAppUrlInput = {
   lat?: number
   lng?: number
   zoom?: number
+  year?: number
+  yearFrom?: number
+  yearTo?: number
 }
 
 export function formatAppUrl(state: WriteAppUrlInput, basePath = getAppBasePath()): string {
@@ -134,6 +146,15 @@ export function formatAppUrl(state: WriteAppUrlInput, basePath = getAppBasePath(
     if (state.lat != null && Number.isFinite(state.lat)) params.set('lat', state.lat.toFixed(5))
     if (state.lng != null && Number.isFinite(state.lng)) params.set('lng', state.lng.toFixed(5))
     if (state.zoom != null && Number.isFinite(state.zoom)) params.set('zoom', state.zoom.toFixed(2))
+    if (state.yearFrom != null && Number.isFinite(state.yearFrom)) {
+      params.set('yearFrom', String(Math.round(state.yearFrom)))
+    }
+    if (state.yearTo != null && Number.isFinite(state.yearTo)) {
+      params.set('yearTo', String(Math.round(state.yearTo)))
+    }
+    if (state.year != null && Number.isFinite(state.year)) {
+      params.set('year', String(Math.round(state.year)))
+    }
   }
 
   const path = state.view === 'map' ? `${basePath}/map` : `${basePath}/` || '/'

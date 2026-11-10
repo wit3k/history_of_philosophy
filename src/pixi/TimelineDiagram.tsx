@@ -16,6 +16,7 @@ import {
   PersonReferencesLayer,
   PublicationReferencesLayer,
   PublicationsLayer,
+  type LineHover,
   type SharedTimelineProps,
   YearLabelsLayer,
   YearLinesLayer,
@@ -112,6 +113,8 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
   const hostRef = useRef<HTMLDivElement>(null)
   const appRef = useRef<PixiApplication | null>(null)
   const [tooltip, setTooltip] = useState<TimelineTooltipState | null>(null)
+  const [lineHover, setLineHoverState] = useState<LineHover | null>(null)
+  const lineHoverRef = useRef<LineHover | null>(null)
   const [canvasOffset, setCanvasOffset] = useState({ left: 0, top: 0 })
   const [isDragged, setIsDragged] = useState(false)
   const quality = useMemo(() => displayQuality(), [])
@@ -407,6 +410,18 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
       props.updateHighlightedPublication(id)
     },
     searchQuery: props.searchQuery,
+    lineHover,
+    setLineHover: next => {
+      if (suspendedRef.current) return
+      lineHoverRef.current = next
+      setLineHoverState(next)
+    },
+    clearLineHover: (kind, id) => {
+      const cur = lineHoverRef.current
+      if (!cur || cur.kind !== kind || cur.id !== id) return
+      lineHoverRef.current = null
+      setLineHoverState(null)
+    },
     windowHeight: props.windowHeight,
     windowWidth: props.windowWidth,
     yearLabelWidth: props.yearLabelWidth,

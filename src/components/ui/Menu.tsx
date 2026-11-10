@@ -30,6 +30,7 @@ class MenuProps {
     public onCloseSearch: () => void,
     public mapView: boolean,
     public onToggleMapView: () => void,
+    public onFiltersVisibleChange?: (visible: boolean) => void,
   ) {}
 }
 
@@ -192,6 +193,11 @@ const ToggleButton = ({
 const Menu = (props: MenuProps) => {
   const isDesktop = useIsDesktop()
   const [filtersVisible, setFiltersVisible] = React.useState(() => window.matchMedia(DESKTOP_MEDIA_QUERY).matches)
+
+  React.useEffect(() => {
+    props.onFiltersVisibleChange?.(filtersVisible)
+  }, [filtersVisible, props.onFiltersVisibleChange])
+
   const groups: {
     active: boolean
     disabled?: boolean

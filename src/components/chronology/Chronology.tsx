@@ -32,12 +32,23 @@ import {
   writeAppUrl,
 } from '../../utils/appUrl'
 import GeographicMap from '../map/GeographicMap'
+import MapTemporalScrubber from '../map/MapTemporalScrubber'
 import LocationDetails from '../location/LocationDetails'
 import PersonDetails from '../person/PersonDetails'
 import PersonHistoryEventDetails from '../personHistoryEvents/PersonHistoryEventDetails'
 import PublicationDetails from '../publication/PublicationDetails'
 import Menu from '../ui/Menu'
 import SearchBar from '../ui/SearchBar'
+import { buildPersonLifePaths } from '../../utils/lifePaths'
+import {
+  buildAvatarTracks,
+  clampYearToRange,
+  collectionLifespanSpan,
+  contentYearsFromPaths,
+  playbackYearsPerSecond,
+  type PlaybackSpeed,
+  type TemporalMode,
+} from '../../utils/mapTemporal'
 
 class ChronologyProperies {
   constructor(
@@ -155,6 +166,37 @@ const Chronology = () => {
   })
   const mapCameraFromUrl = React.useRef(mapCamera != null)
 
+  const initialPeople = PeopleListService.withRowNumbers(PeopleListService.getAll())
+  const initialSpan = collectionLifespanSpan(initialPeople) ?? { yearFrom: -500, yearTo: 2000 }
+  const [mapYearFrom, setMapYearFrom] = React.useState(() =>
+    initialUrl?.yearFrom != null ? Math.round(initialUrl.yearFrom) : initialSpan.yearFrom,
+  )
+  const [mapYearTo, setMapYearTo] = React.useState(() =>
+    initialUrl?.yearTo != null ? Math.round(initialUrl.yearTo) : initialSpan.yearTo,
+  )
+  const [mapYear, setMapYear] = React.useState(() => {
+    const from = initialUrl?.yearFrom != null ? Math.round(initialUrl.yearFrom) : initialSpan.yearFrom
+    const to = initialUrl?.yearTo != null ? Math.round(initialUrl.yearTo) : initialSpan.yearTo
+    const y = initialUrl?.year != null ? Math.round(initialUrl.year) : from
+    return clampYearToRange(y, from, to)
+  })
+  const [temporalMode, setTemporalMode] = React.useState<TemporalMode>(() =>
+    initialUrl?.year != null && initialUrl.year !== (initialUrl.yearFrom ?? initialSpan.yearFrom)
+      ? 'playhead'
+      : 'range',
+  )
+  const [mapPlaying, setMapPlaying] = React.useState(false)
+  const [playbackSpeed, setPlaybackSpeed] = React.useState<PlaybackSpeed>(1)
+  const [filtersVisible, setFiltersVisible] = React.useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia('(min-width: 768px)').matches : true,
+  )
+  const playbackSpeedRef = React.useRef<PlaybackSpeed>(1)
+  playbackSpeedRef.current = playbackSpeed
+  const mapTemporalRef = React.useRef({ year: mapYear, yearFrom: mapYearFrom, yearTo: mapYearTo })
+  mapTemporalRef.current = { year: mapYear, yearFrom: mapYearFrom, yearTo: mapYearTo }
+  const playRafRef = React.useRef<number | null>(null)
+  const lastUrlWriteRef = React.useRef(0)
+
   const timelineViewportRef = React.useRef<{ start?: number; end?: number; row?: number }>({
     start: initialUrl?.start,
     end: initialUrl?.end,
@@ -213,6 +255,9 @@ const Chronology = () => {
         lat?: number
         lng?: number
         zoom?: number
+        year?: number
+        yearFrom?: number
+        yearTo?: number
         clearMapCamera?: boolean
       } = {},
       mode: 'replace' | 'push' = 'replace',
@@ -221,6 +266,7 @@ const Chronology = () => {
       const collection = next.collection ?? activeCollectionIdRef.current
       const layers = next.layers ?? currentLayers()
       const dark = next.dark ?? darkMode
+      const temporal = mapTemporalRef.current
 
       if (nextView === 'timeline') {
         const start = next.start ?? timelineViewportRef.current.start
@@ -253,6 +299,9 @@ const Chronology = () => {
             lat: useCamera?.lat,
             lng: useCamera?.lng,
             zoom: useCamera?.zoom,
+            yearFrom: next.yearFrom ?? temporal.yearFrom,
+            yearTo: next.yearTo ?? temporal.yearTo,
+            year: next.year ?? temporal.year,
           },
           mode,
         )
@@ -344,7 +393,28 @@ const Chronology = () => {
     if (view === 'map') {
       mapCameraFromUrl.current = false
       setMapCamera(null)
-      persistUrl({ collection: collectionId, clearMapCamera: true, view: 'map' }, 'push')
+      const span = collectionLifespanSpan(visiblePeople)
+      if (span) {
+        setMapYearFrom(span.yearFrom)
+        setMapYearTo(span.yearTo)
+        setMapYear(span.yearFrom)
+        setTemporalMode('range')
+        setMapPlaying(false)
+        mapTemporalRef.current = { year: span.yearFrom, yearFrom: span.yearFrom, yearTo: span.yearTo }
+        persistUrl(
+          {
+            collection: collectionId,
+            clearMapCamera: true,
+            view: 'map',
+            year: span.yearFrom,
+            yearFrom: span.yearFrom,
+            yearTo: span.yearTo,
+          },
+          'push',
+        )
+      } else {
+        persistUrl({ collection: collectionId, clearMapCamera: true, view: 'map' }, 'push')
+      }
       return
     }
     if (visiblePeople.length > 0) {
@@ -389,6 +459,24 @@ const Chronology = () => {
         setMapCamera(null)
       }
 
+      const applyMapTemporal = (people: Person[]) => {
+        if (parsed.view !== 'map') return
+        const span = collectionLifespanSpan(people)
+        const yearFrom =
+          parsed.yearFrom != null ? Math.round(parsed.yearFrom) : (span?.yearFrom ?? mapTemporalRef.current.yearFrom)
+        const yearTo =
+          parsed.yearTo != null ? Math.round(parsed.yearTo) : (span?.yearTo ?? mapTemporalRef.current.yearTo)
+        const year =
+          parsed.year != null
+            ? clampYearToRange(Math.round(parsed.year), yearFrom, yearTo)
+            : yearFrom
+        setMapYearFrom(yearFrom)
+        setMapYearTo(yearTo)
+        setMapYear(year)
+        setTemporalMode(parsed.year != null && parsed.year !== yearFrom ? 'playhead' : 'range')
+        mapTemporalRef.current = { year, yearFrom, yearTo }
+      }
+
       if (parsed.collection) {
         const known = CollectionsListService.getAll().some(c => c.id === parsed.collection)
         if (!known) return
@@ -406,6 +494,8 @@ const Chronology = () => {
           } else {
             frameViewportToPeople(visiblePeople, row)
           }
+        } else {
+          applyMapTemporal(visiblePeople)
         }
         return
       }
@@ -413,9 +503,11 @@ const Chronology = () => {
       if (parsed.view === 'timeline' && hasRange) {
         timelineViewportRef.current = { start: rangeStart, end: rangeEnd, row }
         frameViewportToRange(rangeStart, rangeEnd, row)
+      } else if (parsed.view === 'map') {
+        applyMapTemporal(peopleList)
       }
     },
-    [frameViewportToPeople, frameViewportToRange],
+    [frameViewportToPeople, frameViewportToRange, peopleList],
   )
 
   const onCameraCommit = React.useCallback(
@@ -443,6 +535,7 @@ const Chronology = () => {
       const next = { lat: camera.latitude, lng: camera.longitude, zoom: camera.zoom }
       setMapCamera(next)
       mapCameraFromUrl.current = true
+      const temporal = mapTemporalRef.current
       writeAppUrl({
         view: 'map',
         collection: activeCollectionIdRef.current,
@@ -451,18 +544,186 @@ const Chronology = () => {
         lat: next.lat,
         lng: next.lng,
         zoom: next.zoom,
+        year: temporal.year,
+        yearFrom: temporal.yearFrom,
+        yearTo: temporal.yearTo,
       })
     },
     [currentLayers, darkMode],
   )
 
+  const persistMapTemporalThrottled = React.useCallback(
+    (year: number, yearFrom: number, yearTo: number, force = false) => {
+      const now = performance.now()
+      if (!force && now - lastUrlWriteRef.current < 200) return
+      lastUrlWriteRef.current = now
+      persistUrl({ view: 'map', year, yearFrom, yearTo }, 'replace')
+    },
+    [persistUrl],
+  )
+
+  const onScrubberRangeChange = React.useCallback(
+    (yearFrom: number, yearTo: number) => {
+      const year = clampYearToRange(mapTemporalRef.current.year, yearFrom, yearTo)
+      setMapYearFrom(yearFrom)
+      setMapYearTo(yearTo)
+      setMapYear(year)
+      setTemporalMode('range')
+      setMapPlaying(false)
+      mapTemporalRef.current = { year, yearFrom, yearTo }
+      persistMapTemporalThrottled(year, yearFrom, yearTo)
+    },
+    [persistMapTemporalThrottled],
+  )
+
+  const onScrubberYearChange = React.useCallback(
+    (year: number) => {
+      const { yearFrom, yearTo } = mapTemporalRef.current
+      const next = clampYearToRange(year, yearFrom, yearTo)
+      setMapYear(next)
+      setTemporalMode('playhead')
+      setMapPlaying(false)
+      mapTemporalRef.current = { ...mapTemporalRef.current, year: next }
+      persistMapTemporalThrottled(next, yearFrom, yearTo)
+    },
+    [persistMapTemporalThrottled],
+  )
+
+  const stopPlayback = React.useCallback(() => {
+    setMapPlaying(false)
+    if (playRafRef.current != null) {
+      cancelAnimationFrame(playRafRef.current)
+      playRafRef.current = null
+    }
+  }, [])
+
+  const onScrubberSeek = React.useCallback(
+    (year: number) => {
+      const span = collectionLifespanSpan(peopleList)
+      const axisLo = span?.yearFrom ?? mapTemporalRef.current.yearFrom
+      const axisHi = span?.yearTo ?? mapTemporalRef.current.yearTo
+      const lo = Math.min(axisLo, axisHi)
+      const hi = Math.max(axisLo, axisHi)
+      const next = clampYearToRange(Math.round(year), lo, hi)
+      let { yearFrom, yearTo } = mapTemporalRef.current
+      if (next < yearFrom) yearFrom = next
+      if (next > yearTo) yearTo = next
+      setMapYearFrom(yearFrom)
+      setMapYearTo(yearTo)
+      setMapYear(next)
+      setTemporalMode('playhead')
+      mapTemporalRef.current = { year: next, yearFrom, yearTo }
+      persistMapTemporalThrottled(next, yearFrom, yearTo, true)
+    },
+    [peopleList, persistMapTemporalThrottled],
+  )
+
+  const onPlayToggle = React.useCallback(() => {
+    if (mapPlaying) {
+      stopPlayback()
+      const t = mapTemporalRef.current
+      persistUrl({ view: 'map', year: t.year, yearFrom: t.yearFrom, yearTo: t.yearTo }, 'replace')
+      return
+    }
+    const { year, yearFrom, yearTo } = mapTemporalRef.current
+    const start = year >= yearTo ? yearFrom : year
+    setMapYear(start)
+    setTemporalMode('playhead')
+    mapTemporalRef.current = { ...mapTemporalRef.current, year: start }
+    persistUrl({ view: 'map', year: start, yearFrom, yearTo }, 'replace')
+    setMapPlaying(true)
+  }, [mapPlaying, persistUrl, stopPlayback])
+
+  React.useEffect(() => {
+    if (!mapPlaying || view !== 'map') return
+
+    const paths = buildPersonLifePaths(
+      peopleList,
+      LocationListService.getAll(),
+      peopleHistoryEvents,
+      publicationsList,
+    )
+    const tracks = buildAvatarTracks(peopleList, LocationListService.getAll(), peopleHistoryEvents)
+    const contentYears = contentYearsFromPaths(paths, tracks, {
+      showAuthors: displayAuthors,
+      showPublications: displayPublications,
+      showPersonal: displayPersonHistoryEvents,
+    })
+
+    let lastTs: number | null = null
+    const tick = (ts: number) => {
+      if (lastTs == null) lastTs = ts
+      const dt = Math.min((ts - lastTs) / 1000, 0.1)
+      lastTs = ts
+      const current = mapTemporalRef.current
+      if (current.year >= current.yearTo) {
+        setMapYear(current.yearTo)
+        mapTemporalRef.current = { ...current, year: current.yearTo }
+        persistUrl(
+          { view: 'map', year: current.yearTo, yearFrom: current.yearFrom, yearTo: current.yearTo },
+          'replace',
+        )
+        stopPlayback()
+        return
+      }
+      const speed = playbackYearsPerSecond(
+        current.year,
+        current.yearTo,
+        contentYears,
+        playbackSpeedRef.current,
+      )
+      const next = Math.min(current.yearTo, current.year + speed * dt)
+      setMapYear(next)
+      mapTemporalRef.current = { ...current, year: next }
+      persistMapTemporalThrottled(next, current.yearFrom, current.yearTo)
+      playRafRef.current = requestAnimationFrame(tick)
+    }
+    playRafRef.current = requestAnimationFrame(tick)
+    return () => {
+      if (playRafRef.current != null) cancelAnimationFrame(playRafRef.current)
+      playRafRef.current = null
+    }
+  }, [
+    mapPlaying,
+    view,
+    peopleList,
+    peopleHistoryEvents,
+    publicationsList,
+    displayAuthors,
+    displayPublications,
+    displayPersonHistoryEvents,
+    persistMapTemporalThrottled,
+    persistUrl,
+    stopPlayback,
+  ])
+
   const toggleMapView = () => {
     const nextView: AppView = view === 'map' ? 'timeline' : 'map'
     setView(nextView)
     if (nextView === 'map') {
-      // Keep existing map camera if we had one; otherwise fit bounds.
-      persistUrl({ view: 'map', clearMapCamera: mapCamera == null }, 'push')
+      const span = collectionLifespanSpan(peopleList)
+      if (span) {
+        setMapYearFrom(span.yearFrom)
+        setMapYearTo(span.yearTo)
+        setMapYear(span.yearFrom)
+        setTemporalMode('range')
+        setMapPlaying(false)
+        mapTemporalRef.current = { year: span.yearFrom, yearFrom: span.yearFrom, yearTo: span.yearTo }
+        persistUrl(
+          {
+            view: 'map',
+            clearMapCamera: mapCamera == null,
+            year: span.yearFrom,
+            yearFrom: span.yearFrom,
+            yearTo: span.yearTo,
+          },
+          'push',
+        )
+      } else {
+        persistUrl({ view: 'map', clearMapCamera: mapCamera == null }, 'push')
+      }
     } else {
+      stopPlayback()
       persistUrl({ view: 'timeline' }, 'push')
     }
   }
@@ -486,6 +747,9 @@ const Chronology = () => {
       lat: parsed.lat,
       lng: parsed.lng,
       zoom: parsed.zoom,
+      year: parsed.year ?? (parsed.view === 'map' ? mapTemporalRef.current.year : undefined),
+      yearFrom: parsed.yearFrom ?? (parsed.view === 'map' ? mapTemporalRef.current.yearFrom : undefined),
+      yearTo: parsed.yearTo ?? (parsed.view === 'map' ? mapTemporalRef.current.yearTo : undefined),
     })
     if (`${window.location.pathname}${window.location.search}` !== href || window.location.hash) {
       history.replaceState(null, '', href)
@@ -572,9 +836,24 @@ const Chronology = () => {
           initialCamera={mapInitialCamera}
           locationsList={LocationListService.getAll()}
           onCameraCommit={onMapCameraCommit}
+          onPersonClick={id => {
+            const person = peopleList.find(p => p.id === id)
+            if (!person) return
+            setCurrentAuthor(person)
+            setDisplayLocationModal(false)
+            setDisplayPublicationModal(false)
+            setDisplayPersonHistoryEventModal(false)
+            setDisplayPersonModal(true)
+          }}
           peopleHistoryEvents={peopleHistoryEvents}
           peopleList={peopleList}
           publicationsList={publicationsList}
+          temporal={{
+            year: mapYear,
+            yearFrom: mapYearFrom,
+            yearTo: mapYearTo,
+            mode: temporalMode,
+          }}
           windowHeight={prop.windowSize.y}
           windowWidth={prop.windowSize.x}
         />
@@ -640,6 +919,25 @@ const Chronology = () => {
         />
       )}
 
+      {view === 'map' && (
+        <MapTemporalScrubber
+          axisFrom={collectionLifespanSpan(peopleList)?.yearFrom ?? mapYearFrom}
+          axisTo={collectionLifespanSpan(peopleList)?.yearTo ?? mapYearTo}
+          darkMode={darkMode}
+          filtersVisible={filtersVisible}
+          onPlayToggle={onPlayToggle}
+          onRangeChange={onScrubberRangeChange}
+          onSeek={onScrubberSeek}
+          onSpeedChange={setPlaybackSpeed}
+          onYearChange={onScrubberYearChange}
+          playbackSpeed={playbackSpeed}
+          playing={mapPlaying}
+          year={mapYear}
+          yearFrom={mapYearFrom}
+          yearTo={mapYearTo}
+        />
+      )}
+
       <div style={{ position: 'relative', zIndex: 50 }}>
         <Menu
           collectionsState={collectionsState}
@@ -653,6 +951,7 @@ const Chronology = () => {
           displayPublications={displayPublications}
           mapView={view === 'map'}
           onCloseSearch={closeSearch}
+          onFiltersVisibleChange={setFiltersVisible}
           onOpenSearch={openSearch}
           onToggleMapView={toggleMapView}
           searchOpen={searchOpen}

@@ -107,3 +107,13 @@ export function dashOffsetFromTime(ms: number, from = 2000, periodMs = 50_000) {
   const t = (ms % periodMs) / periodMs
   return from * (1 - t)
 }
+
+/**
+ * Marching-dash offset, ~64 px/s.
+ * Increasing offset walks the pattern back toward the start of the polyline,
+ * so `towardEnd` uses a negative offset and the dashes travel start → end.
+ */
+export function chronoDashOffset(ms: number, towardEnd: boolean) {
+  const travel = (ms / 1000) * 64
+  return towardEnd ? -travel : travel
+}

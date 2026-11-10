@@ -1,7 +1,7 @@
 import { setWorkerUrl } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import React from 'react'
-import Map, { Layer, Popup, Source, type MapRef } from 'react-map-gl/maplibre'
+import MapGl, { Layer, Marker, Popup, Source, type MapRef } from 'react-map-gl/maplibre'
 import type Location from '../../data/dto/Location'
 import type Person from '../../data/dto/Person'
 import type PersonHistoryEvent from '../../data/dto/PersonHistoryEvent'
@@ -12,15 +12,20 @@ import {
   buildPersonLifePaths,
   lifePathsToGeoJson,
 } from '../../utils/lifePaths'
+import {
+  avatarPositionAt,
+  buildAvatarTracks,
+  type TemporalState,
+} from '../../utils/mapTemporal'
+import { clusterKey, mapAccentForBasemap, spiralOffsetDegrees } from '../../utils/mapVisual'
+import { formatYear } from '../../utils/years'
 
-// MapLibre v6 loads a separate worker module. Without an explicit URL the
-// default resolves next to the page path (e.g. /map/...), SPA fallback returns
-// HTML, and the browser blocks it as MIME text/html.
 const maplibreWorkerUrl = `${getAppBasePath()}/maplibre-gl-worker.mjs`
 setWorkerUrl(maplibreWorkerUrl)
 
 const LIGHT_STYLE = 'https://tiles.openfreemap.org/styles/liberty'
 const DARK_STYLE = 'https://tiles.openfreemap.org/styles/dark'
+const APP_BASE = getAppBasePath()
 
 const EUROPE_FALLBACK = {
   latitude: 50,
@@ -28,19 +33,41 @@ const EUROPE_FALLBACK = {
   zoom: 3.2,
 }
 
-const POINT_LAYER_ID = 'life-path-points'
-
 const KIND_LABELS: Record<string, string> = {
   birth: 'Narodziny',
   death: 'Śmierć',
   publication: 'Publikacja',
   personal: 'Wydarzenie osobiste',
+  portrait: 'Osoba',
 }
 
 export type MapCamera = {
   latitude: number
   longitude: number
   zoom: number
+}
+
+type EventItem = {
+  id: string
+  kind: string
+  lat: number
+  lng: number
+  accent: string
+  opacity: number
+  personName: string
+  label: string
+  year: number | null
+  radius: number
+}
+
+type PortraitItem = {
+  personId: string
+  name: string
+  accent: string
+  thumbnail: string | null
+  lat: number
+  lng: number
+  opacity: number
 }
 
 type PointTooltip = {
@@ -50,7 +77,6 @@ type PointTooltip = {
   personName: string
   label: string
   year: number | null
-  pinned: boolean
 }
 
 type GeographicMapProps = {
@@ -63,43 +89,150 @@ type GeographicMapProps = {
   locationsList: Location[]
   peopleHistoryEvents: PersonHistoryEvent[]
   publicationsList: Publication[]
+  temporal: TemporalState
   initialCamera: MapCamera | null
   onCameraCommit: (camera: MapCamera) => void
+  onPersonClick: (personId: string) => void
   windowWidth: number
   windowHeight: number
 }
 
-function tooltipFromFeature(
-  feature: maplibregl.MapGeoJSONFeature,
-  longitude: number,
-  latitude: number,
-  pinned: boolean,
-): PointTooltip | null {
-  const props = feature.properties
-  if (!props || props.kind === 'path') return null
-  const yearRaw = props.year
-  const year =
-    yearRaw == null || yearRaw === ''
-      ? null
-      : Number.isFinite(Number(yearRaw))
-        ? Number(yearRaw)
-        : null
-  return {
-    longitude,
-    latitude,
-    kind: String(props.kind ?? ''),
-    personName: String(props.personName ?? ''),
-    label: String(props.label ?? ''),
-    year,
-    pinned,
-  }
+function kindRadius(kind: string): number {
+  if (kind === 'birth' || kind === 'death') return 14
+  if (kind === 'personal') return 12
+  if (kind === 'publication') return 11
+  return 12
 }
+
+const EventBubble = React.memo(function EventBubble(props: {
+  itemId: string
+  size: number
+  accent: string
+  border: string
+  opacity: number
+  title: string
+  onActivate: (itemId: string, event: React.MouseEvent) => void
+}) {
+  return (
+    <button
+      data-item-id={props.itemId}
+      title={props.title}
+      onClick={event => props.onActivate(props.itemId, event)}
+      style={{
+        background: props.accent,
+        border: `2px solid ${props.border}`,
+        borderRadius: '50%',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.45)',
+        cursor: 'pointer',
+        height: props.size,
+        opacity: props.opacity,
+        overflow: 'hidden',
+        padding: 0,
+        pointerEvents: props.opacity < 0.05 ? 'none' : 'auto',
+        width: props.size,
+      }}
+      type="button"
+    />
+  )
+})
+
+const ClusterBubble = React.memo(function ClusterBubble(props: {
+  clusterKey: string
+  count: number
+  accent: string
+  border: string
+  opacity: number
+  onActivate: (clusterKey: string, event: React.MouseEvent) => void
+}) {
+  return (
+    <button
+      aria-label={`${props.count} elementów`}
+      onClick={event => props.onActivate(props.clusterKey, event)}
+      style={{
+        alignItems: 'center',
+        background: props.accent,
+        border: `2px solid ${props.border}`,
+        borderRadius: '50%',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.45)',
+        color: '#fff',
+        cursor: 'pointer',
+        display: 'flex',
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: 12,
+        fontWeight: 800,
+        height: 34,
+        justifyContent: 'center',
+        opacity: props.opacity,
+        width: 34,
+      }}
+      type="button"
+    >
+      {props.count}
+    </button>
+  )
+})
+
+const PortraitBubble = React.memo(function PortraitBubble(props: {
+  personId: string
+  name: string
+  accent: string
+  border: string
+  opacity: number
+  thumbnail: string | null
+  onActivate: (personId: string, event: React.MouseEvent) => void
+}) {
+  return (
+    <button
+      title={props.name}
+      onClick={event => props.onActivate(props.personId, event)}
+      style={{
+        background: props.accent,
+        border: `2px solid ${props.border}`,
+        borderRadius: '50%',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.45)',
+        cursor: 'pointer',
+        height: 28,
+        opacity: props.opacity,
+        overflow: 'hidden',
+        padding: 0,
+        pointerEvents: props.opacity < 0.05 ? 'none' : 'auto',
+        width: 28,
+      }}
+      type="button"
+    >
+      {props.thumbnail ? (
+        <img
+          alt=""
+          draggable={false}
+          src={`${APP_BASE}/assets/person/${props.thumbnail}`}
+          style={{ display: 'block', height: '100%', objectFit: 'cover', width: '100%' }}
+        />
+      ) : (
+        <span
+          style={{
+            alignItems: 'center',
+            color: '#fff',
+            display: 'flex',
+            fontSize: 11,
+            fontWeight: 700,
+            height: '100%',
+            justifyContent: 'center',
+            width: '100%',
+          }}
+        >
+          {props.name.slice(0, 1)}
+        </span>
+      )}
+    </button>
+  )
+})
 
 const GeographicMap = (props: GeographicMapProps) => {
   const mapRef = React.useRef<MapRef>(null)
   const fittedForKey = React.useRef<string | null>(null)
   const skipNextMoveEnd = React.useRef(false)
   const [tooltip, setTooltip] = React.useState<PointTooltip | null>(null)
+  const [expandedClusters, setExpandedClusters] = React.useState<Set<string>>(() => new Set())
 
   const paths = React.useMemo(
     () =>
@@ -112,6 +245,11 @@ const GeographicMap = (props: GeographicMapProps) => {
     [props.peopleList, props.locationsList, props.peopleHistoryEvents, props.publicationsList],
   )
 
+  const avatarTracks = React.useMemo(
+    () => buildAvatarTracks(props.peopleList, props.locationsList, props.peopleHistoryEvents),
+    [props.peopleList, props.locationsList, props.peopleHistoryEvents],
+  )
+
   const geojson = React.useMemo(
     () =>
       lifePathsToGeoJson(paths, {
@@ -119,6 +257,8 @@ const GeographicMap = (props: GeographicMapProps) => {
         showLifelines: props.displayAuthorsTimeline,
         showPublications: props.displayPublications,
         showPersonal: props.displayPersonHistoryEvents,
+        temporal: props.temporal,
+        darkMode: props.darkMode,
       }),
     [
       paths,
@@ -126,8 +266,91 @@ const GeographicMap = (props: GeographicMapProps) => {
       props.displayAuthorsTimeline,
       props.displayPublications,
       props.displayPersonHistoryEvents,
+      props.temporal,
+      props.darkMode,
     ],
   )
+
+  const pathGeoJson = React.useMemo(
+    () => ({
+      type: 'FeatureCollection' as const,
+      features: geojson.features.filter(f => f.properties.kind === 'path'),
+    }),
+    [geojson],
+  )
+
+  // Static event markers only — never mix moving portraits into clusters.
+  const eventItems = React.useMemo(() => {
+    const items: EventItem[] = []
+    for (const f of geojson.features) {
+      if (f.properties.kind === 'path' || f.geometry.type !== 'Point') continue
+      const opacity = Number(f.properties.opacity ?? 0.95)
+      if (opacity < 0.02) continue
+      const [lng, lat] = f.geometry.coordinates
+      const yearRaw = f.properties.year
+      const year =
+        yearRaw == null || yearRaw === ''
+          ? null
+          : Number.isFinite(Number(yearRaw))
+            ? Number(yearRaw)
+            : null
+      items.push({
+        id: `${f.properties.kind}:${f.properties.personId}:${f.properties.refId ?? f.properties.label}:${year}`,
+        kind: String(f.properties.kind ?? ''),
+        lat,
+        lng,
+        accent: String(f.properties.accent ?? '#888'),
+        opacity,
+        personName: String(f.properties.personName ?? ''),
+        label: String(f.properties.label ?? ''),
+        year,
+        radius: kindRadius(String(f.properties.kind ?? '')),
+      })
+    }
+    return items
+  }, [geojson])
+
+  const portraits = React.useMemo(() => {
+    if (!props.displayAuthors) return [] as PortraitItem[]
+    const out: PortraitItem[] = []
+    for (const track of avatarTracks) {
+      const pos = avatarPositionAt(track, props.temporal)
+      if (!pos || pos.opacity < 0.02) continue
+      out.push({
+        personId: track.personId,
+        name: track.name,
+        accent: mapAccentForBasemap(track.accent, props.darkMode),
+        thumbnail: track.thumbnail,
+        lat: pos.lat,
+        lng: pos.lng,
+        opacity: pos.opacity,
+      })
+    }
+    return out
+  }, [avatarTracks, props.displayAuthors, props.temporal, props.darkMode])
+
+  const eventClusters = React.useMemo(() => {
+    const groups = new Map<string, EventItem[]>()
+    for (const item of eventItems) {
+      const key = clusterKey(item.lat, item.lng)
+      const list = groups.get(key) ?? []
+      list.push(item)
+      groups.set(key, list)
+    }
+    return [...groups.entries()].map(([key, members]) => ({
+      key,
+      // Anchor to first member's exact coords so the cluster key stays stable.
+      lat: members[0].lat,
+      lng: members[0].lng,
+      members,
+    }))
+  }, [eventItems])
+
+  // Only collapse clusters when the selected range/mode changes — not every playhead tick.
+  React.useEffect(() => {
+    setExpandedClusters(new Set())
+    setTooltip(null)
+  }, [props.temporal.yearFrom, props.temporal.yearTo, props.temporal.mode])
 
   const fitKey = React.useMemo(
     () =>
@@ -183,7 +406,6 @@ const GeographicMap = (props: GeographicMapProps) => {
   ])
 
   React.useEffect(() => {
-    // Re-fit when collection filter changes and URL has no camera.
     if (props.initialCamera) {
       fittedForKey.current = fitKey
       return
@@ -191,10 +413,6 @@ const GeographicMap = (props: GeographicMapProps) => {
     fittedForKey.current = null
     applyFitOrInitial()
   }, [applyFitOrInitial, fitKey, props.initialCamera])
-
-  React.useEffect(() => {
-    setTooltip(null)
-  }, [geojson])
 
   const onMoveEnd = () => {
     if (skipNextMoveEnd.current) {
@@ -212,45 +430,58 @@ const GeographicMap = (props: GeographicMapProps) => {
     props.onCameraCommit({ latitude: c.lat, longitude: c.lng, zoom: map.getZoom() })
   }
 
-  const queryPoint = (event: { point: { x: number; y: number }; lngLat: { lng: number; lat: number } }) => {
-    const map = mapRef.current?.getMap()
-    if (!map || !map.getLayer(POINT_LAYER_ID)) return null
-    const features = map.queryRenderedFeatures(event.point, { layers: [POINT_LAYER_ID] })
-    const feature = features[0]
-    if (!feature) return null
-    return tooltipFromFeature(feature, event.lngLat.lng, event.lngLat.lat, false)
-  }
+  const border = props.darkMode ? '#111' : '#fff'
+  const kindLabel = tooltip ? (KIND_LABELS[tooltip.kind] ?? tooltip.kind) : ''
 
-  const onMouseMove = (event: maplibregl.MapLayerMouseEvent) => {
-    if (tooltip?.pinned) return
-    const next = queryPoint(event)
-    const map = mapRef.current?.getMap()
-    if (map) map.getCanvas().style.cursor = next ? 'pointer' : ''
-    setTooltip(next)
-  }
+  const eventClustersRef = React.useRef(eventClusters)
+  eventClustersRef.current = eventClusters
 
-  const onMouseLeave = () => {
-    if (tooltip?.pinned) return
-    const map = mapRef.current?.getMap()
-    if (map) map.getCanvas().style.cursor = ''
+  const onClusterActivate = React.useCallback((key: string, event: React.MouseEvent) => {
+    event.stopPropagation()
+    setExpandedClusters(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
     setTooltip(null)
-  }
+  }, [])
 
-  const onClick = (event: maplibregl.MapLayerMouseEvent) => {
-    const next = queryPoint(event)
-    if (next) {
-      setTooltip({ ...next, pinned: true })
+  const onEventActivate = React.useCallback((itemId: string, event: React.MouseEvent) => {
+    event.stopPropagation()
+    for (const group of eventClustersRef.current) {
+      const expanded = expandedClusters.has(group.key)
+      const index = group.members.findIndex(m => m.id === itemId)
+      if (index < 0) continue
+      const item = group.members[index]
+      const offset =
+        expanded && group.members.length > 1
+          ? spiralOffsetDegrees(index, group.members.length)
+          : { dLat: 0, dLng: 0 }
+      setTooltip({
+        latitude: item.lat + offset.dLat,
+        longitude: item.lng + offset.dLng,
+        kind: item.kind,
+        personName: item.personName,
+        label: item.label,
+        year: item.year,
+      })
       return
     }
-    // Tap/click empty map dismisses a pinned (mobile) tooltip.
-    setTooltip(null)
-  }
+  }, [expandedClusters])
 
-  const kindLabel = tooltip ? (KIND_LABELS[tooltip.kind] ?? tooltip.kind) : ''
+  const onPortraitActivate = React.useCallback(
+    (personId: string, event: React.MouseEvent) => {
+      event.stopPropagation()
+      setTooltip(null)
+      props.onPersonClick(personId)
+    },
+    [props.onPersonClick],
+  )
 
   return (
     <div style={{ height: props.windowHeight, width: props.windowWidth }}>
-      <Map
+      <MapGl
         ref={mapRef}
         initialViewState={
           props.initialCamera ?? {
@@ -259,61 +490,104 @@ const GeographicMap = (props: GeographicMapProps) => {
             zoom: EUROPE_FALLBACK.zoom,
           }
         }
-        interactiveLayerIds={[POINT_LAYER_ID]}
         mapStyle={props.darkMode ? DARK_STYLE : LIGHT_STYLE}
-        onClick={onClick}
+        onClick={() => {
+          setExpandedClusters(new Set())
+          setTooltip(null)
+        }}
         onLoad={applyFitOrInitial}
-        onMouseLeave={onMouseLeave}
-        onMouseMove={onMouseMove}
         onMoveEnd={onMoveEnd}
         style={{ width: '100%', height: '100%' }}
-        attributionControl
       >
-        <Source id="life-paths" type="geojson" data={geojson}>
+        <Source id="life-paths" type="geojson" data={pathGeoJson}>
           <Layer
             id="life-path-lines"
             type="line"
             filter={['==', ['get', 'kind'], 'path']}
             paint={{
               'line-color': ['get', 'accent'],
-              'line-width': 2.5,
-              'line-opacity': 0.85,
+              'line-width': 3.25,
+              'line-opacity': ['coalesce', ['get', 'opacity'], 0.85],
             }}
             layout={{
               'line-cap': 'round',
               'line-join': 'round',
             }}
           />
-          <Layer
-            id={POINT_LAYER_ID}
-            type="circle"
-            filter={['!=', ['get', 'kind'], 'path']}
-            paint={{
-              'circle-radius': [
-                'match',
-                ['get', 'kind'],
-                'birth',
-                7,
-                'death',
-                7,
-                'publication',
-                5,
-                'personal',
-                6,
-                5,
-              ],
-              'circle-color': ['get', 'accent'],
-              'circle-stroke-width': 1.5,
-              'circle-stroke-color': props.darkMode ? '#111' : '#fff',
-              'circle-opacity': 0.95,
-            }}
-          />
         </Source>
+
+        {eventClusters.flatMap(group => {
+          const expanded = expandedClusters.has(group.key)
+          if (!expanded && group.members.length > 1) {
+            const accent = group.members[0]?.accent ?? '#5b8def'
+            const opacity = Math.max(...group.members.map(m => m.opacity))
+            return [
+              <Marker
+                key={`cluster:${group.key}`}
+                anchor="center"
+                latitude={group.lat}
+                longitude={group.lng}
+                style={{ zIndex: 10 }}
+              >
+                <ClusterBubble
+                  accent={accent}
+                  border={border}
+                  clusterKey={group.key}
+                  count={group.members.length}
+                  opacity={opacity}
+                  onActivate={onClusterActivate}
+                />
+              </Marker>,
+            ]
+          }
+
+          return group.members.map((item, index) => {
+            const offset =
+              expanded && group.members.length > 1
+                ? spiralOffsetDegrees(index, group.members.length)
+                : { dLat: 0, dLng: 0 }
+            const lat = item.lat + offset.dLat
+            const lng = item.lng + offset.dLng
+            return (
+              <Marker key={item.id} anchor="center" latitude={lat} longitude={lng} style={{ zIndex: 10 }}>
+                <EventBubble
+                  accent={item.accent}
+                  border={border}
+                  itemId={item.id}
+                  opacity={item.opacity}
+                  size={item.radius}
+                  title={item.personName || item.label}
+                  onActivate={onEventActivate}
+                />
+              </Marker>
+            )
+          })
+        })}
+
+        {portraits.map(p => (
+          <Marker
+            key={`portrait:${p.personId}`}
+            anchor="center"
+            latitude={p.lat}
+            longitude={p.lng}
+            style={{ zIndex: 30 }}
+          >
+            <PortraitBubble
+              accent={p.accent}
+              border={border}
+              name={p.name}
+              opacity={p.opacity}
+              personId={p.personId}
+              thumbnail={p.thumbnail}
+              onActivate={onPortraitActivate}
+            />
+          </Marker>
+        ))}
 
         {tooltip && (
           <Popup
             anchor="bottom"
-            closeButton={tooltip.pinned}
+            closeButton
             closeOnClick={false}
             latitude={tooltip.latitude}
             longitude={tooltip.longitude}
@@ -332,14 +606,14 @@ const GeographicMap = (props: GeographicMapProps) => {
             >
               <div style={{ fontWeight: 700, marginBottom: 2 }}>{kindLabel}</div>
               {tooltip.personName && <div style={{ opacity: 0.85 }}>{tooltip.personName}</div>}
-              {tooltip.year != null && <div style={{ opacity: 0.7 }}>{tooltip.year}</div>}
-              {tooltip.label && (
+              {tooltip.year != null && <div style={{ opacity: 0.7 }}>{formatYear(tooltip.year)}</div>}
+              {tooltip.label && tooltip.label !== tooltip.personName && (
                 <div style={{ marginTop: 4 }}>{tooltip.label}</div>
               )}
             </div>
           </Popup>
         )}
-      </Map>
+      </MapGl>
     </div>
   )
 }

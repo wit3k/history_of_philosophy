@@ -10,7 +10,7 @@ import type Publication from '../data/dto/Publication'
 import type PublicationReference from '../data/dto/PublicationReference'
 import ColorsService from '../services/Colors'
 import { formatYearRange, isApproximateAccuracy, mod } from '../utils/years'
-import { dashOffsetFromTime, strokeDashedPolyline, strokeDashedVerticalLine } from './dashedStroke'
+import { chronoDashOffset, strokeDashedPolyline, strokeDashedVerticalLine } from './dashedStroke'
 import { flattenPathDataCached, strokePathData } from './pathBridge'
 import { attitudeColor, buildPersonReferencePath, buildPublicationReferencePath, wrapTitleWords } from './relationPaths'
 import type { TimelineTooltipState } from './TimelineTooltip'
@@ -62,7 +62,17 @@ export type SharedTimelineProps = CameraFns &
     layoutToScreen: (lx: number, ly: number) => { x: number; y: number }
     /** Case-insensitive substring; empty = no search highlight. */
     searchQuery: string
+    /** Relation, person-event or publication currently under the pointer. */
+    lineHover: LineHover | null
+    setLineHover: (next: LineHover | null) => void
+    clearLineHover: (kind: LineHover['kind'], id: string) => void
   }
+
+export type LineHover =
+  | { kind: 'person-ref'; id: string }
+  | { kind: 'pub-ref'; id: string }
+  | { kind: 'person'; id: string }
+  | { kind: 'publication'; id: string }
 
 export function YearLinesLayer({
   yearsOnScale,
@@ -337,39 +347,53 @@ export function PeopleLayer({ people, shared }: { people: Person[]; shared: Shar
   )
 }
 
+const MARCH = [16, 12]
+
 function AnimatedPath({
   path,
   color,
   width,
   alpha,
   dashed,
-  dashPattern,
+  hoverKey,
+  onHover,
+  onLeave,
 }: {
   path: string
   color: string
   width: number
   alpha: number
   dashed: boolean
-  dashPattern: number[]
+  hoverKey: string
+  onHover: (key: string) => void
+  onLeave: (key: string) => void
 }) {
   const gRef = useRef<PixiGraphics | null>(null)
   const pointsRef = useRef(flattenPathDataCached(path))
-  const styleRef = useRef({ alpha, color, dashed, dashPattern, path, width })
-  styleRef.current = { alpha, color, dashed, dashPattern, path, width }
+  const styleRef = useRef({ alpha, color, dashed, path, width })
+  styleRef.current = { alpha, color, dashed, path, width }
   pointsRef.current = flattenPathDataCached(path)
+  const hoverKeyRef = useRef(hoverKey)
+  hoverKeyRef.current = hoverKey
+  const onHoverRef = useRef(onHover)
+  const onLeaveRef = useRef(onLeave)
+  onHoverRef.current = onHover
+  onLeaveRef.current = onLeave
 
   const paint = useCallback(() => {
     const g = gRef.current
     if (!g) return
     const s = styleRef.current
     g.clear()
+    const points = pointsRef.current
     if (s.dashed) {
-      strokeDashedPolyline(g, pointsRef.current, s.dashPattern, dashOffsetFromTime(performance.now()), {
+      const towardEnd = points.length < 2 || points[points.length - 1].x >= points[0].x
+      strokeDashedPolyline(g, points, MARCH, chronoDashOffset(performance.now(), towardEnd), {
         alpha: s.alpha,
         cap: 'butt',
         color: s.color,
-        join: 'miter',
-        width: s.width,
+        join: 'round',
+        width: Math.max(s.width, 3),
       })
     } else {
       strokePathData(g, s.path, {
@@ -386,28 +410,35 @@ function AnimatedPath({
     if (styleRef.current.dashed) paint()
   })
 
-  // Static (or highlight toggle) redraw via React draw — no per-frame setState.
   const draw = useCallback(
     (g: PixiGraphics) => {
       gRef.current = g
       pointsRef.current = flattenPathDataCached(path)
-      g.clear()
-      if (dashed) {
-        strokeDashedPolyline(g, pointsRef.current, dashPattern, dashOffsetFromTime(performance.now()), {
-          alpha,
-          cap: 'butt',
-          color,
-          join: 'miter',
-          width,
-        })
-      } else {
-        strokePathData(g, path, { alpha, cap: 'butt', color, join: 'miter', width })
-      }
+      paint()
     },
-    [path, color, width, alpha, dashed, dashPattern],
+    [alpha, color, dashed, paint, path, width],
   )
 
-  return <pixiGraphics draw={draw} eventMode="none" />
+  const drawHit = useCallback(
+    (g: PixiGraphics) => {
+      g.clear()
+      strokePathData(g, path, { alpha: 0, cap: 'round', color, join: 'round', width: 18 })
+    },
+    [color, path],
+  )
+
+  return (
+    <pixiContainer>
+      <pixiGraphics draw={draw} eventMode="none" />
+      <pixiGraphics
+        cursor="pointer"
+        draw={drawHit}
+        eventMode="static"
+        onPointerOut={() => onLeaveRef.current(hoverKeyRef.current)}
+        onPointerOver={() => onHoverRef.current(hoverKeyRef.current)}
+      />
+    </pixiContainer>
+  )
 }
 
 export function PersonReferencesLayer({
@@ -419,8 +450,9 @@ export function PersonReferencesLayer({
   people: Person[]
   shared: SharedTimelineProps
 }) {
-  const { positionByYear, rowPosition, personBox, highlightedAuthor, isVisibleRange } = shared
-  const highlightsOn = highlightedAuthor !== '0'
+  const { positionByYear, rowPosition, personBox, highlightedAuthor, isVisibleRange, lineHover, setLineHover } =
+    shared
+  const highlightsOn = highlightedAuthor !== '0' || lineHover != null
   return (
     <pixiContainer>
       {references.map(reference => {
@@ -430,7 +462,14 @@ export function PersonReferencesLayer({
         if (!isVisibleRange(Math.min(personFrom.born, personTo.born), Math.max(personFrom.died, personTo.died))) {
           return null
         }
-        const isHighlighted = highlightedAuthor === personFrom.id || highlightedAuthor === personTo.id
+        const key = `pref-${reference.id}`
+        const personHot =
+          lineHover?.kind === 'person' && (lineHover.id === personFrom.id || lineHover.id === personTo.id)
+        const isHighlighted =
+          highlightedAuthor === personFrom.id ||
+          highlightedAuthor === personTo.id ||
+          personHot ||
+          (lineHover?.kind === 'person-ref' && lineHover.id === key)
         const path = buildPersonReferencePath(
           positionByYear(personFrom.born),
           positionByYear(personTo.born),
@@ -440,13 +479,15 @@ export function PersonReferencesLayer({
         )
         return (
           <AnimatedPath
-            key={`pref-${reference.id}-${reference.from}-${reference.to}`}
+            key={`${key}-${reference.from}-${reference.to}`}
             alpha={isHighlighted ? 1 : highlightsOn ? 0.1 : 1}
             color={attitudeColor(reference.attitude)}
             dashed={isHighlighted}
-            dashPattern={[1, 5]}
+            hoverKey={key}
+            onHover={id => setLineHover({ kind: 'person-ref', id })}
+            onLeave={id => shared.clearLineHover('person-ref', id)}
             path={path}
-            width={isHighlighted ? 5 : 2}
+            width={isHighlighted ? 4 : 2}
           />
         )
       })}
@@ -518,7 +559,11 @@ export function PublicationsLayer({
                   titleLines: lines,
                 })
               }}
-              onPointerOut={() => shared.setTooltip(null)}
+              onPointerOut={() => {
+                shared.setTooltip(null)
+                shared.clearLineHover('publication', publication.id)
+              }}
+              onPointerOver={() => shared.setLineHover({ kind: 'publication', id: publication.id })}
               onPointerTap={() => shared.onPublicationClick(publication, author)}
             />
           )
@@ -546,6 +591,8 @@ export function PublicationReferencesLayer({
     pubRefDot,
     highlightedAuthor,
     highlightedPublication,
+    lineHover,
+    setLineHover,
   } = shared
   return (
     <pixiContainer>
@@ -564,11 +611,20 @@ export function PublicationReferencesLayer({
         ) {
           return null
         }
+        const key = `pubref-${reference.id}`
+        const personHot =
+          lineHover?.kind === 'person' && (lineHover.id === authorFrom.id || lineHover.id === authorTo.id)
+        const publicationHot =
+          lineHover?.kind === 'publication' &&
+          (lineHover.id === publicationFrom.id || lineHover.id === publicationTo.id)
         const isHighlighted =
           highlightedAuthor === authorFrom.id ||
           highlightedAuthor === authorTo.id ||
           highlightedPublication === publicationFrom.id ||
-          highlightedPublication === publicationTo.id
+          highlightedPublication === publicationTo.id ||
+          personHot ||
+          publicationHot ||
+          (lineHover?.kind === 'pub-ref' && lineHover.id === key)
         const path = buildPublicationReferencePath(
           positionByYear(publicationFrom.publicationDate),
           positionByYear(publicationTo.publicationDate),
@@ -581,13 +637,15 @@ export function PublicationReferencesLayer({
         )
         return (
           <AnimatedPath
-            key={`pubref-${reference.id}`}
-            alpha={0.7}
+            key={key}
+            alpha={isHighlighted ? 1 : 0.7}
             color={ColorsService.getAccentColor(authorFrom.nationality)}
             dashed={isHighlighted}
-            dashPattern={[20, 3]}
+            hoverKey={key}
+            onHover={id => setLineHover({ kind: 'pub-ref', id })}
+            onLeave={id => shared.clearLineHover('pub-ref', id)}
             path={path}
-            width={2}
+            width={isHighlighted ? 3 : 2}
           />
         )
       })}
@@ -667,7 +725,11 @@ export function PersonHistoryEventsLayer({
                 eventMode="static"
                 onPointerDown={(e: FederatedPointerEvent) => e.stopPropagation()}
                 onPointerMove={showTip}
-                onPointerOut={() => shared.setTooltip(null)}
+                onPointerOut={() => {
+                  shared.setTooltip(null)
+                  shared.clearLineHover('person', person.id)
+                }}
+                onPointerOver={() => shared.setLineHover({ kind: 'person', id: person.id })}
                 onPointerTap={(e: FederatedPointerEvent) => {
                   e.stopPropagation()
                   shared.onPersonHistoryClick(event, person)
@@ -688,7 +750,11 @@ export function PersonHistoryEventsLayer({
               eventMode="static"
               onPointerDown={(e: FederatedPointerEvent) => e.stopPropagation()}
               onPointerMove={showTip}
-              onPointerOut={() => shared.setTooltip(null)}
+              onPointerOut={() => {
+                shared.setTooltip(null)
+                shared.clearLineHover('person', person.id)
+              }}
+              onPointerOver={() => shared.setLineHover({ kind: 'person', id: person.id })}
               onPointerTap={(e: FederatedPointerEvent) => {
                 e.stopPropagation()
                 shared.onPersonHistoryClick(event, person)
