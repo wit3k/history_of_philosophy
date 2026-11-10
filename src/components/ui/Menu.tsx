@@ -28,6 +28,8 @@ class MenuProps {
     public searchOpen: boolean,
     public onOpenSearch: () => void,
     public onCloseSearch: () => void,
+    public mapView: boolean,
+    public onToggleMapView: () => void,
   ) {}
 }
 
@@ -116,6 +118,12 @@ const FiltersIcon = () => (
 const SearchIcon = () => (
   <Icon>
     <path d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+  </Icon>
+)
+
+const MapViewIcon = () => (
+  <Icon>
+    <path d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0Z" />
   </Icon>
 )
 
@@ -258,6 +266,14 @@ const Menu = (props: MenuProps) => {
         icon: <DarkModeIcon />,
         label: 'Tryb ciemny',
         onChange: props.setDarkMode,
+      },
+    ],
+    [
+      {
+        active: props.mapView,
+        icon: <MapViewIcon />,
+        label: props.mapView ? 'Oś czasu' : 'Mapa',
+        onChange: () => props.onToggleMapView(),
       },
     ],
   ]

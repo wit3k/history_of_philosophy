@@ -25,3 +25,8 @@
  * @license BSD-3-Clause
  * @version 11.4.7
  */
+
+/**
+* MapLibre GL JS
+* @license 3-Clause BSD. Full text of license: https://github.com/maplibre/maplibre-gl-js/blob/v6.17.0/LICENSE.txt
+*/

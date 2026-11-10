@@ -10,10 +10,14 @@ export default defineConfig({
   },
   output: {
     target: 'web',
-    assetPrefix: '/history_of_philosophy',
+    // Keep BASE_URL + asset URLs under the GitHub Pages project path.
+    assetPrefix: '/history_of_philosophy/',
     cleanDistPath: true,
     distPath: {
       root: './docs',
     },
+  },
+  server: {
+    base: '/history_of_philosophy',
   },
 })

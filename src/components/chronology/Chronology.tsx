@@ -21,12 +21,17 @@ import type PublicationReference from '../../data/dto/PublicationReference'
 import Coordinates from '../../geometry/Coordinates'
 import TimelineDiagram from '../../pixi/TimelineDiagram'
 import {
+  type AppView,
+  type LayerFlags,
   cameraYFromTopRow,
-  parseViewHash,
+  formatAppUrl,
+  readAppUrl,
+  subscribeAppUrl,
   topRowFromCameraY,
   visibleYearRange,
-  writeViewHash,
-} from '../../utils/viewHash'
+  writeAppUrl,
+} from '../../utils/appUrl'
+import GeographicMap from '../map/GeographicMap'
 import LocationDetails from '../location/LocationDetails'
 import PersonDetails from '../person/PersonDetails'
 import PersonHistoryEventDetails from '../personHistoryEvents/PersonHistoryEventDetails'
@@ -48,6 +53,8 @@ const getWindowDimensions = () => ({
   y: hasWindow ? window.innerHeight : 0,
 })
 
+const initialUrl = hasWindow ? readAppUrl() : null
+
 const Chronology = () => {
   const [dimenstions, setWindowDimensions] = React.useState(getWindowDimensions())
 
@@ -59,7 +66,10 @@ const Chronology = () => {
 
       window.addEventListener('resize', handleResize)
       window.addEventListener('orientationchange', handleResize)
-      return () => window.removeEventListener('resize', handleResize)
+      return () => {
+        window.removeEventListener('resize', handleResize)
+        window.removeEventListener('orientationchange', handleResize)
+      }
     }
   }, [])
 
@@ -84,9 +94,16 @@ const Chronology = () => {
   const [peopleHistoryEvents, setPeopleHistoryEvents] = React.useState<PersonHistoryEvent[]>(
     PeopleHistoryEventsListService.getAll(),
   )
-  const [collectionsState, setCollectionsState] = React.useState<Collection[]>(CollectionsListService.getAll())
+  const [collectionsState, setCollectionsState] = React.useState<Collection[]>(() => {
+    const all = CollectionsListService.getAll()
+    const fromUrl = initialUrl?.collection
+    if (fromUrl && all.some(c => c.id === fromUrl)) {
+      return all.map(c => ({ ...c, isActive: c.id === fromUrl }))
+    }
+    return all
+  })
   const activeCollectionIdRef = React.useRef(
-    CollectionsListService.getAll().find(c => c.isActive)?.id ?? ALL_COLLECTIONS_ID,
+    collectionsState.find(c => c.isActive)?.id ?? ALL_COLLECTIONS_ID,
   )
   const viewportFrameId = React.useRef(0)
   const [viewportFrame, setViewportFrame] = React.useState<{
@@ -109,14 +126,40 @@ const Chronology = () => {
   const [displayPersonHistoryEventModal, setDisplayPersonHistoryEventModal] = React.useState<boolean>(false)
   const [currentLocation, setCurrentLocation] = React.useState(new Location('', '', new Coordinates(0, 0), ''))
 
-  const [displayAuthors, setDisplayAuthors] = React.useState(true)
-  const [displayAuthorsTimeline, setDisplayAuthorsTimeline] = React.useState(true)
-  const [displayAuthorRelations, setDisplayAuthorRelations] = React.useState(true)
-  const [displayPublications, setDisplayPublications] = React.useState(true)
-  const [displayPublicationRelations, setDisplayPublicationRelations] = React.useState(true)
-  const [displayHistoryEvents, setDisplayHistoryEvents] = React.useState(true)
-  const [displayPersonHistoryEvents, setDisplayPersonHistoryEvents] = React.useState(true)
-  const [darkMode, setDarkMode] = React.useState(window?.matchMedia('(prefers-color-scheme: dark)').matches)
+  const [displayAuthors, setDisplayAuthors] = React.useState(initialUrl?.layers.authors ?? true)
+  const [displayAuthorsTimeline, setDisplayAuthorsTimeline] = React.useState(initialUrl?.layers.lifelines ?? true)
+  const [displayAuthorRelations, setDisplayAuthorRelations] = React.useState(initialUrl?.layers.sympathies ?? true)
+  const [displayPublications, setDisplayPublications] = React.useState(initialUrl?.layers.pubs ?? true)
+  const [displayPublicationRelations, setDisplayPublicationRelations] = React.useState(
+    initialUrl?.layers.refs ?? true,
+  )
+  const [displayHistoryEvents, setDisplayHistoryEvents] = React.useState(initialUrl?.layers.events ?? true)
+  const [displayPersonHistoryEvents, setDisplayPersonHistoryEvents] = React.useState(
+    initialUrl?.layers.personal ?? true,
+  )
+  const [darkMode, setDarkMode] = React.useState(() => {
+    if (initialUrl?.dark !== undefined) return initialUrl.dark
+    return hasWindow ? window.matchMedia('(prefers-color-scheme: dark)').matches : true
+  })
+
+  const [view, setView] = React.useState<AppView>(initialUrl?.view ?? 'timeline')
+  const [mapCamera, setMapCamera] = React.useState<{ lat: number; lng: number; zoom: number } | null>(() => {
+    if (
+      initialUrl?.lat != null &&
+      initialUrl?.lng != null &&
+      initialUrl?.zoom != null
+    ) {
+      return { lat: initialUrl.lat, lng: initialUrl.lng, zoom: initialUrl.zoom }
+    }
+    return null
+  })
+  const mapCameraFromUrl = React.useRef(mapCamera != null)
+
+  const timelineViewportRef = React.useRef<{ start?: number; end?: number; row?: number }>({
+    start: initialUrl?.start,
+    end: initialUrl?.end,
+    row: initialUrl?.row,
+  })
 
   const [highlightedAuthor, updateHighlightedAuthor] = React.useState('0')
   const [currentPublication, setCurrentPublication] = React.useState<Publication>(new Publication('', '', 0, 0, '', ''))
@@ -135,6 +178,88 @@ const Chronology = () => {
     setSearchOpen(false)
     setSearchQuery('')
   }, [])
+
+  const currentLayers = React.useCallback(
+    (): LayerFlags => ({
+      authors: displayAuthors,
+      lifelines: displayAuthorsTimeline,
+      sympathies: displayAuthorRelations,
+      pubs: displayPublications,
+      refs: displayPublicationRelations,
+      events: displayHistoryEvents,
+      personal: displayPersonHistoryEvents,
+    }),
+    [
+      displayAuthors,
+      displayAuthorsTimeline,
+      displayAuthorRelations,
+      displayPublications,
+      displayPublicationRelations,
+      displayHistoryEvents,
+      displayPersonHistoryEvents,
+    ],
+  )
+
+  const persistUrl = React.useCallback(
+    (
+      next: {
+        view?: AppView
+        collection?: string
+        layers?: LayerFlags
+        dark?: boolean
+        start?: number
+        end?: number
+        row?: number
+        lat?: number
+        lng?: number
+        zoom?: number
+        clearMapCamera?: boolean
+      } = {},
+      mode: 'replace' | 'push' = 'replace',
+    ) => {
+      const nextView = next.view ?? view
+      const collection = next.collection ?? activeCollectionIdRef.current
+      const layers = next.layers ?? currentLayers()
+      const dark = next.dark ?? darkMode
+
+      if (nextView === 'timeline') {
+        const start = next.start ?? timelineViewportRef.current.start
+        const end = next.end ?? timelineViewportRef.current.end
+        const row = next.row ?? timelineViewportRef.current.row
+        writeAppUrl(
+          {
+            view: 'timeline',
+            collection,
+            layers,
+            dark,
+            start,
+            end,
+            row,
+          },
+          mode,
+        )
+      } else {
+        const useCamera = next.clearMapCamera
+          ? null
+          : next.lat != null && next.lng != null && next.zoom != null
+            ? { lat: next.lat, lng: next.lng, zoom: next.zoom }
+            : mapCamera
+        writeAppUrl(
+          {
+            view: 'map',
+            collection,
+            layers,
+            dark,
+            lat: useCamera?.lat,
+            lng: useCamera?.lng,
+            zoom: useCamera?.zoom,
+          },
+          mode,
+        )
+      }
+    },
+    [currentLayers, darkMode, mapCamera, view],
+  )
 
   interface HasId {
     id: string
@@ -163,7 +288,6 @@ const Chronology = () => {
     setPeopleList(PeopleListService.withRowNumbers(filteredPeople))
     setLocationsList(LocationListService.getAll().filter(itemsFilter(c => c.includedLocations)))
 
-    // World history events with no collection stay visible for every selection.
     const realCollections = collections.filter(c => c.id !== ALL_COLLECTIONS_ID && c.id !== UNASSIGNED_COLLECTION_ID)
     const eventsInAnyCollection = new Set(realCollections.flatMap(c => c.includedEvents).map(id => `${id}`))
     const eventInSelected = itemsFilter(c => c.includedEvents)
@@ -183,18 +307,21 @@ const Chronology = () => {
 
   const currentWindowWidth = () => dimenstions.x || (hasWindow ? window.innerWidth : 0)
 
-  const frameViewportToRange = React.useCallback((from: number, to: number, row = 0) => {
-    const width = hasWindow ? window.innerWidth : 0
-    if (width <= 0) return
-    const span = Math.max(to - from, 1)
-    viewportFrameId.current += 1
-    setViewportFrame({
-      id: viewportFrameId.current,
-      x: from,
-      y: cameraYFromTopRow(row, prop.rowHeight),
-      zoom: width / span,
-    })
-  }, [prop.rowHeight])
+  const frameViewportToRange = React.useCallback(
+    (from: number, to: number, row = 0) => {
+      const width = hasWindow ? window.innerWidth : 0
+      if (width <= 0) return
+      const span = Math.max(to - from, 1)
+      viewportFrameId.current += 1
+      setViewportFrame({
+        id: viewportFrameId.current,
+        x: from,
+        y: cameraYFromTopRow(row, prop.rowHeight),
+        zoom: width / span,
+      })
+    },
+    [prop.rowHeight],
+  )
 
   const frameViewportToPeople = React.useCallback(
     (people: Person[], row = 0) => {
@@ -214,28 +341,53 @@ const Chronology = () => {
     activeCollectionIdRef.current = collectionId
     setCollectionsState(newCollectionsState)
     const visiblePeople = applyCollectionFilter(collectionId, newCollectionsState)
+    if (view === 'map') {
+      mapCameraFromUrl.current = false
+      setMapCamera(null)
+      persistUrl({ collection: collectionId, clearMapCamera: true, view: 'map' }, 'push')
+      return
+    }
     if (visiblePeople.length > 0) {
       const start = Math.min(...visiblePeople.map(person => person.born))
       const end = Math.max(...visiblePeople.map(person => person.died))
       frameViewportToRange(start, end, 0)
-      writeViewHash({ collection: collectionId, start, end, row: 0 })
+      timelineViewportRef.current = { start, end, row: 0 }
+      persistUrl({ collection: collectionId, start, end, row: 0 }, 'push')
       return
     }
     const width = currentWindowWidth()
     if (width > 0) {
       const { start, end } = visibleYearRange(viewPosition.x, zoom, width)
       const row = topRowFromCameraY(viewPosition.y, prop.rowHeight)
-      writeViewHash({ collection: collectionId, start, end, row })
+      timelineViewportRef.current = { start, end, row }
+      persistUrl({ collection: collectionId, start, end, row }, 'push')
     }
   }
 
-  const applyViewFromHash = React.useCallback(
-    (hash: string) => {
-      const parsed = parseViewHash(hash)
+  const applyUrlState = React.useCallback(
+    (parsed: ReturnType<typeof readAppUrl>) => {
+      setView(parsed.view)
+      setDisplayAuthors(parsed.layers.authors)
+      setDisplayAuthorsTimeline(parsed.layers.lifelines)
+      setDisplayAuthorRelations(parsed.layers.sympathies)
+      setDisplayPublications(parsed.layers.pubs)
+      setDisplayPublicationRelations(parsed.layers.refs)
+      setDisplayHistoryEvents(parsed.layers.events)
+      setDisplayPersonHistoryEvents(parsed.layers.personal)
+      if (parsed.dark !== undefined) setDarkMode(parsed.dark)
+
       const rangeStart = parsed.start
       const rangeEnd = parsed.end
       const row = parsed.row ?? 0
       const hasRange = rangeStart != null && rangeEnd != null && rangeEnd > rangeStart
+
+      if (parsed.lat != null && parsed.lng != null && parsed.zoom != null) {
+        mapCameraFromUrl.current = true
+        setMapCamera({ lat: parsed.lat, lng: parsed.lng, zoom: parsed.zoom })
+      } else if (parsed.view === 'map') {
+        mapCameraFromUrl.current = false
+        setMapCamera(null)
+      }
 
       if (parsed.collection) {
         const known = CollectionsListService.getAll().some(c => c.id === parsed.collection)
@@ -247,15 +399,19 @@ const Chronology = () => {
         activeCollectionIdRef.current = parsed.collection
         setCollectionsState(newCollectionsState)
         const visiblePeople = applyCollectionFilter(parsed.collection, newCollectionsState)
-        if (hasRange) {
-          frameViewportToRange(rangeStart, rangeEnd, row)
-        } else {
-          frameViewportToPeople(visiblePeople, row)
+        if (parsed.view === 'timeline') {
+          if (hasRange) {
+            timelineViewportRef.current = { start: rangeStart, end: rangeEnd, row }
+            frameViewportToRange(rangeStart, rangeEnd, row)
+          } else {
+            frameViewportToPeople(visiblePeople, row)
+          }
         }
         return
       }
 
-      if (hasRange) {
+      if (parsed.view === 'timeline' && hasRange) {
+        timelineViewportRef.current = { start: rangeStart, end: rangeEnd, row }
         frameViewportToRange(rangeStart, rangeEnd, row)
       }
     },
@@ -268,21 +424,104 @@ const Chronology = () => {
       if (width <= 0) return
       const { start, end } = visibleYearRange(camera.x, camera.zoom, width)
       const row = topRowFromCameraY(camera.y, prop.rowHeight)
-      writeViewHash({ collection: activeCollectionIdRef.current, start, end, row })
+      timelineViewportRef.current = { start, end, row }
+      writeAppUrl({
+        view: 'timeline',
+        collection: activeCollectionIdRef.current,
+        layers: currentLayers(),
+        dark: darkMode,
+        start,
+        end,
+        row,
+      })
     },
-    [dimenstions.x, prop.rowHeight],
+    [currentLayers, darkMode, dimenstions.x, prop.rowHeight],
   )
 
+  const onMapCameraCommit = React.useCallback(
+    (camera: { latitude: number; longitude: number; zoom: number }) => {
+      const next = { lat: camera.latitude, lng: camera.longitude, zoom: camera.zoom }
+      setMapCamera(next)
+      mapCameraFromUrl.current = true
+      writeAppUrl({
+        view: 'map',
+        collection: activeCollectionIdRef.current,
+        layers: currentLayers(),
+        dark: darkMode,
+        lat: next.lat,
+        lng: next.lng,
+        zoom: next.zoom,
+      })
+    },
+    [currentLayers, darkMode],
+  )
+
+  const toggleMapView = () => {
+    const nextView: AppView = view === 'map' ? 'timeline' : 'map'
+    setView(nextView)
+    if (nextView === 'map') {
+      // Keep existing map camera if we had one; otherwise fit bounds.
+      persistUrl({ view: 'map', clearMapCamera: mapCamera == null }, 'push')
+    } else {
+      persistUrl({ view: 'timeline' }, 'push')
+    }
+  }
+
+  // Initial URL apply (collection + timeline camera) once.
+  const didInit = React.useRef(false)
   React.useEffect(() => {
-    applyViewFromHash(window.location.hash)
-    const onHashChange = () => applyViewFromHash(window.location.hash)
-    window.addEventListener('hashchange', onHashChange)
-    return () => window.removeEventListener('hashchange', onHashChange)
-  }, [applyViewFromHash])
+    if (didInit.current) return
+    didInit.current = true
+    const parsed = readAppUrl()
+    applyUrlState(parsed)
+    // Ensure address bar uses query (and clears hash) without fighting first paint.
+    const href = formatAppUrl({
+      view: parsed.view,
+      collection: activeCollectionIdRef.current,
+      layers: parsed.layers,
+      dark: parsed.dark ?? darkMode,
+      start: parsed.start,
+      end: parsed.end,
+      row: parsed.row,
+      lat: parsed.lat,
+      lng: parsed.lng,
+      zoom: parsed.zoom,
+    })
+    if (`${window.location.pathname}${window.location.search}` !== href || window.location.hash) {
+      history.replaceState(null, '', href)
+    }
+  }, [applyUrlState, darkMode])
+
+  React.useEffect(() => {
+    return subscribeAppUrl(() => {
+      applyUrlState(readAppUrl())
+    })
+  }, [applyUrlState])
 
   React.useEffect(() => {
     document.documentElement.classList.toggle('light-mode', !darkMode)
   }, [darkMode])
+
+  // Persist layer / dark changes to URL (replace).
+  const skipFirstLayerPersist = React.useRef(true)
+  React.useEffect(() => {
+    if (skipFirstLayerPersist.current) {
+      skipFirstLayerPersist.current = false
+      return
+    }
+    persistUrl({ layers: currentLayers(), dark: darkMode })
+  }, [
+    displayAuthors,
+    displayAuthorsTimeline,
+    displayAuthorRelations,
+    displayPublications,
+    displayPublicationRelations,
+    displayHistoryEvents,
+    displayPersonHistoryEvents,
+    darkMode,
+    currentLayers,
+    persistUrl,
+  ])
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -303,16 +542,15 @@ const Chronology = () => {
       }
     }
     document.addEventListener('keydown', handleKeyDown, true)
-    const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-    const darkModeEventHandler = (event: MediaQueryListEvent) => {
-      setDarkMode(event.matches)
-    }
-    darkModeMediaQuery.addEventListener('change', darkModeEventHandler)
     return () => {
       document.removeEventListener('keydown', handleKeyDown, true)
-      darkModeMediaQuery.removeEventListener('change', darkModeEventHandler)
     }
   }, [closeSearch, openSearch, searchOpen])
+
+  const mapInitialCamera =
+    mapCameraFromUrl.current && mapCamera
+      ? { latitude: mapCamera.lat, longitude: mapCamera.lng, zoom: mapCamera.zoom }
+      : null
 
   return (
     <div
@@ -324,65 +562,83 @@ const Chronology = () => {
         width: prop.windowSize.x,
       }}
     >
-      <TimelineDiagram
-        darkMode={darkMode}
-        displayAuthorRelations={displayAuthorRelations}
-        displayAuthors={displayAuthors}
-        displayAuthorsTimeline={displayAuthorsTimeline}
-        displayHistoryEvents={displayHistoryEvents}
-        displayPersonHistoryEvents={displayPersonHistoryEvents}
-        displayPublicationRelations={displayPublicationRelations}
-        displayPublications={displayPublications}
-        highlightedAuthor={highlightedAuthor}
-        highlightedPublication={highlightedPublication}
-        historyEvents={historyEvents}
-        onAuthorClick={id => {
-          setCurrentAuthor(_ => peopleList.find(p => p.id === id)!)
-          setDisplayLocationModal(false)
-          setDisplayPublicationModal(false)
-          setDisplayPersonHistoryEventModal(false)
-          setDisplayPersonModal(true)
-        }}
-        onPersonHistoryClick={(event, person) => {
-          setCurrentAuthor(person)
-          setCurrentPersonHistoryEvent(event)
-          setDisplayPersonHistoryEventModal(true)
-          setDisplayPersonModal(false)
-          setDisplayLocationModal(false)
-          setDisplayPublicationModal(false)
-        }}
-        onPublicationClick={(publication, author) => {
-          setCurrentAuthor(author)
-          setCurrentPublication(publication)
-          setDisplayPublicationModal(true)
-        }}
-        onCameraCommit={onCameraCommit}
-        peopleHistoryEvents={peopleHistoryEvents}
-        peopleList={peopleList}
-        peopleReferenceList={peopleReferenceList}
-        publicationReferenceList={publicationReferenceList}
-        publicationsList={publicationsList}
-        rowHeight={prop.rowHeight}
-        searchQuery={searchQuery}
-        setPosition={setPosition}
-        setYearSelection={setYearSelection}
-        setZoom={setZoom}
-        suspended={
-          displayPublicationModal ||
-          displayLocationModal ||
-          displayPersonModal ||
-          displayPersonHistoryEventModal
-        }
-        updateHighlightedAuthor={updateHighlightedAuthor}
-        updateHighlightedPublication={updateHighlightedPublication}
-        viewPosition={viewPosition}
-        viewportFrame={viewportFrame}
-        windowHeight={prop.windowSize.y}
-        windowWidth={prop.windowSize.x}
-        yearLabelWidth={prop.yearLabelWidth}
-        yearSelection={yearSelection}
-        zoom={zoom}
-      />
+      {view === 'map' ? (
+        <GeographicMap
+          darkMode={darkMode}
+          displayAuthors={displayAuthors}
+          displayAuthorsTimeline={displayAuthorsTimeline}
+          displayPersonHistoryEvents={displayPersonHistoryEvents}
+          displayPublications={displayPublications}
+          initialCamera={mapInitialCamera}
+          locationsList={LocationListService.getAll()}
+          onCameraCommit={onMapCameraCommit}
+          peopleHistoryEvents={peopleHistoryEvents}
+          peopleList={peopleList}
+          publicationsList={publicationsList}
+          windowHeight={prop.windowSize.y}
+          windowWidth={prop.windowSize.x}
+        />
+      ) : (
+        <TimelineDiagram
+          darkMode={darkMode}
+          displayAuthorRelations={displayAuthorRelations}
+          displayAuthors={displayAuthors}
+          displayAuthorsTimeline={displayAuthorsTimeline}
+          displayHistoryEvents={displayHistoryEvents}
+          displayPersonHistoryEvents={displayPersonHistoryEvents}
+          displayPublicationRelations={displayPublicationRelations}
+          displayPublications={displayPublications}
+          highlightedAuthor={highlightedAuthor}
+          highlightedPublication={highlightedPublication}
+          historyEvents={historyEvents}
+          onAuthorClick={id => {
+            setCurrentAuthor(_ => peopleList.find(p => p.id === id)!)
+            setDisplayLocationModal(false)
+            setDisplayPublicationModal(false)
+            setDisplayPersonHistoryEventModal(false)
+            setDisplayPersonModal(true)
+          }}
+          onPersonHistoryClick={(event, person) => {
+            setCurrentAuthor(person)
+            setCurrentPersonHistoryEvent(event)
+            setDisplayPersonHistoryEventModal(true)
+            setDisplayPersonModal(false)
+            setDisplayLocationModal(false)
+            setDisplayPublicationModal(false)
+          }}
+          onPublicationClick={(publication, author) => {
+            setCurrentAuthor(author)
+            setCurrentPublication(publication)
+            setDisplayPublicationModal(true)
+          }}
+          onCameraCommit={onCameraCommit}
+          peopleHistoryEvents={peopleHistoryEvents}
+          peopleList={peopleList}
+          peopleReferenceList={peopleReferenceList}
+          publicationReferenceList={publicationReferenceList}
+          publicationsList={publicationsList}
+          rowHeight={prop.rowHeight}
+          searchQuery={searchQuery}
+          setPosition={setPosition}
+          setYearSelection={setYearSelection}
+          setZoom={setZoom}
+          suspended={
+            displayPublicationModal ||
+            displayLocationModal ||
+            displayPersonModal ||
+            displayPersonHistoryEventModal
+          }
+          updateHighlightedAuthor={updateHighlightedAuthor}
+          updateHighlightedPublication={updateHighlightedPublication}
+          viewPosition={viewPosition}
+          viewportFrame={viewportFrame}
+          windowHeight={prop.windowSize.y}
+          windowWidth={prop.windowSize.x}
+          yearLabelWidth={prop.yearLabelWidth}
+          yearSelection={yearSelection}
+          zoom={zoom}
+        />
+      )}
 
       <div style={{ position: 'relative', zIndex: 50 }}>
         <Menu
@@ -395,8 +651,10 @@ const Chronology = () => {
           displayPersonHistoryEvents={displayPersonHistoryEvents}
           displayPublicationRelations={displayPublicationRelations}
           displayPublications={displayPublications}
+          mapView={view === 'map'}
           onCloseSearch={closeSearch}
           onOpenSearch={openSearch}
+          onToggleMapView={toggleMapView}
           searchOpen={searchOpen}
           selectCollection={selectCollection}
           setDarkMode={setDarkMode}

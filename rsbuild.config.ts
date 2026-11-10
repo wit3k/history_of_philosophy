@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [pluginReact(), pluginSass()],
   server: {
     base: '/history_of_philosophy',
+    historyApiFallback: true,
   },
   html: {
     title: 'History of philosophy',
