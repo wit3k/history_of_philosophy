@@ -128,6 +128,12 @@ const MapViewIcon = () => (
   </Icon>
 )
 
+const DiagramViewIcon = () => (
+  <Icon>
+    <path d="M3.75 6.75h10.5M3.75 12h16.5M3.75 17.25h7.5" />
+  </Icon>
+)
+
 const BarDivider = ({ darkMode }: { darkMode: boolean }) => (
   <span
     aria-hidden="true"
@@ -274,18 +280,20 @@ const Menu = (props: MenuProps) => {
         onChange: props.setDarkMode,
       },
     ],
-    [
-      {
-        active: props.mapView,
-        icon: <MapViewIcon />,
-        label: props.mapView ? 'Oś czasu' : 'Mapa',
-        onChange: () => props.onToggleMapView(),
-      },
-    ],
   ]
 
   const toolbarShifted = filtersVisible && isDesktop
   const toolbarHidden = filtersVisible && !isDesktop
+  const shellClass =
+    'rounded-lg border shadow-lg backdrop-blur-md ' +
+    (props.darkMode ? 'border-white/10 bg-gray-900/75' : 'border-black/10 bg-white/80')
+  const viewTabClass = (active: boolean) =>
+    'flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold tracking-wide transition ' +
+    (active
+      ? 'text-white'
+      : props.darkMode
+        ? 'text-gray-300 hover:bg-white/10 hover:text-white'
+        : 'text-gray-600 hover:bg-black/5 hover:text-gray-900')
 
   return (
     <div>
@@ -293,60 +301,96 @@ const Menu = (props: MenuProps) => {
         className={`fixed top-2 z-40 transition-[left] duration-300 ${toolbarHidden ? 'hidden ' : ''}${toolbarShifted ? 'left-[308px]' : 'left-2'}`}
       >
         <div
-          aria-label="Widok"
-          className={
-            'flex flex-wrap items-center gap-0.5 rounded-lg border p-1 shadow-lg backdrop-blur-md ' +
-            (props.darkMode ? 'border-white/10 bg-gray-900/75' : 'border-black/10 bg-white/80')
-          }
-          role="toolbar"
+          className="inline-flex max-w-full flex-col gap-1"
           style={{ maxWidth: toolbarShifted ? 'calc(100vw - 320px)' : 'calc(100vw - 1rem)' }}
         >
-          {!filtersVisible && (
-            <>
-              <span className="group relative shrink-0">
-                <button
-                  aria-label="Filtry"
-                  className="flex size-7 items-center justify-center rounded-md text-white"
-                  onClick={event => {
-                    setFiltersVisible(true)
-                    if (event.detail !== 0) event.currentTarget.blur()
-                  }}
-                  style={{ background: 'linear-gradient(90deg, #ff4f7e, #fe27be)' }}
-                  type="button"
-                >
-                  <FiltersIcon />
-                </button>
-                <span
-                  className={
-                    'pointer-events-none absolute top-full left-0 z-50 mt-1.5 rounded-md px-2 py-1 text-xs font-medium whitespace-nowrap opacity-0 shadow-lg group-hover:opacity-100 group-has-[:focus-visible]:opacity-100 ' +
-                    (props.darkMode
-                      ? 'bg-gray-950 text-gray-100 ring-1 ring-white/10'
-                      : 'bg-white text-gray-800 ring-1 ring-black/10')
-                  }
-                >
-                  Filtry
+          <div
+            aria-label="Warstwy i ustawienia"
+            className={'flex flex-wrap items-center gap-0.5 p-1 ' + shellClass}
+            role="toolbar"
+          >
+            {!filtersVisible && (
+              <>
+                <span className="group relative shrink-0">
+                  <button
+                    aria-label="Filtry"
+                    className="flex size-7 items-center justify-center rounded-md text-white"
+                    onClick={event => {
+                      setFiltersVisible(true)
+                      if (event.detail !== 0) event.currentTarget.blur()
+                    }}
+                    style={{ background: 'linear-gradient(90deg, #ff4f7e, #fe27be)' }}
+                    type="button"
+                  >
+                    <FiltersIcon />
+                  </button>
+                  <span
+                    className={
+                      'pointer-events-none absolute top-full left-0 z-50 mt-1.5 rounded-md px-2 py-1 text-xs font-medium whitespace-nowrap opacity-0 shadow-lg group-hover:opacity-100 group-has-[:focus-visible]:opacity-100 ' +
+                      (props.darkMode
+                        ? 'bg-gray-950 text-gray-100 ring-1 ring-white/10'
+                        : 'bg-white text-gray-800 ring-1 ring-black/10')
+                    }
+                  >
+                    Filtry
+                  </span>
                 </span>
-              </span>
-              <BarDivider darkMode={props.darkMode} />
-            </>
-          )}
-          {groups.map((group, groupIndex) => (
-            <React.Fragment key={group[0].label}>
-              {groupIndex > 0 && <BarDivider darkMode={props.darkMode} />}
-              {group.map(item => (
-                <ToggleButton
-                  active={item.active}
-                  darkMode={props.darkMode}
-                  disabled={item.disabled}
-                  key={item.label}
-                  label={item.label}
-                  onChange={item.onChange}
-                >
-                  {item.icon}
-                </ToggleButton>
-              ))}
-            </React.Fragment>
-          ))}
+                <BarDivider darkMode={props.darkMode} />
+              </>
+            )}
+            {groups.map((group, groupIndex) => (
+              <React.Fragment key={group[0].label}>
+                {groupIndex > 0 && <BarDivider darkMode={props.darkMode} />}
+                {group.map(item => (
+                  <ToggleButton
+                    active={item.active}
+                    darkMode={props.darkMode}
+                    disabled={item.disabled}
+                    key={item.label}
+                    label={item.label}
+                    onChange={item.onChange}
+                  >
+                    {item.icon}
+                  </ToggleButton>
+                ))}
+              </React.Fragment>
+            ))}
+          </div>
+
+          <div
+            aria-label="Przełącz widok"
+            className={'flex w-full gap-0.5 p-0.5 ' + shellClass}
+            role="tablist"
+          >
+            <button
+              aria-selected={!props.mapView}
+              className={viewTabClass(!props.mapView)}
+              onClick={event => {
+                if (props.mapView) props.onToggleMapView()
+                if (event.detail !== 0) event.currentTarget.blur()
+              }}
+              role="tab"
+              style={!props.mapView ? { background: 'linear-gradient(90deg, #ff4f7e, #fe27be)' } : undefined}
+              type="button"
+            >
+              <DiagramViewIcon />
+              Oś czasu
+            </button>
+            <button
+              aria-selected={props.mapView}
+              className={viewTabClass(props.mapView)}
+              onClick={event => {
+                if (!props.mapView) props.onToggleMapView()
+                if (event.detail !== 0) event.currentTarget.blur()
+              }}
+              role="tab"
+              style={props.mapView ? { background: 'linear-gradient(90deg, #ff4f7e, #fe27be)' } : undefined}
+              type="button"
+            >
+              <MapViewIcon />
+              Mapa
+            </button>
+          </div>
         </div>
       </div>
 
