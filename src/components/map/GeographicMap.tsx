@@ -19,8 +19,10 @@ import {
   type TemporalState,
 } from '../../utils/mapTemporal'
 import {
+  clusterAutoExpandZoom,
   clusterKey,
   clusterRingPixelOffsets,
+  isClusterAutoExpanded,
   isLightHex,
   mapAccentForBasemap,
 } from '../../utils/mapVisual'
@@ -121,6 +123,7 @@ type MapBubbleItem = {
   id: string
   kind: string
   personId: string
+  refId: string | null
   lat: number
   lng: number
   accent: string
@@ -158,6 +161,7 @@ type GeographicMapProps = {
   initialCamera: MapCamera | null
   onCameraCommit: (camera: MapCamera) => void
   onPersonClick: (personId: string) => void
+  onPublicationClick: (publicationId: string, personId: string) => void
   windowWidth: number
   windowHeight: number
 }
@@ -327,15 +331,22 @@ const GeographicMap = (props: GeographicMapProps) => {
   const [tooltip, setTooltip] = React.useState<PointTooltip | null>(null)
   const [expandedClusters, setExpandedClusters] = React.useState<Set<string>>(() => new Set())
   const [layoutTick, setLayoutTick] = React.useState(0)
+  const [mapZoom, setMapZoom] = React.useState(
+    () => props.initialCamera?.zoom ?? EUROPE_FALLBACK.zoom,
+  )
   const [hoverTooltips, setHoverTooltips] = React.useState(canHoverTooltips)
+  const [selectedPersonId, setSelectedPersonId] = React.useState<string | null>(null)
   const [markerHoverPersonId, setMarkerHoverPersonId] = React.useState<string | null>(null)
   const [pathHoverPersonId, setPathHoverPersonId] = React.useState<string | null>(null)
   const expandedClustersRef = React.useRef(expandedClusters)
   expandedClustersRef.current = expandedClusters
+  const mapZoomRef = React.useRef(mapZoom)
+  mapZoomRef.current = mapZoom
   const clearMarkerHoverTimer = React.useRef<number | null>(null)
 
-  const hoverPersonId = markerHoverPersonId ?? pathHoverPersonId
-  const highlightsOn = hoverPersonId != null
+  // Sticky click selection wins; hover only previews when nothing is selected.
+  const activePersonId = selectedPersonId ?? markerHoverPersonId ?? pathHoverPersonId
+  const highlightsOn = activePersonId != null
 
   React.useEffect(() => {
     const media = window.matchMedia(HOVER_TOOLTIP_MEDIA)
@@ -406,8 +417,8 @@ const GeographicMap = (props: GeographicMapProps) => {
   )
 
   const highlightPathGeoJson = React.useMemo(() => {
-    if (!hoverPersonId) return null
-    const path = paths.find(p => p.personId === hoverPersonId)
+    if (!activePersonId) return null
+    const path = paths.find(p => p.personId === activePersonId)
     if (!path) return null
     const coordinates = personLifeLineCoordinates(path, {
       showPublications: props.displayPublications,
@@ -431,7 +442,7 @@ const GeographicMap = (props: GeographicMapProps) => {
       ],
     }
   }, [
-    hoverPersonId,
+    activePersonId,
     paths,
     props.displayPublications,
     props.displayPersonHistoryEvents,
@@ -452,10 +463,12 @@ const GeographicMap = (props: GeographicMapProps) => {
           : Number.isFinite(Number(yearRaw))
             ? Number(yearRaw)
             : null
+      const refRaw = f.properties.refId
       items.push({
         id: `${f.properties.kind}:${f.properties.personId}:${f.properties.refId ?? f.properties.label}:${year}`,
         kind: String(f.properties.kind ?? ''),
         personId: String(f.properties.personId ?? ''),
+        refId: refRaw == null || refRaw === '' ? null : String(refRaw),
         lat,
         lng,
         accent: String(f.properties.accent ?? '#888'),
@@ -475,6 +488,7 @@ const GeographicMap = (props: GeographicMapProps) => {
           id: `portrait:${track.personId}`,
           kind: 'portrait',
           personId: track.personId,
+          refId: null,
           lat: pos.lat,
           lng: pos.lng,
           accent: mapAccentForBasemap(track.accent, props.darkMode),
@@ -513,11 +527,30 @@ const GeographicMap = (props: GeographicMapProps) => {
     }))
   }, [mapBubbles])
 
-  // Only collapse clusters when the selected range/mode changes — not every playhead tick.
+  // Only collapse manual expands when the selected range/mode changes — not every playhead tick.
   React.useEffect(() => {
     setExpandedClusters(new Set())
     setTooltip(null)
+    setSelectedPersonId(null)
   }, [props.temporal.yearFrom, props.temporal.yearTo, props.temporal.mode])
+
+  // After zooming out past a pile's auto threshold, drop its manual expand too.
+  React.useEffect(() => {
+    setExpandedClusters(prev => {
+      if (prev.size === 0) return prev
+      let changed = false
+      const next = new Set(prev)
+      for (const group of mapClusters) {
+        if (!prev.has(group.key)) continue
+        const collapseBelow = clusterAutoExpandZoom(group.members.length) - 0.75
+        if (mapZoom < collapseBelow) {
+          next.delete(group.key)
+          changed = true
+        }
+      }
+      return changed ? next : prev
+    })
+  }, [mapZoom, mapClusters])
 
   const fitKey = React.useMemo(
     () =>
@@ -581,7 +614,15 @@ const GeographicMap = (props: GeographicMapProps) => {
     applyFitOrInitial()
   }, [applyFitOrInitial, fitKey, props.initialCamera])
 
+  const syncMapZoom = React.useCallback(() => {
+    const map = mapRef.current?.getMap()
+    if (!map) return
+    const zoom = map.getZoom()
+    if (Math.abs(zoom - mapZoomRef.current) > 0.01) setMapZoom(zoom)
+  }, [])
+
   const onMoveEnd = () => {
+    syncMapZoom()
     if (skipNextMoveEnd.current) {
       skipNextMoveEnd.current = false
       const map = mapRef.current?.getMap()
@@ -654,6 +695,12 @@ const GeographicMap = (props: GeographicMapProps) => {
 
   const onClusterActivate = React.useCallback((key: string, event: React.MouseEvent) => {
     event.stopPropagation()
+    const group = mapClustersRef.current.find(g => g.key === key)
+    // Already open from zoom — keep it; click-to-collapse only applies when zoomed out.
+    if (group && isClusterAutoExpanded(mapZoomRef.current, group.members.length)) {
+      setTooltip(null)
+      return
+    }
     setExpandedClusters(prev => {
       const next = new Set(prev)
       if (next.has(key)) next.delete(key)
@@ -663,12 +710,23 @@ const GeographicMap = (props: GeographicMapProps) => {
     setTooltip(null)
   }, [])
 
+  const isGroupExpanded = React.useCallback(
+    (group: { key: string; members: MapBubbleItem[] }) => {
+      if (group.members.length <= 1) return false
+      return (
+        isClusterAutoExpanded(mapZoomRef.current, group.members.length) ||
+        expandedClustersRef.current.has(group.key)
+      )
+    },
+    [],
+  )
+
   const showBubbleTooltip = React.useCallback(
     (itemId: string) => {
       const found = findBubble(itemId)
       if (!found) return
       const { group, index, item } = found
-      const expanded = expandedClustersRef.current.has(group.key)
+      const expanded = isGroupExpanded(group)
       const positions =
         expanded && group.members.length > 1 ? expandedMemberPositions(group) : null
       const pos = positions?.[index] ?? { lat: item.lat, lng: item.lng }
@@ -682,20 +740,30 @@ const GeographicMap = (props: GeographicMapProps) => {
         label: item.label,
         year: item.year,
       })
+      return item
     },
-    [expandedMemberPositions, findBubble, setMarkerHover],
+    [expandedMemberPositions, findBubble, isGroupExpanded, setMarkerHover],
   )
 
   const clearTooltipFor = React.useCallback((id: string) => {
     setTooltip(prev => (prev?.id === id ? null : prev))
   }, [])
 
+  const selectPerson = React.useCallback((personId: string) => {
+    setSelectedPersonId(personId)
+  }, [])
+
   const onEventActivate = React.useCallback(
     (itemId: string, event: React.MouseEvent) => {
       event.stopPropagation()
-      showBubbleTooltip(itemId)
+      const item = showBubbleTooltip(itemId)
+      if (!item) return
+      selectPerson(item.personId)
+      if (item.kind === 'publication' && item.refId) {
+        props.onPublicationClick(item.refId, item.personId)
+      }
     },
-    [showBubbleTooltip],
+    [props.onPublicationClick, selectPerson, showBubbleTooltip],
   )
 
   const onEventHoverEnter = React.useCallback(
@@ -739,10 +807,10 @@ const GeographicMap = (props: GeographicMapProps) => {
     (personId: string, event: React.MouseEvent) => {
       event.stopPropagation()
       setTooltip(null)
-      setMarkerHover(personId)
+      selectPerson(personId)
       props.onPersonClick(personId)
     },
-    [props.onPersonClick, setMarkerHover],
+    [props.onPersonClick, selectPerson],
   )
 
   const onPathMouseMove = React.useCallback(
@@ -751,6 +819,21 @@ const GeographicMap = (props: GeographicMapProps) => {
       setPathHoverPersonId(pid != null && pid !== '' ? String(pid) : null)
     },
     [],
+  )
+
+  const onMapClick = React.useCallback(
+    (event: { features?: { properties?: { personId?: unknown } }[] }) => {
+      const pid = event.features?.[0]?.properties?.personId
+      if (pid != null && pid !== '') {
+        selectPerson(String(pid))
+        return
+      }
+      setSelectedPersonId(null)
+      setTooltip(null)
+      setMarkerHoverPersonId(null)
+      setPathHoverPersonId(null)
+    },
+    [selectPerson],
   )
 
   return (
@@ -766,16 +849,16 @@ const GeographicMap = (props: GeographicMapProps) => {
         }
         interactiveLayerIds={['life-path-hit']}
         mapStyle={props.darkMode ? DARK_STYLE : LIGHT_STYLE}
-        onClick={() => {
-          setTooltip(null)
-          setMarkerHoverPersonId(null)
-          setPathHoverPersonId(null)
+        onClick={onMapClick}
+        onLoad={() => {
+          applyFitOrInitial()
+          syncMapZoom()
         }}
-        onLoad={applyFitOrInitial}
         onMouseLeave={() => setPathHoverPersonId(null)}
         onMouseMove={onPathMouseMove}
         onMove={() => {
-          if (expandedClustersRef.current.size > 0) setLayoutTick(t => t + 1)
+          syncMapZoom()
+          setLayoutTick(t => t + 1)
         }}
         onMoveEnd={onMoveEnd}
         style={{ width: '100%', height: '100%' }}
@@ -785,11 +868,11 @@ const GeographicMap = (props: GeographicMapProps) => {
             id="life-path-lines"
             type="line"
             filter={
-              hoverPersonId && highlightPathGeoJson
+              activePersonId && highlightPathGeoJson
                 ? [
                     'all',
                     ['==', ['get', 'kind'], 'path'],
-                    ['!=', ['get', 'personId'], hoverPersonId],
+                    ['!=', ['get', 'personId'], activePersonId],
                   ]
                 : ['==', ['get', 'kind'], 'path']
             }
@@ -797,14 +880,14 @@ const GeographicMap = (props: GeographicMapProps) => {
               'line-color': ['get', 'accent'],
               'line-width': [
                 'case',
-                ['==', ['get', 'personId'], hoverPersonId ?? ''],
+                ['==', ['get', 'personId'], activePersonId ?? ''],
                 4,
                 3.25,
               ],
               'line-opacity': highlightsOn
                 ? [
                     'case',
-                    ['==', ['get', 'personId'], hoverPersonId ?? ''],
+                    ['==', ['get', 'personId'], activePersonId ?? ''],
                     ['coalesce', ['get', 'opacity'], 0.85],
                     ['*', ['coalesce', ['get', 'opacity'], 0.85], HIGHLIGHT_DIM],
                   ]
@@ -851,9 +934,12 @@ const GeographicMap = (props: GeographicMapProps) => {
         )}
 
         {mapClusters.flatMap(group => {
-          const expanded = expandedClusters.has(group.key)
+          const expanded =
+            group.members.length > 1 &&
+            (isClusterAutoExpanded(mapZoom, group.members.length) ||
+              expandedClusters.has(group.key))
           const renderBubble = (item: MapBubbleItem, lat: number, lng: number, zIndex: number) => {
-            const highlighted = hoverPersonId === item.personId
+            const highlighted = activePersonId === item.personId
             const opacity = visualOpacity(item.opacity, highlighted, highlightsOn)
             if (item.kind === 'portrait') {
               return (
@@ -913,7 +999,7 @@ const GeographicMap = (props: GeographicMapProps) => {
 
           const accent = group.members[0]?.accent ?? '#5b8def'
           const opacity = Math.max(...group.members.map(m => m.opacity))
-          const clusterHot = group.members.some(m => m.personId === hoverPersonId)
+          const clusterHot = group.members.some(m => m.personId === activePersonId)
           const hub = (
             <Marker
               key={`cluster:${group.key}`}

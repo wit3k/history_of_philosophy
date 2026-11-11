@@ -76,6 +76,22 @@ export function clusterKey(lat: number, lng: number, precision = 3): string {
 }
 
 /**
+ * Zoom at which a same-location pile auto-explodes into the ring layout.
+ * Bigger piles need a closer look so the rings stay usable.
+ */
+export function clusterAutoExpandZoom(memberCount: number): number {
+  if (memberCount <= 1) return Number.POSITIVE_INFINITY
+  if (memberCount <= 8) return 9
+  if (memberCount <= 20) return 10.5
+  if (memberCount <= 40) return 11.5
+  return 12.5
+}
+
+export function isClusterAutoExpanded(zoom: number, memberCount: number): boolean {
+  return zoom >= clusterAutoExpandZoom(memberCount)
+}
+
+/**
  * Concentric ring offsets in screen pixels around a hub.
  * Edge gap between bubbles = half bubble diameter; ring radii grow so rings do not collide.
  */

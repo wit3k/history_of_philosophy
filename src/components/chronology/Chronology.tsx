@@ -845,6 +845,19 @@ const Chronology = () => {
             setDisplayPersonHistoryEventModal(false)
             setDisplayPersonModal(true)
           }}
+          onPublicationClick={(publicationId, personId) => {
+            const publication =
+              publicationsList.find(p => p.id === publicationId) ??
+              publicationsList.find(p => String(p.id) === String(publicationId))
+            const author = peopleList.find(p => p.id === personId)
+            if (!publication || !author) return
+            setCurrentAuthor(author)
+            setCurrentPublication(publication)
+            setDisplayPublicationModal(true)
+            setDisplayPersonModal(false)
+            setDisplayLocationModal(false)
+            setDisplayPersonHistoryEventModal(false)
+          }}
           peopleHistoryEvents={peopleHistoryEvents}
           peopleList={peopleList}
           publicationsList={publicationsList}
