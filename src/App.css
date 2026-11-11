@@ -10,3 +10,23 @@ html {
 html.light-mode {
   color: #111827;
 }
+
+/* MapLibre markers can sit above the default popup stacking context. */
+.maplibregl-popup.map-point-popup {
+  z-index: 1000 !important;
+}
+
+.maplibregl-popup.map-point-popup--hover {
+  pointer-events: none;
+}
+
+/* Marching dash around highlighted map bubbles (period = 6+4). */
+@keyframes map-dash-march {
+  to {
+    stroke-dashoffset: -10;
+  }
+}
+
+.map-bubble-dash-ring {
+  animation: map-dash-march 0.35s linear infinite;
+}

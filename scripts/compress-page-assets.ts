@@ -1,6 +1,9 @@
 /**
  * Shrink static images under public/assets for GitHub Pages.
  * Branch deploys time out around ~600MB ("Timeout reached, aborting!").
+ *
+ * Person thumbs stay sharper (no palette dither, higher quality) — map bubbles
+ * show faces small but need clean pixels on retina.
  */
 import { readdirSync, statSync } from 'fs'
 import { join } from 'path'
@@ -11,12 +14,47 @@ type Job = {
   maxWidth: number
   maxHeight: number
   fit: keyof sharp.FitEnum
+  /** Skip rewrite when file is already tiny (bytes). */
+  skipBelowBytes?: number
+  png: {
+    compressionLevel: number
+    quality: number
+    palette: boolean
+    effort?: number
+  }
 }
 
 const jobs: Job[] = [
-  { dir: 'public/assets/publication', maxWidth: 360, maxHeight: 504, fit: 'inside' },
-  { dir: 'public/assets/location', maxWidth: 480, maxHeight: 200, fit: 'cover' },
-  { dir: 'public/assets/person_big', maxWidth: 200, maxHeight: 300, fit: 'inside' },
+  {
+    dir: 'public/assets/publication',
+    maxWidth: 360,
+    maxHeight: 504,
+    fit: 'inside',
+    png: { compressionLevel: 9, palette: true, quality: 65, effort: 8 },
+  },
+  {
+    dir: 'public/assets/location',
+    maxWidth: 480,
+    maxHeight: 200,
+    fit: 'cover',
+    png: { compressionLevel: 9, palette: true, quality: 65, effort: 8 },
+  },
+  {
+    dir: 'public/assets/person_big',
+    maxWidth: 200,
+    maxHeight: 300,
+    fit: 'inside',
+    png: { compressionLevel: 9, palette: true, quality: 70, effort: 8 },
+  },
+  {
+    // Map / timeline face chips — lighter compression than covers.
+    dir: 'public/assets/person',
+    maxWidth: 64,
+    maxHeight: 64,
+    fit: 'cover',
+    skipBelowBytes: 12_000,
+    png: { compressionLevel: 6, palette: false, quality: 90, effort: 6 },
+  },
 ]
 
 const IMAGE_RE = /\.(png|jpe?g|webp)$/i
@@ -24,14 +62,15 @@ const IMAGE_RE = /\.(png|jpe?g|webp)$/i
 async function compressFile(path: string, job: Job) {
   const before = statSync(path).size
   const meta = await sharp(path).metadata()
+  const skipBelow = job.skipBelowBytes ?? 40_000
   const needsResize =
     (meta.width ?? 0) > job.maxWidth || (meta.height ?? 0) > job.maxHeight || before > 80_000
 
-  if (!needsResize && before < 40_000) return { before, after: before, skipped: true }
+  if (!needsResize && before < skipBelow) return { before, after: before, skipped: true }
 
   const buf = await sharp(path)
     .resize(job.maxWidth, job.maxHeight, { fit: job.fit, withoutEnlargement: true })
-    .png({ compressionLevel: 9, palette: true, quality: 65, effort: 8 })
+    .png(job.png)
     .toBuffer()
 
   if (buf.length >= before * 0.95) return { before, after: before, skipped: true }
@@ -42,7 +81,13 @@ async function compressFile(path: string, job: Job) {
 let saved = 0
 let touched = 0
 for (const job of jobs) {
-  const files = readdirSync(job.dir).filter(f => IMAGE_RE.test(f))
+  let files: string[]
+  try {
+    files = readdirSync(job.dir).filter(f => IMAGE_RE.test(f))
+  } catch {
+    console.warn(`\n${job.dir}: missing, skip`)
+    continue
+  }
   console.log(`\n${job.dir}: ${files.length} files`)
   for (const file of files) {
     const path = join(job.dir, file)

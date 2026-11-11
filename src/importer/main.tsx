@@ -154,13 +154,12 @@ const people = (await getTable('people')).list
   .filter((person: any) => person['Imię i nazwisko'])
   .map((person: any, i: number) => {
     if (person['Zdjęcie'] != null && person['Zdjęcie'][0] != null) {
+      // 64² keeps map/timeline avatars sharp on retina (CSS ~28–32px).
       queueImage(
         nocoUrl + '/' + person['Zdjęcie'][0].path,
         './public/assets/person/' + person['Zdjęcie'][0].id + '.png',
-        new Coordinates(30, 30),
+        new Coordinates(64, 64),
         0,
-        // new Coordinates(50, 50),
-        // 5,
       )
       queueImage(
         nocoUrl + '/' + person['Zdjęcie'][0].path,

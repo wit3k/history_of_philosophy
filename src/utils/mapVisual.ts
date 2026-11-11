@@ -1,14 +1,31 @@
-/** Near-black accents (e.g. German #000) vanish on the dark basemap. */
-export function isNearBlackHex(hex: string): boolean {
+function parseHexRgb(hex: string): { r: number; g: number; b: number } | null {
   const m = /^#?([0-9a-f]{6}|[0-9a-f]{8}|[0-9a-f]{3})$/i.exec(hex.trim())
-  if (!m) return false
+  if (!m) return null
   let h = m[1]
   if (h.length === 3) h = h.split('').map(c => c + c).join('')
-  const r = Number.parseInt(h.slice(0, 2), 16)
-  const g = Number.parseInt(h.slice(2, 4), 16)
-  const b = Number.parseInt(h.slice(4, 6), 16)
-  // Relative luminance threshold — catches #000 and very dark navy.
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b < 40
+  return {
+    r: Number.parseInt(h.slice(0, 2), 16),
+    g: Number.parseInt(h.slice(2, 4), 16),
+    b: Number.parseInt(h.slice(4, 6), 16),
+  }
+}
+
+function relativeLuminance(hex: string): number | null {
+  const rgb = parseHexRgb(hex)
+  if (!rgb) return null
+  return 0.2126 * rgb.r + 0.7152 * rgb.g + 0.0722 * rgb.b
+}
+
+/** Near-black accents (e.g. German #000) vanish on the dark basemap. */
+export function isNearBlackHex(hex: string): boolean {
+  const lum = relativeLuminance(hex)
+  return lum != null && lum < 40
+}
+
+/** Light accents need dark label text (e.g. white cluster count). */
+export function isLightHex(hex: string): boolean {
+  const lum = relativeLuminance(hex)
+  return lum != null && lum >= 170
 }
 
 export function mapAccentForBasemap(accent: string, darkMode: boolean): string {
@@ -58,14 +75,33 @@ export function clusterKey(lat: number, lng: number, precision = 3): string {
   return `${lat.toFixed(precision)},${lng.toFixed(precision)}`
 }
 
-/** Spiral offsets in degrees so exploded bubbles do not stack. */
-export function spiralOffsetDegrees(index: number, count: number): { dLat: number; dLng: number } {
-  if (count <= 1) return { dLat: 0, dLng: 0 }
-  const angle = (index / count) * Math.PI * 2 - Math.PI / 2
-  const ring = 1 + Math.floor(index / 8)
-  const radius = 0.045 * ring
-  return {
-    dLat: Math.sin(angle) * radius,
-    dLng: Math.cos(angle) * radius,
+/**
+ * Concentric ring offsets in screen pixels around a hub.
+ * Edge gap between bubbles = half bubble diameter; ring radii grow so rings do not collide.
+ */
+export function clusterRingPixelOffsets(
+  count: number,
+  bubbleDiameterPx: number,
+  hubDiameterPx: number,
+): { x: number; y: number }[] {
+  if (count <= 0) return []
+  const d = Math.max(bubbleDiameterPx, 1)
+  const spacing = d * 1.5
+  const hubClear = hubDiameterPx / 2 + d
+  const out: { x: number; y: number }[] = []
+  let placed = 0
+  let ring = 0
+  while (placed < count) {
+    ring += 1
+    const rMin = hubClear + (ring - 1) * spacing
+    const capacity = Math.max(1, Math.floor((2 * Math.PI * rMin) / spacing))
+    const n = Math.min(count - placed, capacity)
+    const r = Math.max(rMin, (n * spacing) / (2 * Math.PI))
+    for (let i = 0; i < n; i++) {
+      const angle = -Math.PI / 2 + (i / n) * Math.PI * 2
+      out.push({ x: Math.cos(angle) * r, y: Math.sin(angle) * r })
+    }
+    placed += n
   }
+  return out
 }

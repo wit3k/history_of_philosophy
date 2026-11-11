@@ -224,6 +224,28 @@ export function lifePathsToGeoJson(
   return { type: 'FeatureCollection', features }
 }
 
+/** Continuous lon/lat polyline for one person (oldest → newest), including curve samples. */
+export function personLifeLineCoordinates(
+  path: PersonLifePath,
+  opts: { showPublications: boolean; showPersonal: boolean },
+): [number, number][] {
+  const layerPoints = path.points.filter(p => {
+    if (p.kind === 'publication') return opts.showPublications
+    if (p.kind === 'personal') return opts.showPersonal
+    return true
+  })
+  if (layerPoints.length < 2) return []
+  const coords: [number, number][] = []
+  for (let i = 0; i < layerPoints.length - 1; i++) {
+    const a = layerPoints[i]
+    const b = layerPoints[i + 1]
+    const seg = curvedSegmentCoords(a.lng, a.lat, b.lng, b.lat, `${path.personId}:${i}`)
+    if (i > 0) seg.shift()
+    coords.push(...seg)
+  }
+  return coords
+}
+
 export function boundsFromPaths(paths: PersonLifePath[]): [[number, number], [number, number]] | null {
   let minLat = Infinity
   let maxLat = -Infinity

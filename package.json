@@ -7,6 +7,7 @@
     "build": "rsbuild build",
     "compress-assets": "bun run scripts/compress-page-assets.ts",
     "github": "bun run compress-assets && rsbuild build --config rsbuild.github.config.ts && bun run scripts/spa-fallback.ts",
+    "deploy:github": "bun run scripts/deploy-github.ts",
     "check": "biome check --write",
     "dev": "rsbuild dev --open",
     "format": "biome format --write",

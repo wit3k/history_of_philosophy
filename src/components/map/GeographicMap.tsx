@@ -11,14 +11,80 @@ import {
   boundsFromPaths,
   buildPersonLifePaths,
   lifePathsToGeoJson,
+  personLifeLineCoordinates,
 } from '../../utils/lifePaths'
 import {
   avatarPositionAt,
   buildAvatarTracks,
   type TemporalState,
 } from '../../utils/mapTemporal'
-import { clusterKey, mapAccentForBasemap, spiralOffsetDegrees } from '../../utils/mapVisual'
+import {
+  clusterKey,
+  clusterRingPixelOffsets,
+  isLightHex,
+  mapAccentForBasemap,
+} from '../../utils/mapVisual'
 import { formatYear } from '../../utils/years'
+
+const CLUSTER_HUB_DIAMETER = 34
+const POPUP_Z_INDEX = 1000
+const HOVER_TOOLTIP_MEDIA = '(hover: hover) and (pointer: fine)'
+/** Match diagram relation fade while something is highlighted. */
+const HIGHLIGHT_DIM = 0.1
+/** MapLibre dasharray phases — marches along the line (oldest → newest). */
+const LINE_DASH_SEQUENCE: number[][] = [
+  [0, 4, 3],
+  [0.5, 4, 2.5],
+  [1, 4, 2],
+  [1.5, 4, 1.5],
+  [2, 4, 1],
+  [2.5, 4, 0.5],
+  [3, 4, 0],
+  [0, 0.5, 3, 3.5],
+  [0, 1, 3, 3],
+  [0, 1.5, 3, 2.5],
+  [0, 2, 3, 2],
+  [0, 2.5, 3, 1.5],
+  [0, 3, 3, 1],
+  [0, 3.5, 3, 0.5],
+]
+
+function BubbleDashRing(props: { size: number; color: string }) {
+  const r = props.size / 2 + 1
+  const c = props.size / 2
+  return (
+    <svg
+      height={props.size}
+      width={props.size}
+      style={{
+        height: props.size,
+        left: 0,
+        overflow: 'visible',
+        pointerEvents: 'none',
+        position: 'absolute',
+        top: 0,
+        width: props.size,
+      }}
+    >
+      <circle
+        className="map-bubble-dash-ring"
+        cx={c}
+        cy={c}
+        fill="none"
+        r={r}
+        stroke={props.color}
+        strokeDasharray="6 4"
+        strokeLinecap="butt"
+        strokeWidth={2.5}
+      />
+    </svg>
+  )
+}
+
+function visualOpacity(base: number, highlighted: boolean, highlightsOn: boolean): number {
+  if (!highlightsOn) return base
+  return highlighted ? base : base * HIGHLIGHT_DIM
+}
 
 const maplibreWorkerUrl = `${getAppBasePath()}/maplibre-gl-worker.mjs`
 setWorkerUrl(maplibreWorkerUrl)
@@ -26,6 +92,10 @@ setWorkerUrl(maplibreWorkerUrl)
 const LIGHT_STYLE = 'https://tiles.openfreemap.org/styles/liberty'
 const DARK_STYLE = 'https://tiles.openfreemap.org/styles/dark'
 const APP_BASE = getAppBasePath()
+
+function canHoverTooltips(): boolean {
+  return typeof window !== 'undefined' && window.matchMedia(HOVER_TOOLTIP_MEDIA).matches
+}
 
 const EUROPE_FALLBACK = {
   latitude: 50,
@@ -47,9 +117,10 @@ export type MapCamera = {
   zoom: number
 }
 
-type EventItem = {
+type MapBubbleItem = {
   id: string
   kind: string
+  personId: string
   lat: number
   lng: number
   accent: string
@@ -58,19 +129,13 @@ type EventItem = {
   label: string
   year: number | null
   radius: number
+  thumbnail: string | null
 }
 
-type PortraitItem = {
-  personId: string
-  name: string
-  accent: string
-  thumbnail: string | null
-  lat: number
-  lng: number
-  opacity: number
-}
+const PORTRAIT_DIAMETER = 28
 
 type PointTooltip = {
+  id: string
   longitude: number
   latitude: number
   kind: string
@@ -111,28 +176,37 @@ const EventBubble = React.memo(function EventBubble(props: {
   border: string
   opacity: number
   title: string
+  highlighted: boolean
+  hoverTooltips: boolean
   onActivate: (itemId: string, event: React.MouseEvent) => void
+  onHoverEnter?: (itemId: string) => void
+  onHoverLeave?: (itemId: string) => void
 }) {
   return (
     <button
       data-item-id={props.itemId}
-      title={props.title}
+      title={props.hoverTooltips ? undefined : props.title}
       onClick={event => props.onActivate(props.itemId, event)}
+      onMouseEnter={props.onHoverEnter ? () => props.onHoverEnter?.(props.itemId) : undefined}
+      onMouseLeave={props.onHoverLeave ? () => props.onHoverLeave?.(props.itemId) : undefined}
       style={{
         background: props.accent,
-        border: `2px solid ${props.border}`,
+        border: props.highlighted ? `2px solid transparent` : `2px solid ${props.border}`,
         borderRadius: '50%',
         boxShadow: '0 1px 4px rgba(0,0,0,0.45)',
         cursor: 'pointer',
         height: props.size,
         opacity: props.opacity,
-        overflow: 'hidden',
+        overflow: 'visible',
         padding: 0,
         pointerEvents: props.opacity < 0.05 ? 'none' : 'auto',
+        position: 'relative',
         width: props.size,
       }}
       type="button"
-    />
+    >
+      {props.highlighted && <BubbleDashRing color={props.accent} size={props.size} />}
+    </button>
   )
 })
 
@@ -144,6 +218,7 @@ const ClusterBubble = React.memo(function ClusterBubble(props: {
   opacity: number
   onActivate: (clusterKey: string, event: React.MouseEvent) => void
 }) {
+  const labelColor = isLightHex(props.accent) ? '#111' : '#fff'
   return (
     <button
       aria-label={`${props.count} elementów`}
@@ -154,16 +229,16 @@ const ClusterBubble = React.memo(function ClusterBubble(props: {
         border: `2px solid ${props.border}`,
         borderRadius: '50%',
         boxShadow: '0 1px 4px rgba(0,0,0,0.45)',
-        color: '#fff',
+        color: labelColor,
         cursor: 'pointer',
         display: 'flex',
         fontFamily: 'system-ui, sans-serif',
         fontSize: 12,
         fontWeight: 800,
-        height: 34,
+        height: CLUSTER_HUB_DIAMETER,
         justifyContent: 'center',
         opacity: props.opacity,
-        width: 34,
+        width: CLUSTER_HUB_DIAMETER,
       }}
       type="button"
     >
@@ -179,50 +254,68 @@ const PortraitBubble = React.memo(function PortraitBubble(props: {
   border: string
   opacity: number
   thumbnail: string | null
+  highlighted: boolean
+  hoverTooltips: boolean
   onActivate: (personId: string, event: React.MouseEvent) => void
+  onHoverEnter?: (personId: string) => void
+  onHoverLeave?: (personId: string) => void
 }) {
   return (
     <button
-      title={props.name}
+      title={props.hoverTooltips ? undefined : props.name}
       onClick={event => props.onActivate(props.personId, event)}
+      onMouseEnter={props.onHoverEnter ? () => props.onHoverEnter?.(props.personId) : undefined}
+      onMouseLeave={props.onHoverLeave ? () => props.onHoverLeave?.(props.personId) : undefined}
       style={{
         background: props.accent,
-        border: `2px solid ${props.border}`,
+        border: props.highlighted ? `2px solid transparent` : `2px solid ${props.border}`,
         borderRadius: '50%',
         boxShadow: '0 1px 4px rgba(0,0,0,0.45)',
         cursor: 'pointer',
         height: 28,
         opacity: props.opacity,
-        overflow: 'hidden',
+        overflow: 'visible',
         padding: 0,
         pointerEvents: props.opacity < 0.05 ? 'none' : 'auto',
+        position: 'relative',
         width: 28,
       }}
       type="button"
     >
-      {props.thumbnail ? (
-        <img
-          alt=""
-          draggable={false}
-          src={`${APP_BASE}/assets/person/${props.thumbnail}`}
-          style={{ display: 'block', height: '100%', objectFit: 'cover', width: '100%' }}
-        />
-      ) : (
-        <span
-          style={{
-            alignItems: 'center',
-            color: '#fff',
-            display: 'flex',
-            fontSize: 11,
-            fontWeight: 700,
-            height: '100%',
-            justifyContent: 'center',
-            width: '100%',
-          }}
-        >
-          {props.name.slice(0, 1)}
-        </span>
-      )}
+      <span
+        style={{
+          borderRadius: '50%',
+          display: 'block',
+          height: '100%',
+          overflow: 'hidden',
+          width: '100%',
+        }}
+      >
+        {props.thumbnail ? (
+          <img
+            alt=""
+            draggable={false}
+            src={`${APP_BASE}/assets/person/${props.thumbnail}`}
+            style={{ display: 'block', height: '100%', objectFit: 'cover', width: '100%' }}
+          />
+        ) : (
+          <span
+            style={{
+              alignItems: 'center',
+              color: '#fff',
+              display: 'flex',
+              fontSize: 11,
+              fontWeight: 700,
+              height: '100%',
+              justifyContent: 'center',
+              width: '100%',
+            }}
+          >
+            {props.name.slice(0, 1)}
+          </span>
+        )}
+      </span>
+      {props.highlighted && <BubbleDashRing color={props.accent} size={28} />}
     </button>
   )
 })
@@ -233,6 +326,39 @@ const GeographicMap = (props: GeographicMapProps) => {
   const skipNextMoveEnd = React.useRef(false)
   const [tooltip, setTooltip] = React.useState<PointTooltip | null>(null)
   const [expandedClusters, setExpandedClusters] = React.useState<Set<string>>(() => new Set())
+  const [layoutTick, setLayoutTick] = React.useState(0)
+  const [hoverTooltips, setHoverTooltips] = React.useState(canHoverTooltips)
+  const [markerHoverPersonId, setMarkerHoverPersonId] = React.useState<string | null>(null)
+  const [pathHoverPersonId, setPathHoverPersonId] = React.useState<string | null>(null)
+  const expandedClustersRef = React.useRef(expandedClusters)
+  expandedClustersRef.current = expandedClusters
+  const clearMarkerHoverTimer = React.useRef<number | null>(null)
+
+  const hoverPersonId = markerHoverPersonId ?? pathHoverPersonId
+  const highlightsOn = hoverPersonId != null
+
+  React.useEffect(() => {
+    const media = window.matchMedia(HOVER_TOOLTIP_MEDIA)
+    const sync = () => setHoverTooltips(media.matches)
+    sync()
+    media.addEventListener('change', sync)
+    return () => media.removeEventListener('change', sync)
+  }, [])
+
+  const setMarkerHover = React.useCallback((personId: string | null) => {
+    if (clearMarkerHoverTimer.current != null) {
+      window.clearTimeout(clearMarkerHoverTimer.current)
+      clearMarkerHoverTimer.current = null
+    }
+    if (personId) {
+      setMarkerHoverPersonId(personId)
+      return
+    }
+    clearMarkerHoverTimer.current = window.setTimeout(() => {
+      setMarkerHoverPersonId(null)
+      clearMarkerHoverTimer.current = null
+    }, 50)
+  }, [])
 
   const paths = React.useMemo(
     () =>
@@ -279,9 +405,41 @@ const GeographicMap = (props: GeographicMapProps) => {
     [geojson],
   )
 
-  // Static event markers only — never mix moving portraits into clusters.
-  const eventItems = React.useMemo(() => {
-    const items: EventItem[] = []
+  const highlightPathGeoJson = React.useMemo(() => {
+    if (!hoverPersonId) return null
+    const path = paths.find(p => p.personId === hoverPersonId)
+    if (!path) return null
+    const coordinates = personLifeLineCoordinates(path, {
+      showPublications: props.displayPublications,
+      showPersonal: props.displayPersonHistoryEvents,
+    })
+    if (coordinates.length < 2) return null
+    return {
+      type: 'FeatureCollection' as const,
+      features: [
+        {
+          type: 'Feature' as const,
+          properties: {
+            personId: path.personId,
+            accent: mapAccentForBasemap(path.accent, props.darkMode),
+          },
+          geometry: {
+            type: 'LineString' as const,
+            coordinates,
+          },
+        },
+      ],
+    }
+  }, [
+    hoverPersonId,
+    paths,
+    props.displayPublications,
+    props.displayPersonHistoryEvents,
+    props.darkMode,
+  ])
+
+  const mapBubbles = React.useMemo(() => {
+    const items: MapBubbleItem[] = []
     for (const f of geojson.features) {
       if (f.properties.kind === 'path' || f.geometry.type !== 'Point') continue
       const opacity = Number(f.properties.opacity ?? 0.95)
@@ -297,6 +455,7 @@ const GeographicMap = (props: GeographicMapProps) => {
       items.push({
         id: `${f.properties.kind}:${f.properties.personId}:${f.properties.refId ?? f.properties.label}:${year}`,
         kind: String(f.properties.kind ?? ''),
+        personId: String(f.properties.personId ?? ''),
         lat,
         lng,
         accent: String(f.properties.accent ?? '#888'),
@@ -305,33 +464,41 @@ const GeographicMap = (props: GeographicMapProps) => {
         label: String(f.properties.label ?? ''),
         year,
         radius: kindRadius(String(f.properties.kind ?? '')),
+        thumbnail: null,
       })
+    }
+    if (props.displayAuthors) {
+      for (const track of avatarTracks) {
+        const pos = avatarPositionAt(track, props.temporal)
+        if (!pos || pos.opacity < 0.02) continue
+        items.push({
+          id: `portrait:${track.personId}`,
+          kind: 'portrait',
+          personId: track.personId,
+          lat: pos.lat,
+          lng: pos.lng,
+          accent: mapAccentForBasemap(track.accent, props.darkMode),
+          opacity: pos.opacity,
+          personName: track.name,
+          label: track.name,
+          year: null,
+          radius: PORTRAIT_DIAMETER,
+          thumbnail: track.thumbnail,
+        })
+      }
     }
     return items
-  }, [geojson])
+  }, [
+    geojson,
+    avatarTracks,
+    props.displayAuthors,
+    props.temporal,
+    props.darkMode,
+  ])
 
-  const portraits = React.useMemo(() => {
-    if (!props.displayAuthors) return [] as PortraitItem[]
-    const out: PortraitItem[] = []
-    for (const track of avatarTracks) {
-      const pos = avatarPositionAt(track, props.temporal)
-      if (!pos || pos.opacity < 0.02) continue
-      out.push({
-        personId: track.personId,
-        name: track.name,
-        accent: mapAccentForBasemap(track.accent, props.darkMode),
-        thumbnail: track.thumbnail,
-        lat: pos.lat,
-        lng: pos.lng,
-        opacity: pos.opacity,
-      })
-    }
-    return out
-  }, [avatarTracks, props.displayAuthors, props.temporal, props.darkMode])
-
-  const eventClusters = React.useMemo(() => {
-    const groups = new Map<string, EventItem[]>()
-    for (const item of eventItems) {
+  const mapClusters = React.useMemo(() => {
+    const groups = new Map<string, MapBubbleItem[]>()
+    for (const item of mapBubbles) {
       const key = clusterKey(item.lat, item.lng)
       const list = groups.get(key) ?? []
       list.push(item)
@@ -344,7 +511,7 @@ const GeographicMap = (props: GeographicMapProps) => {
       lng: members[0].lng,
       members,
     }))
-  }, [eventItems])
+  }, [mapBubbles])
 
   // Only collapse clusters when the selected range/mode changes — not every playhead tick.
   React.useEffect(() => {
@@ -433,8 +600,57 @@ const GeographicMap = (props: GeographicMapProps) => {
   const border = props.darkMode ? '#111' : '#fff'
   const kindLabel = tooltip ? (KIND_LABELS[tooltip.kind] ?? tooltip.kind) : ''
 
-  const eventClustersRef = React.useRef(eventClusters)
-  eventClustersRef.current = eventClusters
+  const mapClustersRef = React.useRef(mapClusters)
+  mapClustersRef.current = mapClusters
+
+  const expandedMemberPositions = React.useCallback(
+    (group: { lat: number; lng: number; members: MapBubbleItem[] }) => {
+      void layoutTick
+      const map = mapRef.current?.getMap()
+      const bubbleDiameter = Math.max(...group.members.map(m => m.radius), 12)
+      const offsets = clusterRingPixelOffsets(
+        group.members.length,
+        bubbleDiameter,
+        CLUSTER_HUB_DIAMETER,
+      )
+      if (!map) {
+        return group.members.map(m => ({ lat: m.lat, lng: m.lng }))
+      }
+      const origin = map.project([group.lng, group.lat])
+      return offsets.map(o => {
+        const ll = map.unproject([origin.x + o.x, origin.y + o.y])
+        return { lat: ll.lat, lng: ll.lng }
+      })
+    },
+    [layoutTick],
+  )
+
+  const findBubble = React.useCallback((itemId: string) => {
+    for (const group of mapClustersRef.current) {
+      const index = group.members.findIndex(m => m.id === itemId)
+      if (index < 0) continue
+      return { group, index, item: group.members[index] }
+    }
+    return null
+  }, [])
+
+  React.useEffect(() => {
+    if (!highlightPathGeoJson) return
+    const map = mapRef.current?.getMap()
+    if (!map) return
+    let step = -1
+    let raf = 0
+    const tick = (ts: number) => {
+      const next = Math.floor(ts / 50) % LINE_DASH_SEQUENCE.length
+      if (next !== step && map.getLayer('life-path-dash')) {
+        step = next
+        map.setPaintProperty('life-path-dash', 'line-dasharray', LINE_DASH_SEQUENCE[next])
+      }
+      raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [highlightPathGeoJson])
 
   const onClusterActivate = React.useCallback((key: string, event: React.MouseEvent) => {
     event.stopPropagation()
@@ -447,36 +663,94 @@ const GeographicMap = (props: GeographicMapProps) => {
     setTooltip(null)
   }, [])
 
-  const onEventActivate = React.useCallback((itemId: string, event: React.MouseEvent) => {
-    event.stopPropagation()
-    for (const group of eventClustersRef.current) {
-      const expanded = expandedClusters.has(group.key)
-      const index = group.members.findIndex(m => m.id === itemId)
-      if (index < 0) continue
-      const item = group.members[index]
-      const offset =
-        expanded && group.members.length > 1
-          ? spiralOffsetDegrees(index, group.members.length)
-          : { dLat: 0, dLng: 0 }
+  const showBubbleTooltip = React.useCallback(
+    (itemId: string) => {
+      const found = findBubble(itemId)
+      if (!found) return
+      const { group, index, item } = found
+      const expanded = expandedClustersRef.current.has(group.key)
+      const positions =
+        expanded && group.members.length > 1 ? expandedMemberPositions(group) : null
+      const pos = positions?.[index] ?? { lat: item.lat, lng: item.lng }
+      setMarkerHover(item.personId)
       setTooltip({
-        latitude: item.lat + offset.dLat,
-        longitude: item.lng + offset.dLng,
+        id: item.id,
+        latitude: pos.lat,
+        longitude: pos.lng,
         kind: item.kind,
         personName: item.personName,
         label: item.label,
         year: item.year,
       })
-      return
-    }
-  }, [expandedClusters])
+    },
+    [expandedMemberPositions, findBubble, setMarkerHover],
+  )
+
+  const clearTooltipFor = React.useCallback((id: string) => {
+    setTooltip(prev => (prev?.id === id ? null : prev))
+  }, [])
+
+  const onEventActivate = React.useCallback(
+    (itemId: string, event: React.MouseEvent) => {
+      event.stopPropagation()
+      showBubbleTooltip(itemId)
+    },
+    [showBubbleTooltip],
+  )
+
+  const onEventHoverEnter = React.useCallback(
+    (itemId: string) => {
+      const found = findBubble(itemId)
+      if (!found) return
+      setMarkerHover(found.item.personId)
+      if (hoverTooltips) showBubbleTooltip(itemId)
+    },
+    [findBubble, hoverTooltips, setMarkerHover, showBubbleTooltip],
+  )
+
+  const onEventHoverLeave = React.useCallback(
+    (itemId: string) => {
+      if (hoverTooltips) clearTooltipFor(itemId)
+      setMarkerHover(null)
+    },
+    [clearTooltipFor, hoverTooltips, setMarkerHover],
+  )
+
+  const onPortraitHoverEnter = React.useCallback(
+    (personId: string) => {
+      const itemId = `portrait:${personId}`
+      const found = findBubble(itemId)
+      if (!found) return
+      setMarkerHover(personId)
+      if (hoverTooltips) showBubbleTooltip(itemId)
+    },
+    [findBubble, hoverTooltips, setMarkerHover, showBubbleTooltip],
+  )
+
+  const onPortraitHoverLeave = React.useCallback(
+    (personId: string) => {
+      if (hoverTooltips) clearTooltipFor(`portrait:${personId}`)
+      setMarkerHover(null)
+    },
+    [clearTooltipFor, hoverTooltips, setMarkerHover],
+  )
 
   const onPortraitActivate = React.useCallback(
     (personId: string, event: React.MouseEvent) => {
       event.stopPropagation()
       setTooltip(null)
+      setMarkerHover(personId)
       props.onPersonClick(personId)
     },
-    [props.onPersonClick],
+    [props.onPersonClick, setMarkerHover],
+  )
+
+  const onPathMouseMove = React.useCallback(
+    (event: { features?: { properties?: { personId?: unknown } }[] }) => {
+      const pid = event.features?.[0]?.properties?.personId
+      setPathHoverPersonId(pid != null && pid !== '' ? String(pid) : null)
+    },
+    [],
   )
 
   return (
@@ -490,12 +764,19 @@ const GeographicMap = (props: GeographicMapProps) => {
             zoom: EUROPE_FALLBACK.zoom,
           }
         }
+        interactiveLayerIds={['life-path-hit']}
         mapStyle={props.darkMode ? DARK_STYLE : LIGHT_STYLE}
         onClick={() => {
-          setExpandedClusters(new Set())
           setTooltip(null)
+          setMarkerHoverPersonId(null)
+          setPathHoverPersonId(null)
         }}
         onLoad={applyFitOrInitial}
+        onMouseLeave={() => setPathHoverPersonId(null)}
+        onMouseMove={onPathMouseMove}
+        onMove={() => {
+          if (expandedClustersRef.current.size > 0) setLayoutTick(t => t + 1)
+        }}
         onMoveEnd={onMoveEnd}
         style={{ width: '100%', height: '100%' }}
       >
@@ -503,11 +784,45 @@ const GeographicMap = (props: GeographicMapProps) => {
           <Layer
             id="life-path-lines"
             type="line"
-            filter={['==', ['get', 'kind'], 'path']}
+            filter={
+              hoverPersonId && highlightPathGeoJson
+                ? [
+                    'all',
+                    ['==', ['get', 'kind'], 'path'],
+                    ['!=', ['get', 'personId'], hoverPersonId],
+                  ]
+                : ['==', ['get', 'kind'], 'path']
+            }
             paint={{
               'line-color': ['get', 'accent'],
-              'line-width': 3.25,
-              'line-opacity': ['coalesce', ['get', 'opacity'], 0.85],
+              'line-width': [
+                'case',
+                ['==', ['get', 'personId'], hoverPersonId ?? ''],
+                4,
+                3.25,
+              ],
+              'line-opacity': highlightsOn
+                ? [
+                    'case',
+                    ['==', ['get', 'personId'], hoverPersonId ?? ''],
+                    ['coalesce', ['get', 'opacity'], 0.85],
+                    ['*', ['coalesce', ['get', 'opacity'], 0.85], HIGHLIGHT_DIM],
+                  ]
+                : ['coalesce', ['get', 'opacity'], 0.85],
+            }}
+            layout={{
+              'line-cap': 'round',
+              'line-join': 'round',
+            }}
+          />
+          <Layer
+            id="life-path-hit"
+            type="line"
+            filter={['==', ['get', 'kind'], 'path']}
+            paint={{
+              'line-color': '#000',
+              'line-opacity': 0,
+              'line-width': 14,
             }}
             layout={{
               'line-cap': 'round',
@@ -516,83 +831,131 @@ const GeographicMap = (props: GeographicMapProps) => {
           />
         </Source>
 
-        {eventClusters.flatMap(group => {
-          const expanded = expandedClusters.has(group.key)
-          if (!expanded && group.members.length > 1) {
-            const accent = group.members[0]?.accent ?? '#5b8def'
-            const opacity = Math.max(...group.members.map(m => m.opacity))
-            return [
-              <Marker
-                key={`cluster:${group.key}`}
-                anchor="center"
-                latitude={group.lat}
-                longitude={group.lng}
-                style={{ zIndex: 10 }}
-              >
-                <ClusterBubble
-                  accent={accent}
-                  border={border}
-                  clusterKey={group.key}
-                  count={group.members.length}
-                  opacity={opacity}
-                  onActivate={onClusterActivate}
-                />
-              </Marker>,
-            ]
-          }
+        {highlightPathGeoJson && (
+          <Source id="life-path-highlight" type="geojson" data={highlightPathGeoJson}>
+            <Layer
+              id="life-path-dash"
+              type="line"
+              paint={{
+                'line-color': ['get', 'accent'],
+                'line-dasharray': LINE_DASH_SEQUENCE[0],
+                'line-opacity': 1,
+                'line-width': 4,
+              }}
+              layout={{
+                'line-cap': 'butt',
+                'line-join': 'round',
+              }}
+            />
+          </Source>
+        )}
 
-          return group.members.map((item, index) => {
-            const offset =
-              expanded && group.members.length > 1
-                ? spiralOffsetDegrees(index, group.members.length)
-                : { dLat: 0, dLng: 0 }
-            const lat = item.lat + offset.dLat
-            const lng = item.lng + offset.dLng
+        {mapClusters.flatMap(group => {
+          const expanded = expandedClusters.has(group.key)
+          const renderBubble = (item: MapBubbleItem, lat: number, lng: number, zIndex: number) => {
+            const highlighted = hoverPersonId === item.personId
+            const opacity = visualOpacity(item.opacity, highlighted, highlightsOn)
+            if (item.kind === 'portrait') {
+              return (
+                <Marker
+                  key={item.id}
+                  anchor="center"
+                  latitude={lat}
+                  longitude={lng}
+                  style={{ zIndex: highlighted ? Math.max(zIndex, 40) : zIndex }}
+                >
+                  <PortraitBubble
+                    accent={item.accent}
+                    border={border}
+                    highlighted={highlighted}
+                    hoverTooltips={hoverTooltips}
+                    name={item.personName}
+                    opacity={opacity}
+                    personId={item.personId}
+                    thumbnail={item.thumbnail}
+                    onActivate={onPortraitActivate}
+                    onHoverEnter={onPortraitHoverEnter}
+                    onHoverLeave={onPortraitHoverLeave}
+                  />
+                </Marker>
+              )
+            }
             return (
-              <Marker key={item.id} anchor="center" latitude={lat} longitude={lng} style={{ zIndex: 10 }}>
+              <Marker
+                key={item.id}
+                anchor="center"
+                latitude={lat}
+                longitude={lng}
+                style={{ zIndex: highlighted ? Math.max(zIndex, 20) : zIndex }}
+              >
                 <EventBubble
                   accent={item.accent}
                   border={border}
+                  highlighted={highlighted}
+                  hoverTooltips={hoverTooltips}
                   itemId={item.id}
-                  opacity={item.opacity}
+                  opacity={opacity}
                   size={item.radius}
                   title={item.personName || item.label}
                   onActivate={onEventActivate}
+                  onHoverEnter={onEventHoverEnter}
+                  onHoverLeave={onEventHoverLeave}
                 />
               </Marker>
             )
-          })
-        })}
+          }
 
-        {portraits.map(p => (
-          <Marker
-            key={`portrait:${p.personId}`}
-            anchor="center"
-            latitude={p.lat}
-            longitude={p.lng}
-            style={{ zIndex: 30 }}
-          >
-            <PortraitBubble
-              accent={p.accent}
-              border={border}
-              name={p.name}
-              opacity={p.opacity}
-              personId={p.personId}
-              thumbnail={p.thumbnail}
-              onActivate={onPortraitActivate}
-            />
-          </Marker>
-        ))}
+          if (group.members.length <= 1) {
+            const item = group.members[0]
+            if (!item) return []
+            return [renderBubble(item, item.lat, item.lng, item.kind === 'portrait' ? 30 : 10)]
+          }
+
+          const accent = group.members[0]?.accent ?? '#5b8def'
+          const opacity = Math.max(...group.members.map(m => m.opacity))
+          const clusterHot = group.members.some(m => m.personId === hoverPersonId)
+          const hub = (
+            <Marker
+              key={`cluster:${group.key}`}
+              anchor="center"
+              latitude={group.lat}
+              longitude={group.lng}
+              style={{ zIndex: 12 }}
+            >
+              <ClusterBubble
+                accent={accent}
+                border={border}
+                clusterKey={group.key}
+                count={group.members.length}
+                opacity={visualOpacity(opacity, clusterHot, highlightsOn)}
+                onActivate={onClusterActivate}
+              />
+            </Marker>
+          )
+
+          if (!expanded) return [hub]
+
+          const positions = expandedMemberPositions(group)
+          return [
+            hub,
+            ...group.members.map((item, index) => {
+              const pos = positions[index] ?? { lat: item.lat, lng: item.lng }
+              return renderBubble(item, pos.lat, pos.lng, item.kind === 'portrait' ? 31 : 11)
+            }),
+          ]
+        })}
 
         {tooltip && (
           <Popup
             anchor="bottom"
-            closeButton
+            className={hoverTooltips ? 'map-point-popup map-point-popup--hover' : 'map-point-popup'}
+            closeButton={!hoverTooltips}
             closeOnClick={false}
             latitude={tooltip.latitude}
             longitude={tooltip.longitude}
             maxWidth="240px"
             offset={12}
+            style={{ zIndex: POPUP_Z_INDEX }}
             onClose={() => setTooltip(null)}
           >
             <div
