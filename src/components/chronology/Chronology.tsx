@@ -195,6 +195,9 @@ const Chronology = () => {
   const mapTemporalRef = React.useRef({ year: mapYear, yearFrom: mapYearFrom, yearTo: mapYearTo })
   mapTemporalRef.current = { year: mapYear, yearFrom: mapYearFrom, yearTo: mapYearTo }
   const playRafRef = React.useRef<number | null>(null)
+  /** Limit React map commits while playing — ref still advances every frame. */
+  const lastPlayCommitMsRef = React.useRef(0)
+  const lastPlayCommitYearRef = React.useRef<number | null>(null)
   const lastUrlWriteRef = React.useRef(0)
 
   const timelineViewportRef = React.useRef<{ start?: number; end?: number; row?: number }>({
@@ -651,6 +654,8 @@ const Chronology = () => {
     })
 
     let lastTs: number | null = null
+    lastPlayCommitMsRef.current = 0
+    lastPlayCommitYearRef.current = Math.round(mapTemporalRef.current.year)
     const tick = (ts: number) => {
       if (lastTs == null) lastTs = ts
       const dt = Math.min((ts - lastTs) / 1000, 0.1)
@@ -659,6 +664,7 @@ const Chronology = () => {
       if (current.year >= current.yearTo) {
         setMapYear(current.yearTo)
         mapTemporalRef.current = { ...current, year: current.yearTo }
+        lastPlayCommitYearRef.current = Math.round(current.yearTo)
         persistUrl(
           { view: 'map', year: current.yearTo, yearFrom: current.yearFrom, yearTo: current.yearTo },
           'replace',
@@ -673,9 +679,16 @@ const Chronology = () => {
         playbackSpeedRef.current,
       )
       const next = Math.min(current.yearTo, current.year + speed * dt)
-      setMapYear(next)
       mapTemporalRef.current = { ...current, year: next }
       persistMapTemporalThrottled(next, current.yearFrom, current.yearTo)
+      // Avoid rebuilding the dense map every rAF — commit on whole-year change or ~5 Hz.
+      const nextInt = Math.round(next)
+      const due = ts - lastPlayCommitMsRef.current >= 180
+      if (due || nextInt !== lastPlayCommitYearRef.current) {
+        lastPlayCommitMsRef.current = ts
+        lastPlayCommitYearRef.current = nextInt
+        setMapYear(nextInt)
+      }
       playRafRef.current = requestAnimationFrame(tick)
     }
     playRafRef.current = requestAnimationFrame(tick)
@@ -861,6 +874,7 @@ const Chronology = () => {
           peopleHistoryEvents={peopleHistoryEvents}
           peopleList={peopleList}
           publicationsList={publicationsList}
+          searchQuery={searchQuery}
           temporal={{
             year: mapYear,
             yearFrom: mapYearFrom,

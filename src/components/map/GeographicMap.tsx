@@ -19,11 +19,8 @@ import {
   type TemporalState,
 } from '../../utils/mapTemporal'
 import {
-  clusterAutoExpandZoom,
-  clusterKey,
-  clusterRingPixelOffsets,
-  isClusterAutoExpanded,
   isLightHex,
+  layoutScreenBubbles,
   mapAccentForBasemap,
 } from '../../utils/mapVisual'
 import { formatYear } from '../../utils/years'
@@ -33,6 +30,8 @@ const POPUP_Z_INDEX = 1000
 const HOVER_TOOLTIP_MEDIA = '(hover: hover) and (pointer: fine)'
 /** Match diagram relation fade while something is highlighted. */
 const HIGHLIGHT_DIM = 0.1
+/** Match TimelineLayers search dim (alpha ≈ 0.22). */
+const SEARCH_DIM = 0.22
 /** MapLibre dasharray phases — marches along the line (oldest → newest). */
 const LINE_DASH_SEQUENCE: number[][] = [
   [0, 4, 3],
@@ -83,9 +82,29 @@ function BubbleDashRing(props: { size: number; color: string }) {
   )
 }
 
-function visualOpacity(base: number, highlighted: boolean, highlightsOn: boolean): number {
-  if (!highlightsOn) return base
-  return highlighted ? base : base * HIGHLIGHT_DIM
+function searchNeedle(query: string): string {
+  return query.trim().toLowerCase()
+}
+
+function matchesSearch(haystack: string, needle: string): boolean {
+  if (!needle) return true
+  return haystack.toLowerCase().includes(needle)
+}
+
+/** temporal × search dim × selection dim (design.md option 2). */
+function composedOpacity(
+  base: number,
+  opts: {
+    searchActive: boolean
+    searchMatch: boolean
+    selectionActive: boolean
+    selected: boolean
+  },
+): number {
+  let opacity = base
+  if (opts.searchActive && !opts.searchMatch) opacity *= SEARCH_DIM
+  if (opts.selectionActive && !opts.selected) opacity *= HIGHLIGHT_DIM
+  return opacity
 }
 
 const maplibreWorkerUrl = `${getAppBasePath()}/maplibre-gl-worker.mjs`
@@ -157,6 +176,7 @@ type GeographicMapProps = {
   locationsList: Location[]
   peopleHistoryEvents: PersonHistoryEvent[]
   publicationsList: Publication[]
+  searchQuery: string
   temporal: TemporalState
   initialCamera: MapCamera | null
   onCameraCommit: (camera: MapCamera) => void
@@ -331,22 +351,61 @@ const GeographicMap = (props: GeographicMapProps) => {
   const [tooltip, setTooltip] = React.useState<PointTooltip | null>(null)
   const [expandedClusters, setExpandedClusters] = React.useState<Set<string>>(() => new Set())
   const [layoutTick, setLayoutTick] = React.useState(0)
-  const [mapZoom, setMapZoom] = React.useState(
-    () => props.initialCamera?.zoom ?? EUROPE_FALLBACK.zoom,
-  )
   const [hoverTooltips, setHoverTooltips] = React.useState(canHoverTooltips)
   const [selectedPersonId, setSelectedPersonId] = React.useState<string | null>(null)
   const [markerHoverPersonId, setMarkerHoverPersonId] = React.useState<string | null>(null)
   const [pathHoverPersonId, setPathHoverPersonId] = React.useState<string | null>(null)
-  const expandedClustersRef = React.useRef(expandedClusters)
-  expandedClustersRef.current = expandedClusters
-  const mapZoomRef = React.useRef(mapZoom)
-  mapZoomRef.current = mapZoom
+  const layoutRafRef = React.useRef(0)
   const clearMarkerHoverTimer = React.useRef<number | null>(null)
+
+  // Whole-year temporal for geojson/layout — fractional playhead was rebuilding
+  // spiderfy + all Markers every animation frame (stutter on dense maps).
+  const layoutYear = Math.round(props.temporal.year)
+  const mapTemporal = React.useMemo(
+    () => ({
+      year: layoutYear,
+      yearFrom: props.temporal.yearFrom,
+      yearTo: props.temporal.yearTo,
+      mode: props.temporal.mode,
+    }),
+    [layoutYear, props.temporal.mode, props.temporal.yearFrom, props.temporal.yearTo],
+  )
 
   // Sticky click selection wins; hover only previews when nothing is selected.
   const activePersonId = selectedPersonId ?? markerHoverPersonId ?? pathHoverPersonId
   const highlightsOn = activePersonId != null
+  const needle = searchNeedle(props.searchQuery)
+  const searchActive = needle.length > 0
+
+  const personNameById = React.useMemo(() => {
+    const map = new Map<string, string>()
+    for (const p of props.peopleList) map.set(String(p.id), p.name)
+    return map
+  }, [props.peopleList])
+
+  const publicationTitleById = React.useMemo(() => {
+    const map = new Map<string, string>()
+    for (const p of props.publicationsList) map.set(String(p.id), p.title)
+    return map
+  }, [props.publicationsList])
+
+  const personNameMatches = React.useCallback(
+    (personId: string) => matchesSearch(personNameById.get(String(personId)) ?? '', needle),
+    [needle, personNameById],
+  )
+
+  const bubbleSearchMatch = React.useCallback(
+    (item: MapBubbleItem) => {
+      if (!searchActive) return true
+      if (item.kind === 'publication') {
+        const title =
+          (item.refId != null ? publicationTitleById.get(String(item.refId)) : null) ?? item.label
+        return matchesSearch(title, needle)
+      }
+      return personNameMatches(item.personId)
+    },
+    [needle, personNameMatches, publicationTitleById, searchActive],
+  )
 
   React.useEffect(() => {
     const media = window.matchMedia(HOVER_TOOLTIP_MEDIA)
@@ -394,7 +453,7 @@ const GeographicMap = (props: GeographicMapProps) => {
         showLifelines: props.displayAuthorsTimeline,
         showPublications: props.displayPublications,
         showPersonal: props.displayPersonHistoryEvents,
-        temporal: props.temporal,
+        temporal: mapTemporal,
         darkMode: props.darkMode,
       }),
     [
@@ -403,18 +462,33 @@ const GeographicMap = (props: GeographicMapProps) => {
       props.displayAuthorsTimeline,
       props.displayPublications,
       props.displayPersonHistoryEvents,
-      props.temporal,
+      mapTemporal,
       props.darkMode,
     ],
   )
 
-  const pathGeoJson = React.useMemo(
-    () => ({
-      type: 'FeatureCollection' as const,
-      features: geojson.features.filter(f => f.properties.kind === 'path'),
-    }),
-    [geojson],
-  )
+  const pathGeoJson = React.useMemo(() => {
+    const features = geojson.features
+      .filter(f => f.properties.kind === 'path')
+      .map(f => {
+        const personId = String(f.properties.personId ?? '')
+        const base = Number(f.properties.opacity ?? 0.85)
+        const opacity = composedOpacity(base, {
+          searchActive,
+          searchMatch: personNameMatches(personId),
+          selectionActive: highlightsOn,
+          selected: activePersonId === personId,
+        })
+        return {
+          ...f,
+          properties: {
+            ...f.properties,
+            opacity,
+          },
+        }
+      })
+    return { type: 'FeatureCollection' as const, features }
+  }, [activePersonId, geojson, highlightsOn, personNameMatches, searchActive])
 
   const highlightPathGeoJson = React.useMemo(() => {
     if (!activePersonId) return null
@@ -423,6 +497,7 @@ const GeographicMap = (props: GeographicMapProps) => {
     const coordinates = personLifeLineCoordinates(path, {
       showPublications: props.displayPublications,
       showPersonal: props.displayPersonHistoryEvents,
+      temporal: mapTemporal,
     })
     if (coordinates.length < 2) return null
     return {
@@ -447,6 +522,7 @@ const GeographicMap = (props: GeographicMapProps) => {
     props.displayPublications,
     props.displayPersonHistoryEvents,
     props.darkMode,
+    mapTemporal,
   ])
 
   const mapBubbles = React.useMemo(() => {
@@ -482,7 +558,7 @@ const GeographicMap = (props: GeographicMapProps) => {
     }
     if (props.displayAuthors) {
       for (const track of avatarTracks) {
-        const pos = avatarPositionAt(track, props.temporal)
+        const pos = avatarPositionAt(track, mapTemporal)
         if (!pos || pos.opacity < 0.02) continue
         items.push({
           id: `portrait:${track.personId}`,
@@ -506,51 +582,104 @@ const GeographicMap = (props: GeographicMapProps) => {
     geojson,
     avatarTracks,
     props.displayAuthors,
-    props.temporal,
+    mapTemporal,
     props.darkMode,
   ])
 
-  const mapClusters = React.useMemo(() => {
-    const groups = new Map<string, MapBubbleItem[]>()
-    for (const item of mapBubbles) {
-      const key = clusterKey(item.lat, item.lng)
-      const list = groups.get(key) ?? []
-      list.push(item)
-      groups.set(key, list)
-    }
-    return [...groups.entries()].map(([key, members]) => ({
-      key,
-      // Anchor to first member's exact coords so the cluster key stays stable.
-      lat: members[0].lat,
-      lng: members[0].lng,
-      members,
-    }))
+  const bubbleById = React.useMemo(() => {
+    const map = new Map<string, MapBubbleItem>()
+    for (const item of mapBubbles) map.set(item.id, item)
+    return map
   }, [mapBubbles])
+
+  type PlacedMarker =
+    | { kind: 'individual'; item: MapBubbleItem; lat: number; lng: number }
+    | {
+        kind: 'hub'
+        key: string
+        members: MapBubbleItem[]
+        lat: number
+        lng: number
+      }
+
+  const { placedMarkers, displayPosById, hubsByKey } = React.useMemo(() => {
+    void layoutTick
+    const map = mapRef.current?.getMap()
+    const placed: PlacedMarker[] = []
+    const displayPos = new Map<string, { lat: number; lng: number }>()
+    const hubs = new Map<string, MapBubbleItem[]>()
+
+    if (!map) {
+      for (const item of mapBubbles) {
+        placed.push({ kind: 'individual', item, lat: item.lat, lng: item.lng })
+        displayPos.set(item.id, { lat: item.lat, lng: item.lng })
+      }
+      return { placedMarkers: placed, displayPosById: displayPos, hubsByKey: hubs }
+    }
+
+    const points = mapBubbles.map(item => {
+      const p = map.project([item.lng, item.lat])
+      return {
+        id: item.id,
+        x: p.x,
+        y: p.y,
+        diameterPx: item.radius,
+        // People are never count-hubbed — only push-separated when overlapping.
+        groupable: item.kind !== 'portrait',
+      }
+    })
+    const nodes = layoutScreenBubbles(points, {
+      hubDiameterPx: CLUSTER_HUB_DIAMETER,
+      forceExpandKeys: expandedClusters,
+    })
+
+    for (const node of nodes) {
+      const ll = map.unproject([node.x, node.y])
+      if (node.kind === 'individual') {
+        const item = bubbleById.get(node.id)
+        if (!item) continue
+        placed.push({ kind: 'individual', item, lat: ll.lat, lng: ll.lng })
+        displayPos.set(item.id, { lat: ll.lat, lng: ll.lng })
+      } else {
+        const members = node.memberIds
+          .map(id => bubbleById.get(id))
+          .filter((m): m is MapBubbleItem => m != null && m.kind !== 'portrait')
+        if (members.length === 0) continue
+        if (members.length === 1) {
+          const item = members[0]
+          placed.push({ kind: 'individual', item, lat: ll.lat, lng: ll.lng })
+          displayPos.set(item.id, { lat: ll.lat, lng: ll.lng })
+          continue
+        }
+        hubs.set(node.key, members)
+        placed.push({
+          kind: 'hub',
+          key: node.key,
+          members,
+          lat: ll.lat,
+          lng: ll.lng,
+        })
+        for (const m of members) {
+          displayPos.set(m.id, { lat: ll.lat, lng: ll.lng })
+        }
+      }
+    }
+
+    return { placedMarkers: placed, displayPosById: displayPos, hubsByKey: hubs }
+  }, [bubbleById, expandedClusters, layoutTick, mapBubbles])
 
   // Only collapse manual expands when the selected range/mode changes — not every playhead tick.
   React.useEffect(() => {
     setExpandedClusters(new Set())
     setTooltip(null)
     setSelectedPersonId(null)
-  }, [props.temporal.yearFrom, props.temporal.yearTo, props.temporal.mode])
+  }, [mapTemporal.yearFrom, mapTemporal.yearTo, mapTemporal.mode])
 
-  // After zooming out past a pile's auto threshold, drop its manual expand too.
   React.useEffect(() => {
-    setExpandedClusters(prev => {
-      if (prev.size === 0) return prev
-      let changed = false
-      const next = new Set(prev)
-      for (const group of mapClusters) {
-        if (!prev.has(group.key)) continue
-        const collapseBelow = clusterAutoExpandZoom(group.members.length) - 0.75
-        if (mapZoom < collapseBelow) {
-          next.delete(group.key)
-          changed = true
-        }
-      }
-      return changed ? next : prev
-    })
-  }, [mapZoom, mapClusters])
+    return () => {
+      if (layoutRafRef.current) cancelAnimationFrame(layoutRafRef.current)
+    }
+  }, [])
 
   const fitKey = React.useMemo(
     () =>
@@ -614,15 +743,18 @@ const GeographicMap = (props: GeographicMapProps) => {
     applyFitOrInitial()
   }, [applyFitOrInitial, fitKey, props.initialCamera])
 
-  const syncMapZoom = React.useCallback(() => {
-    const map = mapRef.current?.getMap()
-    if (!map) return
-    const zoom = map.getZoom()
-    if (Math.abs(zoom - mapZoomRef.current) > 0.01) setMapZoom(zoom)
+  const bumpLayout = React.useCallback(() => {
+    if (layoutRafRef.current) return
+    layoutRafRef.current = requestAnimationFrame(() => {
+      layoutRafRef.current = 0
+      setLayoutTick(t => t + 1)
+    })
   }, [])
 
   const onMoveEnd = () => {
-    syncMapZoom()
+    // Camera settled — drop click-forced spiderfies so layout is source of truth again.
+    setExpandedClusters(new Set())
+    bumpLayout()
     if (skipNextMoveEnd.current) {
       skipNextMoveEnd.current = false
       const map = mapRef.current?.getMap()
@@ -641,39 +773,19 @@ const GeographicMap = (props: GeographicMapProps) => {
   const border = props.darkMode ? '#111' : '#fff'
   const kindLabel = tooltip ? (KIND_LABELS[tooltip.kind] ?? tooltip.kind) : ''
 
-  const mapClustersRef = React.useRef(mapClusters)
-  mapClustersRef.current = mapClusters
+  const hubsByKeyRef = React.useRef(hubsByKey)
+  hubsByKeyRef.current = hubsByKey
+  const displayPosByIdRef = React.useRef(displayPosById)
+  displayPosByIdRef.current = displayPosById
 
-  const expandedMemberPositions = React.useCallback(
-    (group: { lat: number; lng: number; members: MapBubbleItem[] }) => {
-      void layoutTick
-      const map = mapRef.current?.getMap()
-      const bubbleDiameter = Math.max(...group.members.map(m => m.radius), 12)
-      const offsets = clusterRingPixelOffsets(
-        group.members.length,
-        bubbleDiameter,
-        CLUSTER_HUB_DIAMETER,
-      )
-      if (!map) {
-        return group.members.map(m => ({ lat: m.lat, lng: m.lng }))
-      }
-      const origin = map.project([group.lng, group.lat])
-      return offsets.map(o => {
-        const ll = map.unproject([origin.x + o.x, origin.y + o.y])
-        return { lat: ll.lat, lng: ll.lng }
-      })
+  const findBubble = React.useCallback(
+    (itemId: string) => {
+      const item = bubbleById.get(itemId)
+      if (!item) return null
+      return { item }
     },
-    [layoutTick],
+    [bubbleById],
   )
-
-  const findBubble = React.useCallback((itemId: string) => {
-    for (const group of mapClustersRef.current) {
-      const index = group.members.findIndex(m => m.id === itemId)
-      if (index < 0) continue
-      return { group, index, item: group.members[index] }
-    }
-    return null
-  }, [])
 
   React.useEffect(() => {
     if (!highlightPathGeoJson) return
@@ -695,9 +807,7 @@ const GeographicMap = (props: GeographicMapProps) => {
 
   const onClusterActivate = React.useCallback((key: string, event: React.MouseEvent) => {
     event.stopPropagation()
-    const group = mapClustersRef.current.find(g => g.key === key)
-    // Already open from zoom — keep it; click-to-collapse only applies when zoomed out.
-    if (group && isClusterAutoExpanded(mapZoomRef.current, group.members.length)) {
+    if (!hubsByKeyRef.current.has(key)) {
       setTooltip(null)
       return
     }
@@ -710,26 +820,15 @@ const GeographicMap = (props: GeographicMapProps) => {
     setTooltip(null)
   }, [])
 
-  const isGroupExpanded = React.useCallback(
-    (group: { key: string; members: MapBubbleItem[] }) => {
-      if (group.members.length <= 1) return false
-      return (
-        isClusterAutoExpanded(mapZoomRef.current, group.members.length) ||
-        expandedClustersRef.current.has(group.key)
-      )
-    },
-    [],
-  )
-
   const showBubbleTooltip = React.useCallback(
     (itemId: string) => {
       const found = findBubble(itemId)
       if (!found) return
-      const { group, index, item } = found
-      const expanded = isGroupExpanded(group)
-      const positions =
-        expanded && group.members.length > 1 ? expandedMemberPositions(group) : null
-      const pos = positions?.[index] ?? { lat: item.lat, lng: item.lng }
+      const { item } = found
+      const pos = displayPosByIdRef.current.get(item.id) ?? {
+        lat: item.lat,
+        lng: item.lng,
+      }
       setMarkerHover(item.personId)
       setTooltip({
         id: item.id,
@@ -742,7 +841,7 @@ const GeographicMap = (props: GeographicMapProps) => {
       })
       return item
     },
-    [expandedMemberPositions, findBubble, isGroupExpanded, setMarkerHover],
+    [findBubble, setMarkerHover],
   )
 
   const clearTooltipFor = React.useCallback((id: string) => {
@@ -814,16 +913,25 @@ const GeographicMap = (props: GeographicMapProps) => {
   )
 
   const onPathMouseMove = React.useCallback(
-    (event: { features?: { properties?: { personId?: unknown } }[] }) => {
-      const pid = event.features?.[0]?.properties?.personId
+    (event: {
+      features?: { properties?: { personId?: unknown; opacity?: unknown } }[]
+    }) => {
+      const feat = event.features?.find(f => {
+        const opacity = Number(f.properties?.opacity ?? 0)
+        return opacity > 0.05
+      })
+      const pid = feat?.properties?.personId
       setPathHoverPersonId(pid != null && pid !== '' ? String(pid) : null)
     },
     [],
   )
 
   const onMapClick = React.useCallback(
-    (event: { features?: { properties?: { personId?: unknown } }[] }) => {
-      const pid = event.features?.[0]?.properties?.personId
+    (event: {
+      features?: { properties?: { personId?: unknown; opacity?: unknown } }[]
+    }) => {
+      const feat = event.features?.find(f => Number(f.properties?.opacity ?? 0) > 0.05)
+      const pid = feat?.properties?.personId
       if (pid != null && pid !== '') {
         selectPerson(String(pid))
         return
@@ -852,14 +960,10 @@ const GeographicMap = (props: GeographicMapProps) => {
         onClick={onMapClick}
         onLoad={() => {
           applyFitOrInitial()
-          syncMapZoom()
+          bumpLayout()
         }}
         onMouseLeave={() => setPathHoverPersonId(null)}
         onMouseMove={onPathMouseMove}
-        onMove={() => {
-          syncMapZoom()
-          setLayoutTick(t => t + 1)
-        }}
         onMoveEnd={onMoveEnd}
         style={{ width: '100%', height: '100%' }}
       >
@@ -884,14 +988,7 @@ const GeographicMap = (props: GeographicMapProps) => {
                 4,
                 3.25,
               ],
-              'line-opacity': highlightsOn
-                ? [
-                    'case',
-                    ['==', ['get', 'personId'], activePersonId ?? ''],
-                    ['coalesce', ['get', 'opacity'], 0.85],
-                    ['*', ['coalesce', ['get', 'opacity'], 0.85], HIGHLIGHT_DIM],
-                  ]
-                : ['coalesce', ['get', 'opacity'], 0.85],
+              'line-opacity': ['coalesce', ['get', 'opacity'], 0.85],
             }}
             layout={{
               'line-cap': 'round',
@@ -901,7 +998,13 @@ const GeographicMap = (props: GeographicMapProps) => {
           <Layer
             id="life-path-hit"
             type="line"
-            filter={['==', ['get', 'kind'], 'path']}
+            // Zero-opacity segments stay in the source (anti-flicker) but must not
+            // steal hover — they are temporally hidden past/future crumbs.
+            filter={[
+              'all',
+              ['==', ['get', 'kind'], 'path'],
+              ['>', ['get', 'opacity'], 0.05],
+            ]}
             paint={{
               'line-color': '#000',
               'line-opacity': 0,
@@ -922,7 +1025,10 @@ const GeographicMap = (props: GeographicMapProps) => {
               paint={{
                 'line-color': ['get', 'accent'],
                 'line-dasharray': LINE_DASH_SEQUENCE[0],
-                'line-opacity': 1,
+                'line-opacity':
+                  searchActive && activePersonId && !personNameMatches(activePersonId)
+                    ? SEARCH_DIM
+                    : 1,
                 'line-width': 4,
               }}
               layout={{
@@ -933,102 +1039,93 @@ const GeographicMap = (props: GeographicMapProps) => {
           </Source>
         )}
 
-        {mapClusters.flatMap(group => {
-          const expanded =
-            group.members.length > 1 &&
-            (isClusterAutoExpanded(mapZoom, group.members.length) ||
-              expandedClusters.has(group.key))
-          const renderBubble = (item: MapBubbleItem, lat: number, lng: number, zIndex: number) => {
-            const highlighted = activePersonId === item.personId
-            const opacity = visualOpacity(item.opacity, highlighted, highlightsOn)
-            if (item.kind === 'portrait') {
-              return (
-                <Marker
-                  key={item.id}
-                  anchor="center"
-                  latitude={lat}
-                  longitude={lng}
-                  style={{ zIndex: highlighted ? Math.max(zIndex, 40) : zIndex }}
-                >
-                  <PortraitBubble
-                    accent={item.accent}
-                    border={border}
-                    highlighted={highlighted}
-                    hoverTooltips={hoverTooltips}
-                    name={item.personName}
-                    opacity={opacity}
-                    personId={item.personId}
-                    thumbnail={item.thumbnail}
-                    onActivate={onPortraitActivate}
-                    onHoverEnter={onPortraitHoverEnter}
-                    onHoverLeave={onPortraitHoverLeave}
-                  />
-                </Marker>
-              )
-            }
+        {placedMarkers.map(marker => {
+          if (marker.kind === 'hub') {
+            const accent = marker.members[0]?.accent ?? '#5b8def'
+            const baseOpacity = Math.max(...marker.members.map(m => m.opacity))
+            const clusterSelected = marker.members.some(m => m.personId === activePersonId)
+            const clusterSearchMatch = marker.members.some(m => bubbleSearchMatch(m))
+            return (
+              <Marker
+                key={`cluster:${marker.key}`}
+                anchor="center"
+                latitude={marker.lat}
+                longitude={marker.lng}
+                style={{ zIndex: 12 }}
+              >
+                <ClusterBubble
+                  accent={accent}
+                  border={border}
+                  clusterKey={marker.key}
+                  count={marker.members.length}
+                  opacity={composedOpacity(baseOpacity, {
+                    searchActive,
+                    searchMatch: clusterSearchMatch,
+                    selectionActive: highlightsOn,
+                    selected: clusterSelected,
+                  })}
+                  onActivate={onClusterActivate}
+                />
+              </Marker>
+            )
+          }
+
+          const { item, lat, lng } = marker
+          const highlighted = activePersonId === item.personId
+          const opacity = composedOpacity(item.opacity, {
+            searchActive,
+            searchMatch: bubbleSearchMatch(item),
+            selectionActive: highlightsOn,
+            selected: highlighted,
+          })
+          if (item.kind === 'portrait') {
             return (
               <Marker
                 key={item.id}
                 anchor="center"
                 latitude={lat}
                 longitude={lng}
-                style={{ zIndex: highlighted ? Math.max(zIndex, 20) : zIndex }}
+                style={{ zIndex: highlighted ? 40 : 30 }}
               >
-                <EventBubble
+                <PortraitBubble
                   accent={item.accent}
                   border={border}
                   highlighted={highlighted}
                   hoverTooltips={hoverTooltips}
-                  itemId={item.id}
+                  name={item.personName}
                   opacity={opacity}
-                  size={item.radius}
-                  title={item.personName || item.label}
-                  onActivate={onEventActivate}
-                  onHoverEnter={onEventHoverEnter}
-                  onHoverLeave={onEventHoverLeave}
+                  personId={item.personId}
+                  thumbnail={item.thumbnail}
+                  onActivate={onPortraitActivate}
+                  onHoverEnter={onPortraitHoverEnter}
+                  onHoverLeave={onPortraitHoverLeave}
                 />
               </Marker>
             )
           }
-
-          if (group.members.length <= 1) {
-            const item = group.members[0]
-            if (!item) return []
-            return [renderBubble(item, item.lat, item.lng, item.kind === 'portrait' ? 30 : 10)]
-          }
-
-          const accent = group.members[0]?.accent ?? '#5b8def'
-          const opacity = Math.max(...group.members.map(m => m.opacity))
-          const clusterHot = group.members.some(m => m.personId === activePersonId)
-          const hub = (
+          return (
             <Marker
-              key={`cluster:${group.key}`}
+              key={item.id}
               anchor="center"
-              latitude={group.lat}
-              longitude={group.lng}
-              style={{ zIndex: 12 }}
+              latitude={lat}
+              longitude={lng}
+              style={{ zIndex: highlighted ? 20 : 10 }}
             >
-              <ClusterBubble
-                accent={accent}
+              <EventBubble
+                accent={item.accent}
                 border={border}
-                clusterKey={group.key}
-                count={group.members.length}
-                opacity={visualOpacity(opacity, clusterHot, highlightsOn)}
-                onActivate={onClusterActivate}
+                highlighted={highlighted}
+                hoverTooltips={hoverTooltips}
+                itemId={item.id}
+                opacity={opacity}
+                size={item.radius}
+                title={item.personName || item.label}
+                onActivate={onEventActivate}
+                onHoverEnter={onEventHoverEnter}
+                onHoverLeave={onEventHoverLeave}
               />
             </Marker>
           )
-
-          if (!expanded) return [hub]
-
-          const positions = expandedMemberPositions(group)
-          return [
-            hub,
-            ...group.members.map((item, index) => {
-              const pos = positions[index] ?? { lat: item.lat, lng: item.lng }
-              return renderBubble(item, pos.lat, pos.lng, item.kind === 'portrait' ? 31 : 11)
-            }),
-          ]
         })}
 
         {tooltip && (

@@ -227,7 +227,12 @@ export function lifePathsToGeoJson(
 /** Continuous lon/lat polyline for one person (oldest → newest), including curve samples. */
 export function personLifeLineCoordinates(
   path: PersonLifePath,
-  opts: { showPublications: boolean; showPersonal: boolean },
+  opts: {
+    showPublications: boolean
+    showPersonal: boolean
+    /** When set, skip segments that are temporally hidden (opacity 0). */
+    temporal?: TemporalState | null
+  },
 ): [number, number][] {
   const layerPoints = path.points.filter(p => {
     if (p.kind === 'publication') return opts.showPublications
@@ -235,13 +240,20 @@ export function personLifeLineCoordinates(
     return true
   })
   if (layerPoints.length < 2) return []
+  const temporal = opts.temporal ?? null
   const coords: [number, number][] = []
+  let continueLine = false
   for (let i = 0; i < layerPoints.length - 1; i++) {
     const a = layerPoints[i]
     const b = layerPoints[i + 1]
+    if (temporal && segmentOpacity(a, b, temporal) <= 0) {
+      continueLine = false
+      continue
+    }
     const seg = curvedSegmentCoords(a.lng, a.lat, b.lng, b.lat, `${path.personId}:${i}`)
-    if (i > 0) seg.shift()
+    if (continueLine) seg.shift()
     coords.push(...seg)
+    continueLine = true
   }
   return coords
 }
