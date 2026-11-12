@@ -26,9 +26,14 @@ export type OverlayBubble = {
   border: string
   label: string
   personId: string
+  /** Hub: all member person ids (for selection emphasis without dimming others). */
+  memberPersonIds?: string[]
   count?: number
   thumbnail?: string | null
-  highlighted?: boolean
+  /** Crowded: animate border only (no layout motion). */
+  pulse?: boolean
+  /** Sparse portrait: screen-space hop (does not affect neighbors' layout). */
+  hop?: boolean
 }
 
 export type OverlayPathSeg = {
@@ -93,6 +98,7 @@ export class MapPixiOverlay {
   private bubbles: OverlayBubble[] = []
   private paths: OverlayPathSeg[] = []
   private highlight: OverlayHighlight = null
+  private highlightedPersonId: string | null = null
   private map: MapLike | null = null
   private destroyed = false
   private dashStep = 0
@@ -181,21 +187,32 @@ export class MapPixiOverlay {
     this.sync()
   }
 
+  /** Emphasize one person without rebuilding / dimming the rest of the scene. */
+  setHighlightedPersonId(personId: string | null) {
+    if (this.highlightedPersonId === personId) return
+    const prev = this.highlightedPersonId
+    this.highlightedPersonId = personId
+    for (const b of this.bubbles) {
+      if (!this.bubbleMatchesPerson(b, prev) && !this.bubbleMatchesPerson(b, personId)) continue
+      const node = this.bubbleNodes.get(b.id)
+      if (node) this.paintBubble(node, b)
+    }
+  }
+
   setHighlight(highlight: OverlayHighlight) {
     this.highlight = highlight
     this.drawHighlight()
   }
 
+  private bubbleMatchesPerson(b: OverlayBubble, personId: string | null): boolean {
+    if (personId == null) return false
+    if (b.memberPersonIds?.includes(personId)) return true
+    return b.personId === personId
+  }
+
   sync() {
     if (!this.map || !this.app) return
-    for (const b of this.bubbles) {
-      const node = this.bubbleNodes.get(b.id)
-      if (!node) continue
-      const p = this.map.project([b.lng, b.lat])
-      node.position.set(p.x, p.y)
-      node.visible = b.opacity >= 0.05
-      node.alpha = Math.max(0, Math.min(1, b.opacity))
-    }
+    this.placeBubbles()
     for (const seg of this.paths) {
       const g = this.pathNodes.get(seg.id)
       if (!g) continue
@@ -203,6 +220,32 @@ export class MapPixiOverlay {
       g.visible = seg.opacity > 0.05
     }
     this.drawHighlight()
+  }
+
+  private placeBubbles() {
+    if (!this.map) return
+    const now = performance.now()
+    for (const b of this.bubbles) {
+      const node = this.bubbleNodes.get(b.id)
+      if (!node) continue
+      const p = this.map.project([b.lng, b.lat])
+      let hopY = 0
+      if (b.hop) {
+        let salt = 0
+        for (let c = 0; c < b.personId.length; c++) salt = (salt * 31 + b.personId.charCodeAt(c)) | 0
+        const phase = (now / 1000) * 2.4 * Math.PI + (salt % 1000) * 0.01
+        hopY = -Math.abs(Math.sin(phase)) * Math.min(4, b.diameter * 0.18)
+      }
+      node.position.set(p.x, p.y + hopY)
+      node.visible = b.opacity >= 0.05
+      node.alpha = Math.max(0, Math.min(1, b.opacity))
+      const pulseRing = node.children.find(c => c.label === 'pulseRing') as Graphics | undefined
+      if (pulseRing) {
+        const pulse = 1 + 0.08 * (0.5 + 0.5 * Math.sin(now / 220 + b.personId.length))
+        pulseRing.scale.set(pulse)
+        pulseRing.alpha = 0.55 + 0.35 * (0.5 + 0.5 * Math.sin(now / 220))
+      }
+    }
   }
 
   private rebuildBubbles() {
@@ -227,11 +270,12 @@ export class MapPixiOverlay {
 
   private paintBubble(node: Container, b: OverlayBubble) {
     node.removeChildren()
+    const highlighted = this.bubbleMatchesPerson(b, this.highlightedPersonId)
     const r = b.diameter / 2
     const g = new Graphics()
     g.circle(0, 0, r)
     g.fill({ color: parseColor(b.accent) })
-    g.stroke({ width: b.highlighted ? 0 : 2, color: parseColor(b.border) })
+    g.stroke({ width: highlighted ? 0 : 2, color: parseColor(b.border) })
     node.addChild(g)
 
     if (b.kind === 'portrait' && b.thumbnail) {
@@ -276,12 +320,20 @@ export class MapPixiOverlay {
       node.addChild(label)
     }
 
-    if (b.highlighted) {
+    if (highlighted) {
       const ring = new Graphics()
       ring.circle(0, 0, r + 2)
       ring.stroke({ width: 2.5, color: parseColor(b.accent), pixelLine: false })
-      // approximate dash via multiple arcs is heavy; solid ring is enough for selection cue
       node.addChild(ring)
+      this.bubblesLayer.addChild(node)
+    }
+
+    if (b.pulse) {
+      const pulseRing = new Graphics()
+      pulseRing.label = 'pulseRing'
+      pulseRing.circle(0, 0, r + 3)
+      pulseRing.stroke({ width: 2, color: parseColor(b.accent), alpha: 0.7 })
+      node.addChild(pulseRing)
     }
 
     node.hitArea = new Circle(0, 0, r + 2)
@@ -353,6 +405,8 @@ export class MapPixiOverlay {
         this.dashStep = next
         this.drawHighlight()
       }
+      // Hop / border pulse need continuous screen updates even when the map is still.
+      if (this.bubbles.some(b => b.hop || b.pulse)) this.placeBubbles()
       this.dashRaf = requestAnimationFrame(tick)
     }
     this.dashRaf = requestAnimationFrame(tick)

@@ -5,6 +5,8 @@ import { formatPlayhead, formatYear } from '../../utils/years'
 const DESKTOP_MEDIA_QUERY = '(min-width: 768px)'
 /** Matches Menu sidebar `md:w-[300px]`. */
 const FILTERS_SIDEBAR_WIDTH_PX = 300
+const LABEL_GAP_PX = 8
+const PLAYHEAD_LABEL_PAD_PX = 10
 
 type MapTemporalScrubberProps = {
   darkMode: boolean
@@ -37,14 +39,19 @@ function formatSpeed(speed: number): string {
   return `${speed}×`
 }
 
+const labelFont =
+  'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace'
+
 const MapTemporalScrubber = (props: MapTemporalScrubberProps) => {
   const trackRef = React.useRef<HTMLDivElement>(null)
+  const playheadLabelRef = React.useRef<HTMLSpanElement>(null)
   const dragKind = React.useRef<DragKind>(null)
   const rangeGrabOffset = React.useRef(0)
   const pointerDown = React.useRef<{ x: number; y: number; year: number; seek: boolean } | null>(null)
   const [isDesktop, setIsDesktop] = React.useState(() =>
     typeof window !== 'undefined' ? window.matchMedia(DESKTOP_MEDIA_QUERY).matches : true,
   )
+  const [playheadLabelLeft, setPlayheadLabelLeft] = React.useState(false)
 
   React.useEffect(() => {
     const media = window.matchMedia(DESKTOP_MEDIA_QUERY)
@@ -135,6 +142,22 @@ const MapTemporalScrubber = (props: MapTemporalScrubberProps) => {
     }
   }, [])
 
+  const fromPct = yearToRatio(props.yearFrom) * 100
+  const toPct = yearToRatio(props.yearTo) * 100
+  const yearPct = yearToRatio(props.year) * 100
+  const playheadText = formatPlayhead(props.year)
+
+  React.useLayoutEffect(() => {
+    const track = trackRef.current
+    const label = playheadLabelRef.current
+    if (!track || !label) return
+    const trackRect = track.getBoundingClientRect()
+    const labelWidth = label.offsetWidth
+    const playheadX = trackRect.left + (yearPct / 100) * trackRect.width
+    const roomRight = trackRect.right - (playheadX + LABEL_GAP_PX)
+    setPlayheadLabelLeft(roomRight < labelWidth + PLAYHEAD_LABEL_PAD_PX)
+  }, [playheadText, yearPct, props.filtersVisible, isDesktop])
+
   // Full-screen filters drawer on mobile — hide the scrubber while it is open.
   if (props.filtersVisible && !isDesktop) return null
 
@@ -142,16 +165,13 @@ const MapTemporalScrubber = (props: MapTemporalScrubberProps) => {
   const canSlow = speedIndex > 0
   const canFast = speedIndex < PLAYBACK_SPEED_STEPS.length - 1
 
-  const fromPct = yearToRatio(props.yearFrom) * 100
-  const toPct = yearToRatio(props.yearTo) * 100
-  const yearPct = yearToRatio(props.year) * 100
-
   const bg = props.darkMode ? 'rgba(20, 22, 24, 0.92)' : 'rgba(255, 255, 255, 0.94)'
   const trackBg = props.darkMode ? '#3a3d40' : '#d1d5db'
   const rangeBg = props.darkMode ? '#5b8def' : '#2563eb'
   const text = props.darkMode ? '#e5e7eb' : '#111827'
   const handleBorder = props.darkMode ? '#111' : '#fff'
   const mutedBtn = props.darkMode ? '#2f3338' : '#e5e7eb'
+  const labelColor = props.darkMode ? 'rgba(229, 231, 235, 0.9)' : 'rgba(17, 24, 39, 0.85)'
 
   const controlBtn = (opts: {
     label: string
@@ -189,6 +209,34 @@ const MapTemporalScrubber = (props: MapTemporalScrubberProps) => {
 
   const shiftedForSidebar = props.filtersVisible && isDesktop
 
+  const bubbleLabel = (opts: {
+    leftPct: number
+    text: string
+    placement: 'above' | 'below'
+  }) => (
+    <span
+      style={{
+        color: labelColor,
+        fontFamily: labelFont,
+        fontSize: 11,
+        fontVariantNumeric: 'tabular-nums',
+        left: `${opts.leftPct}%`,
+        pointerEvents: 'none',
+        position: 'absolute',
+        top: opts.placement === 'above' ? -2 : undefined,
+        bottom: opts.placement === 'below' ? -2 : undefined,
+        transform:
+          opts.placement === 'above'
+            ? 'translate(-50%, -100%)'
+            : 'translate(-50%, 100%)',
+        whiteSpace: 'nowrap',
+        zIndex: 1,
+      }}
+    >
+      {opts.text}
+    </span>
+  )
+
   return (
     <div
       style={{
@@ -224,8 +272,7 @@ const MapTemporalScrubber = (props: MapTemporalScrubberProps) => {
         })}
         <span
           style={{
-            fontFamily:
-              'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+            fontFamily: labelFont,
             fontSize: 12,
             fontVariantNumeric: 'tabular-nums',
             minWidth: '3.5ch',
@@ -244,32 +291,7 @@ const MapTemporalScrubber = (props: MapTemporalScrubberProps) => {
         })}
       </div>
 
-      <div style={{ display: 'flex', flex: 1, flexDirection: 'column', gap: 6, minWidth: 0 }}>
-        <div
-          style={{
-            display: 'flex',
-            fontFamily:
-              'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
-            fontSize: 12,
-            fontVariantNumeric: 'tabular-nums',
-            justifyContent: 'space-between',
-            opacity: 0.85,
-          }}
-        >
-          <span style={{ whiteSpace: 'nowrap' }}>
-            {formatYear(props.yearFrom)} – {formatYear(props.yearTo)}
-          </span>
-          <span
-            style={{
-              flex: '0 0 auto',
-              minWidth: '11ch',
-              textAlign: 'right',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {formatPlayhead(props.year)}
-          </span>
-        </div>
+      <div style={{ display: 'flex', flex: 1, flexDirection: 'column', minWidth: 0, paddingBottom: 14, paddingTop: 14 }}>
         <div
           ref={trackRef}
           onPointerDown={onPointerDown('track')}
@@ -297,6 +319,38 @@ const MapTemporalScrubber = (props: MapTemporalScrubberProps) => {
               width: `${Math.max(toPct - fromPct, 0.5)}%`,
             }}
           />
+          {bubbleLabel({
+            leftPct: fromPct,
+            placement: 'below',
+            text: formatYear(props.yearFrom),
+          })}
+          {bubbleLabel({
+            leftPct: toPct,
+            placement: 'above',
+            text: formatYear(props.yearTo),
+          })}
+          <span
+            ref={playheadLabelRef}
+            style={{
+              color: '#fff',
+              fontFamily: labelFont,
+              fontSize: 11,
+              fontVariantNumeric: 'tabular-nums',
+              fontWeight: 600,
+              left: `${yearPct}%`,
+              pointerEvents: 'none',
+              position: 'absolute',
+              textShadow: '0 0 3px rgba(0,0,0,0.55)',
+              top: '50%',
+              transform: playheadLabelLeft
+                ? `translate(calc(-100% - ${LABEL_GAP_PX}px), -50%)`
+                : `translate(${LABEL_GAP_PX}px, -50%)`,
+              whiteSpace: 'nowrap',
+              zIndex: 4,
+            }}
+          >
+            {playheadText}
+          </span>
           <Handle
             border={handleBorder}
             color={rangeBg}

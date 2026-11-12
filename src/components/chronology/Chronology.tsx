@@ -23,6 +23,8 @@ import TimelineDiagram from '../../pixi/TimelineDiagram'
 import {
   type AppView,
   type LayerFlags,
+  DEFAULT_LAYERS_MAP,
+  DEFAULT_LAYERS_TIMELINE,
   cameraYFromTopRow,
   formatAppUrl,
   readAppUrl,
@@ -138,23 +140,90 @@ const Chronology = () => {
   const [displayPersonHistoryEventModal, setDisplayPersonHistoryEventModal] = React.useState<boolean>(false)
   const [currentLocation, setCurrentLocation] = React.useState(new Location('', '', new Coordinates(0, 0), ''))
 
-  const [displayAuthors, setDisplayAuthors] = React.useState(initialUrl?.layers.authors ?? true)
-  const [displayAuthorsTimeline, setDisplayAuthorsTimeline] = React.useState(initialUrl?.layers.lifelines ?? true)
-  const [displayAuthorRelations, setDisplayAuthorRelations] = React.useState(initialUrl?.layers.sympathies ?? true)
-  const [displayPublications, setDisplayPublications] = React.useState(initialUrl?.layers.pubs ?? true)
-  const [displayPublicationRelations, setDisplayPublicationRelations] = React.useState(
-    initialUrl?.layers.refs ?? true,
+  const [layersTimeline, setLayersTimeline] = React.useState<LayerFlags>(
+    () => initialUrl?.layersTimeline ?? { ...DEFAULT_LAYERS_TIMELINE },
   )
-  const [displayHistoryEvents, setDisplayHistoryEvents] = React.useState(initialUrl?.layers.events ?? true)
-  const [displayPersonHistoryEvents, setDisplayPersonHistoryEvents] = React.useState(
-    initialUrl?.layers.personal ?? true,
+  const [layersMap, setLayersMap] = React.useState<LayerFlags>(
+    () => initialUrl?.layersMap ?? { ...DEFAULT_LAYERS_MAP },
   )
+  const layersTimelineRef = React.useRef(layersTimeline)
+  const layersMapRef = React.useRef(layersMap)
+  layersTimelineRef.current = layersTimeline
+  layersMapRef.current = layersMap
+
   const [darkMode, setDarkMode] = React.useState(() => {
     if (initialUrl?.dark !== undefined) return initialUrl.dark
     return hasWindow ? window.matchMedia('(prefers-color-scheme: dark)').matches : true
   })
 
   const [view, setView] = React.useState<AppView>(initialUrl?.view ?? 'timeline')
+
+  const activeLayers = view === 'map' ? layersMap : layersTimeline
+  const displayAuthors = activeLayers.authors
+  const displayAuthorsTimeline = activeLayers.lifelines
+  const displayAuthorRelations = activeLayers.sympathies
+  const displayPublications = activeLayers.pubs
+  const displayPublicationRelations = activeLayers.refs
+  const displayHistoryEvents = activeLayers.events
+  const displayPersonHistoryEvents = activeLayers.personal
+
+  const patchActiveLayers = React.useCallback(
+    (patch: Partial<LayerFlags>) => {
+      if (view === 'map') setLayersMap(prev => ({ ...prev, ...patch }))
+      else setLayersTimeline(prev => ({ ...prev, ...patch }))
+    },
+    [view],
+  )
+
+  const setDisplayAuthors = React.useCallback(
+    (v: React.SetStateAction<boolean>) => {
+      patchActiveLayers({
+        authors: typeof v === 'function' ? v(activeLayers.authors) : v,
+      })
+    },
+    [activeLayers.authors, patchActiveLayers],
+  )
+  const setDisplayAuthorsTimeline = React.useCallback(
+    (v: React.SetStateAction<boolean>) => {
+      patchActiveLayers({
+        lifelines: typeof v === 'function' ? v(activeLayers.lifelines) : v,
+      })
+    },
+    [activeLayers.lifelines, patchActiveLayers],
+  )
+  const setDisplayAuthorRelations = React.useCallback(
+    (v: React.SetStateAction<boolean>) => {
+      patchActiveLayers({
+        sympathies: typeof v === 'function' ? v(activeLayers.sympathies) : v,
+      })
+    },
+    [activeLayers.sympathies, patchActiveLayers],
+  )
+  const setDisplayPublications = React.useCallback(
+    (v: React.SetStateAction<boolean>) => {
+      patchActiveLayers({ pubs: typeof v === 'function' ? v(activeLayers.pubs) : v })
+    },
+    [activeLayers.pubs, patchActiveLayers],
+  )
+  const setDisplayPublicationRelations = React.useCallback(
+    (v: React.SetStateAction<boolean>) => {
+      patchActiveLayers({ refs: typeof v === 'function' ? v(activeLayers.refs) : v })
+    },
+    [activeLayers.refs, patchActiveLayers],
+  )
+  const setDisplayHistoryEvents = React.useCallback(
+    (v: React.SetStateAction<boolean>) => {
+      patchActiveLayers({ events: typeof v === 'function' ? v(activeLayers.events) : v })
+    },
+    [activeLayers.events, patchActiveLayers],
+  )
+  const setDisplayPersonHistoryEvents = React.useCallback(
+    (v: React.SetStateAction<boolean>) => {
+      patchActiveLayers({ personal: typeof v === 'function' ? v(activeLayers.personal) : v })
+    },
+    [activeLayers.personal, patchActiveLayers],
+  )
+
   const [mapCamera, setMapCamera] = React.useState<{ lat: number; lng: number; zoom: number } | null>(() => {
     if (
       initialUrl?.lat != null &&
@@ -166,6 +235,11 @@ const Chronology = () => {
     return null
   })
   const mapCameraFromUrl = React.useRef(mapCamera != null)
+  /** Bumped only for intentional map focus (URL popstate / show-on-map), not for pan commits. */
+  const [cameraFocusToken, setCameraFocusToken] = React.useState(0)
+  const bumpCameraFocus = React.useCallback(() => {
+    setCameraFocusToken(t => t + 1)
+  }, [])
 
   const initialPeople = PeopleListService.withRowNumbers(PeopleListService.getAll())
   const initialSpan = collectionLifespanSpan(initialPeople) ?? { yearFrom: -500, yearTo: 2000 }
@@ -202,8 +276,7 @@ const Chronology = () => {
     yearTo: mapYearTo,
   }
   const playRafRef = React.useRef<number | null>(null)
-  /** Limit React map commits while playing — ref still advances every frame. */
-  const lastPlayCommitMsRef = React.useRef(0)
+  /** Last day committed to React while playing — ref still advances every frame. */
   const lastPlayCommitYearRef = React.useRef<number | null>(null)
   const lastUrlWriteRef = React.useRef(0)
 
@@ -231,33 +304,13 @@ const Chronology = () => {
     setSearchQuery('')
   }, [])
 
-  const currentLayers = React.useCallback(
-    (): LayerFlags => ({
-      authors: displayAuthors,
-      lifelines: displayAuthorsTimeline,
-      sympathies: displayAuthorRelations,
-      pubs: displayPublications,
-      refs: displayPublicationRelations,
-      events: displayHistoryEvents,
-      personal: displayPersonHistoryEvents,
-    }),
-    [
-      displayAuthors,
-      displayAuthorsTimeline,
-      displayAuthorRelations,
-      displayPublications,
-      displayPublicationRelations,
-      displayHistoryEvents,
-      displayPersonHistoryEvents,
-    ],
-  )
-
   const persistUrl = React.useCallback(
     (
       next: {
         view?: AppView
         collection?: string
-        layers?: LayerFlags
+        layersTimeline?: LayerFlags
+        layersMap?: LayerFlags
         dark?: boolean
         start?: number
         end?: number
@@ -274,50 +327,37 @@ const Chronology = () => {
     ) => {
       const nextView = next.view ?? view
       const collection = next.collection ?? activeCollectionIdRef.current
-      const layers = next.layers ?? currentLayers()
       const dark = next.dark ?? darkMode
       const temporal = mapTemporalRef.current
-
-      if (nextView === 'timeline') {
-        const start = next.start ?? timelineViewportRef.current.start
-        const end = next.end ?? timelineViewportRef.current.end
-        const row = next.row ?? timelineViewportRef.current.row
-        writeAppUrl(
-          {
-            view: 'timeline',
-            collection,
-            layers,
-            dark,
-            start,
-            end,
-            row,
-          },
-          mode,
-        )
-      } else {
-        const useCamera = next.clearMapCamera
-          ? null
-          : next.lat != null && next.lng != null && next.zoom != null
-            ? { lat: next.lat, lng: next.lng, zoom: next.zoom }
-            : mapCamera
-        writeAppUrl(
-          {
-            view: 'map',
-            collection,
-            layers,
-            dark,
-            lat: useCamera?.lat,
-            lng: useCamera?.lng,
-            zoom: useCamera?.zoom,
-            yearFrom: next.yearFrom ?? temporal.yearFrom,
-            yearTo: next.yearTo ?? temporal.yearTo,
-            year: next.year ?? temporal.year,
-          },
-          mode,
-        )
-      }
+      const start = next.start ?? timelineViewportRef.current.start
+      const end = next.end ?? timelineViewportRef.current.end
+      const row = next.row ?? timelineViewportRef.current.row
+      const useCamera = next.clearMapCamera
+        ? null
+        : next.lat != null && next.lng != null && next.zoom != null
+          ? { lat: next.lat, lng: next.lng, zoom: next.zoom }
+          : mapCamera
+      writeAppUrl(
+        {
+          view: nextView,
+          collection,
+          dark,
+          layersTimeline: next.layersTimeline ?? layersTimelineRef.current,
+          layersMap: next.layersMap ?? layersMapRef.current,
+          start,
+          end,
+          row,
+          lat: useCamera?.lat,
+          lng: useCamera?.lng,
+          zoom: useCamera?.zoom,
+          yearFrom: next.yearFrom ?? temporal.yearFrom,
+          yearTo: next.yearTo ?? temporal.yearTo,
+          year: next.year ?? temporal.year,
+        },
+        mode,
+      )
     },
-    [currentLayers, darkMode, mapCamera, view],
+    [darkMode, mapCamera, view],
   )
 
   interface HasId {
@@ -447,13 +487,8 @@ const Chronology = () => {
   const applyUrlState = React.useCallback(
     (parsed: ReturnType<typeof readAppUrl>) => {
       setView(parsed.view)
-      setDisplayAuthors(parsed.layers.authors)
-      setDisplayAuthorsTimeline(parsed.layers.lifelines)
-      setDisplayAuthorRelations(parsed.layers.sympathies)
-      setDisplayPublications(parsed.layers.pubs)
-      setDisplayPublicationRelations(parsed.layers.refs)
-      setDisplayHistoryEvents(parsed.layers.events)
-      setDisplayPersonHistoryEvents(parsed.layers.personal)
+      setLayersTimeline(parsed.layersTimeline)
+      setLayersMap(parsed.layersMap)
       if (parsed.dark !== undefined) setDarkMode(parsed.dark)
 
       const rangeStart = parsed.start
@@ -464,6 +499,7 @@ const Chronology = () => {
       if (parsed.lat != null && parsed.lng != null && parsed.zoom != null) {
         mapCameraFromUrl.current = true
         setMapCamera({ lat: parsed.lat, lng: parsed.lng, zoom: parsed.zoom })
+        bumpCameraFocus()
       } else if (parsed.view === 'map') {
         mapCameraFromUrl.current = false
         setMapCamera(null)
@@ -517,7 +553,7 @@ const Chronology = () => {
         applyMapTemporal(peopleList)
       }
     },
-    [frameViewportToPeople, frameViewportToRange, peopleList],
+    [bumpCameraFocus, frameViewportToPeople, frameViewportToRange, peopleList],
   )
 
   const onCameraCommit = React.useCallback(
@@ -527,39 +563,28 @@ const Chronology = () => {
       const { start, end } = visibleYearRange(camera.x, camera.zoom, width)
       const row = topRowFromCameraY(camera.y, prop.rowHeight)
       timelineViewportRef.current = { start, end, row }
-      writeAppUrl({
-        view: 'timeline',
-        collection: activeCollectionIdRef.current,
-        layers: currentLayers(),
-        dark: darkMode,
-        start,
-        end,
-        row,
-      })
+      persistUrl({ view: 'timeline', start, end, row }, 'replace')
     },
-    [currentLayers, darkMode, dimenstions.x, prop.rowHeight],
+    [dimenstions.x, persistUrl, prop.rowHeight],
   )
 
   const onMapCameraCommit = React.useCallback(
     (camera: { latitude: number; longitude: number; zoom: number }) => {
-      const next = { lat: camera.latitude, lng: camera.longitude, zoom: camera.zoom }
+      // Match packed URL precision so animation-time URL writes stay stable.
+      const next = {
+        lat: Math.round(camera.latitude * 1e5) / 1e5,
+        lng: Math.round(camera.longitude * 1e5) / 1e5,
+        zoom: Math.round(camera.zoom * 100) / 100,
+      }
       setMapCamera(next)
       mapCameraFromUrl.current = true
-      const temporal = mapTemporalRef.current
-      writeAppUrl({
-        view: 'map',
-        collection: activeCollectionIdRef.current,
-        layers: currentLayers(),
-        dark: darkMode,
-        lat: next.lat,
-        lng: next.lng,
-        zoom: next.zoom,
-        year: temporal.year,
-        yearFrom: temporal.yearFrom,
-        yearTo: temporal.yearTo,
-      })
+      // Do not bump cameraFocusToken — pan must not jump the map back onto itself.
+      persistUrl(
+        { view: 'map', lat: next.lat, lng: next.lng, zoom: next.zoom },
+        'replace',
+      )
     },
-    [currentLayers, darkMode],
+    [persistUrl],
   )
 
   const persistMapTemporalThrottled = React.useCallback(
@@ -655,23 +680,23 @@ const Chronology = () => {
     )
     const tracks = buildAvatarTracks(peopleList, LocationListService.getAll(), peopleHistoryEvents)
     const contentYears = contentYearsFromPaths(paths, tracks, {
-      showAuthors: displayAuthors,
-      showPublications: displayPublications,
-      showPersonal: displayPersonHistoryEvents,
+      showAuthors: layersMap.authors,
+      showPublications: layersMap.pubs,
+      showPersonal: layersMap.personal,
     })
 
     let lastTs: number | null = null
-    lastPlayCommitMsRef.current = 0
-    lastPlayCommitYearRef.current = Math.round(mapTemporalRef.current.year)
+    lastPlayCommitYearRef.current = quantizeToDay(mapTemporalRef.current.year)
     const tick = (ts: number) => {
       if (lastTs == null) lastTs = ts
       const dt = Math.min((ts - lastTs) / 1000, 0.1)
       lastTs = ts
       const current = mapTemporalRef.current
       if (current.year >= current.yearTo) {
-        setMapYear(current.yearTo)
+        const endDay = quantizeToDay(current.yearTo)
+        setMapYear(endDay)
         mapTemporalRef.current = { ...current, year: current.yearTo }
-        lastPlayCommitYearRef.current = Math.round(current.yearTo)
+        lastPlayCommitYearRef.current = endDay
         persistUrl(
           { view: 'map', year: current.yearTo, yearFrom: current.yearFrom, yearTo: current.yearTo },
           'replace',
@@ -689,13 +714,9 @@ const Chronology = () => {
       const next = Math.min(current.yearTo, current.year + speed * dt)
       mapTemporalRef.current = { ...current, year: next }
       persistMapTemporalThrottled(next, current.yearFrom, current.yearTo)
-      // Below 1×: commit day steps so portraits/paths animate smoothly.
-      // At 1× and above: keep whole-year commits (throttled) to avoid dense rebuilds.
-      const commitYear = speedMult < 1 ? quantizeToDay(next) : Math.round(next)
-      const dayChanged = commitYear !== lastPlayCommitYearRef.current
-      const due = speedMult < 1 ? dayChanged : dayChanged || ts - lastPlayCommitMsRef.current >= 180
-      if (due) {
-        lastPlayCommitMsRef.current = ts
+      // Always commit day steps so travel stays smooth at every speed (rAF may skip days when fast).
+      const commitYear = quantizeToDay(next)
+      if (commitYear !== lastPlayCommitYearRef.current) {
         lastPlayCommitYearRef.current = commitYear
         setMapYear(commitYear)
       }
@@ -712,9 +733,9 @@ const Chronology = () => {
     peopleList,
     peopleHistoryEvents,
     publicationsList,
-    displayAuthors,
-    displayPublications,
-    displayPersonHistoryEvents,
+    layersMap.authors,
+    layersMap.pubs,
+    layersMap.personal,
     persistMapTemporalThrottled,
     persistUrl,
     stopPlayback,
@@ -724,27 +745,9 @@ const Chronology = () => {
     const nextView: AppView = view === 'map' ? 'timeline' : 'map'
     setView(nextView)
     if (nextView === 'map') {
-      const span = collectionLifespanSpan(peopleList)
-      if (span) {
-        setMapYearFrom(span.yearFrom)
-        setMapYearTo(span.yearTo)
-        setMapYear(span.yearFrom)
-        setTemporalMode('range')
-        setMapPlaying(false)
-        mapTemporalRef.current = { year: span.yearFrom, yearFrom: span.yearFrom, yearTo: span.yearTo }
-        persistUrl(
-          {
-            view: 'map',
-            clearMapCamera: mapCamera == null,
-            year: span.yearFrom,
-            yearFrom: span.yearFrom,
-            yearTo: span.yearTo,
-          },
-          'push',
-        )
-      } else {
-        persistUrl({ view: 'map', clearMapCamera: mapCamera == null }, 'push')
-      }
+      setMapPlaying(false)
+      // Keep map layers/camera/years from dual URL pack; do not reset to collection.
+      persistUrl({ view: 'map', clearMapCamera: mapCamera == null }, 'push')
     } else {
       stopPlayback()
       persistUrl({ view: 'timeline' }, 'push')
@@ -762,7 +765,8 @@ const Chronology = () => {
     const href = formatAppUrl({
       view: parsed.view,
       collection: activeCollectionIdRef.current,
-      layers: parsed.layers,
+      layersTimeline: parsed.layersTimeline,
+      layersMap: parsed.layersMap,
       dark: parsed.dark ?? darkMode,
       start: parsed.start,
       end: parsed.end,
@@ -770,9 +774,9 @@ const Chronology = () => {
       lat: parsed.lat,
       lng: parsed.lng,
       zoom: parsed.zoom,
-      year: parsed.year ?? (parsed.view === 'map' ? mapTemporalRef.current.year : undefined),
-      yearFrom: parsed.yearFrom ?? (parsed.view === 'map' ? mapTemporalRef.current.yearFrom : undefined),
-      yearTo: parsed.yearTo ?? (parsed.view === 'map' ? mapTemporalRef.current.yearTo : undefined),
+      year: parsed.year ?? mapTemporalRef.current.year,
+      yearFrom: parsed.yearFrom ?? mapTemporalRef.current.yearFrom,
+      yearTo: parsed.yearTo ?? mapTemporalRef.current.yearTo,
     })
     if (`${window.location.pathname}${window.location.search}` !== href || window.location.hash) {
       history.replaceState(null, '', href)
@@ -796,19 +800,8 @@ const Chronology = () => {
       skipFirstLayerPersist.current = false
       return
     }
-    persistUrl({ layers: currentLayers(), dark: darkMode })
-  }, [
-    displayAuthors,
-    displayAuthorsTimeline,
-    displayAuthorRelations,
-    displayPublications,
-    displayPublicationRelations,
-    displayHistoryEvents,
-    displayPersonHistoryEvents,
-    darkMode,
-    currentLayers,
-    persistUrl,
-  ])
+    persistUrl({ dark: darkMode })
+  }, [layersTimeline, layersMap, darkMode, persistUrl])
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -852,11 +845,13 @@ const Chronology = () => {
       {view === 'map' ? (
         <GeographicMap
           darkMode={darkMode}
-          displayAuthors={displayAuthors}
-          displayAuthorsTimeline={displayAuthorsTimeline}
-          displayPersonHistoryEvents={displayPersonHistoryEvents}
-          displayPublications={displayPublications}
+          displayAuthors={layersMap.authors}
+          displayAuthorsTimeline={layersMap.lifelines}
+          displayPersonHistoryEvents={layersMap.personal}
+          displayPublications={layersMap.pubs}
           initialCamera={mapInitialCamera}
+          cameraFocusToken={cameraFocusToken}
+          playing={mapPlaying}
           locationsList={LocationListService.getAll()}
           onCameraCommit={onMapCameraCommit}
           onPersonClick={id => {
@@ -897,13 +892,13 @@ const Chronology = () => {
       ) : (
         <TimelineDiagram
           darkMode={darkMode}
-          displayAuthorRelations={displayAuthorRelations}
-          displayAuthors={displayAuthors}
-          displayAuthorsTimeline={displayAuthorsTimeline}
-          displayHistoryEvents={displayHistoryEvents}
-          displayPersonHistoryEvents={displayPersonHistoryEvents}
-          displayPublicationRelations={displayPublicationRelations}
-          displayPublications={displayPublications}
+          displayAuthorRelations={layersTimeline.sympathies}
+          displayAuthors={layersTimeline.authors}
+          displayAuthorsTimeline={layersTimeline.lifelines}
+          displayHistoryEvents={layersTimeline.events}
+          displayPersonHistoryEvents={layersTimeline.personal}
+          displayPublicationRelations={layersTimeline.refs}
+          displayPublications={layersTimeline.pubs}
           highlightedAuthor={highlightedAuthor}
           highlightedPublication={highlightedPublication}
           historyEvents={historyEvents}
@@ -1072,6 +1067,22 @@ const Chronology = () => {
         currentLocation={currentLocation}
         darkMode={darkMode}
         displayModal={displayLocationModal}
+        onShowOnMap={location => {
+          const lat = location.coordinates.x
+          const lng = location.coordinates.y
+          if (!Number.isFinite(lat) || !Number.isFinite(lng)) return
+          const zoom = 12
+          setDisplayLocationModal(false)
+          setDisplayPublicationModal(false)
+          setDisplayPersonModal(false)
+          setDisplayPersonHistoryEventModal(false)
+          setMapPlaying(false)
+          mapCameraFromUrl.current = true
+          setMapCamera({ lat, lng, zoom })
+          bumpCameraFocus()
+          setView('map')
+          persistUrl({ view: 'map', lat, lng, zoom }, 'push')
+        }}
         peopleList={peopleList}
         publicationCallback={id => {
           const publication =

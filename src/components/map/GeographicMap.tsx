@@ -16,6 +16,7 @@ import {
 import {
   avatarPositionAt,
   buildAvatarTracks,
+  crowdedPortraitIds,
   type TemporalState,
 } from '../../utils/mapTemporal'
 import { layoutScreenBubbles, mapAccentForBasemap } from '../../utils/mapVisual'
@@ -29,8 +30,6 @@ import {
 const CLUSTER_HUB_DIAMETER = 34
 const POPUP_Z_INDEX = 1000
 const HOVER_TOOLTIP_MEDIA = '(hover: hover) and (pointer: fine)'
-/** Match diagram relation fade while something is highlighted. */
-const HIGHLIGHT_DIM = 0.1
 /** Match TimelineLayers search dim (alpha ≈ 0.22). */
 const SEARCH_DIM = 0.22
 function searchNeedle(query: string): string {
@@ -42,20 +41,16 @@ function matchesSearch(haystack: string, needle: string): boolean {
   return haystack.toLowerCase().includes(needle)
 }
 
-/** temporal × search dim × selection dim (design.md option 2). */
+/** temporal base × search dim only (selection uses stroke/label emphasis, not dimming). */
 function composedOpacity(
   base: number,
   opts: {
     searchActive: boolean
     searchMatch: boolean
-    selectionActive: boolean
-    selected: boolean
   },
 ): number {
-  let opacity = base
-  if (opts.searchActive && !opts.searchMatch) opacity *= SEARCH_DIM
-  if (opts.selectionActive && !opts.selected) opacity *= HIGHLIGHT_DIM
-  return opacity
+  if (opts.searchActive && !opts.searchMatch) return base * SEARCH_DIM
+  return base
 }
 
 const maplibreWorkerUrl = `${getAppBasePath()}/maplibre-gl-worker.mjs`
@@ -129,7 +124,15 @@ type GeographicMapProps = {
   publicationsList: Publication[]
   searchQuery: string
   temporal: TemporalState
+  /** When false, freeze hop/pulse so portraits stay still on pause / scrub. */
+  playing?: boolean
+  /** Camera for first paint / fit. Not a controlled follow-target (avoids pan↔URL loops). */
   initialCamera: MapCamera | null
+  /**
+   * Bump to force jumpTo(initialCamera). Use for location focus / back-forward URL only —
+   * not after ordinary pan commits.
+   */
+  cameraFocusToken?: number
   onCameraCommit: (camera: MapCamera) => void
   onPersonClick: (personId: string) => void
   onPublicationClick: (publicationId: string, personId: string) => void
@@ -160,7 +163,7 @@ const GeographicMap = (props: GeographicMapProps) => {
   const layoutRafRef = React.useRef(0)
   const clearMarkerHoverTimer = React.useRef<number | null>(null)
 
-  // Playhead may be day-quantized (speed < 1×) for smooth portrait travel; keep it as-is.
+  // Playhead is day-quantized during playback for smooth portrait travel; keep fractions as-is.
   const mapTemporal = React.useMemo(
     () => ({
       year: props.temporal.year,
@@ -173,7 +176,6 @@ const GeographicMap = (props: GeographicMapProps) => {
 
   // Sticky click selection wins; hover only previews when nothing is selected.
   const activePersonId = selectedPersonId ?? markerHoverPersonId ?? pathHoverPersonId
-  const highlightsOn = activePersonId != null
   const needle = searchNeedle(props.searchQuery)
   const searchActive = needle.length > 0
 
@@ -276,10 +278,8 @@ const GeographicMap = (props: GeographicMapProps) => {
       const opacity = composedOpacity(base, {
         searchActive,
         searchMatch: personNameMatches(personId),
-        selectionActive: highlightsOn,
-        selected: activePersonId === personId,
       })
-      if (opacity <= 0.05 || personId === activePersonId) continue
+      if (opacity <= 0.05) continue
       out.push({
         id: `path:${personId}:${f.properties.segment}`,
         personId,
@@ -289,7 +289,7 @@ const GeographicMap = (props: GeographicMapProps) => {
       })
     }
     return out
-  }, [activePersonId, geojson, highlightsOn, personNameMatches, searchActive])
+  }, [geojson, personNameMatches, searchActive])
 
   const highlightCoords = React.useMemo(() => {
     if (!activePersonId) return null
@@ -347,7 +347,8 @@ const GeographicMap = (props: GeographicMapProps) => {
     }
     if (props.displayAuthors) {
       for (const track of avatarTracks) {
-        const pos = avatarPositionAt(track, mapTemporal)
+        // Stable geographic position for layout; hop/pulse applied later per crowd.
+        const pos = avatarPositionAt(track, mapTemporal, { hop: false })
         if (!pos || pos.opacity < 0.02) continue
         items.push({
           id: `portrait:${track.personId}`,
@@ -391,12 +392,24 @@ const GeographicMap = (props: GeographicMapProps) => {
         lng: number
       }
 
+  /** Softens portrait ring reflows when pile membership changes mid-playback. */
+  const portraitLayoutMemRef = React.useRef(
+    new Map<string, { geoX: number; geoY: number; x: number; y: number }>(),
+  )
+  const portraitLayoutMemTickRef = React.useRef(layoutTick)
+  if (portraitLayoutMemTickRef.current !== layoutTick) {
+    portraitLayoutMemTickRef.current = layoutTick
+    portraitLayoutMemRef.current.clear()
+  }
+
   const { placedMarkers, displayPosById, hubsByKey } = React.useMemo(() => {
     void layoutTick
     const map = mapRef.current?.getMap()
     const placed: PlacedMarker[] = []
     const displayPos = new Map<string, { lat: number; lng: number }>()
     const hubs = new Map<string, MapBubbleItem[]>()
+    const mem = portraitLayoutMemRef.current
+    const seenPortraits = new Set<string>()
 
     if (!map) {
       for (const item of mapBubbles) {
@@ -406,8 +419,10 @@ const GeographicMap = (props: GeographicMapProps) => {
       return { placedMarkers: placed, displayPosById: displayPos, hubsByKey: hubs }
     }
 
+    const geoById = new Map<string, { x: number; y: number }>()
     const points = mapBubbles.map(item => {
       const p = map.project([item.lng, item.lat])
+      geoById.set(item.id, { x: p.x, y: p.y })
       return {
         id: item.id,
         x: p.x,
@@ -423,13 +438,32 @@ const GeographicMap = (props: GeographicMapProps) => {
     })
 
     for (const node of nodes) {
-      const ll = map.unproject([node.x, node.y])
       if (node.kind === 'individual') {
         const item = bubbleById.get(node.id)
         if (!item) continue
+        let x = node.x
+        let y = node.y
+        if (item.kind === 'portrait') {
+          seenPortraits.add(item.id)
+          const geo = geoById.get(item.id) ?? { x: node.x, y: node.y }
+          const prev = mem.get(item.id)
+          if (prev) {
+            const geoJump = Math.hypot(geo.x - prev.geoX, geo.y - prev.geoY)
+            if (geoJump < 48) {
+              // Follow geographic drift, keep prior pack offset, ease toward new ring slot.
+              const carriedX = prev.x + (geo.x - prev.geoX)
+              const carriedY = prev.y + (geo.y - prev.geoY)
+              x = carriedX * 0.82 + node.x * 0.18
+              y = carriedY * 0.82 + node.y * 0.18
+            }
+          }
+          mem.set(item.id, { geoX: geo.x, geoY: geo.y, x, y })
+        }
+        const ll = map.unproject([x, y])
         placed.push({ kind: 'individual', item, lat: ll.lat, lng: ll.lng })
         displayPos.set(item.id, { lat: ll.lat, lng: ll.lng })
       } else {
+        const ll = map.unproject([node.x, node.y])
         const members = node.memberIds
           .map(id => bubbleById.get(id))
           .filter((m): m is MapBubbleItem => m != null && m.kind !== 'portrait')
@@ -452,6 +486,10 @@ const GeographicMap = (props: GeographicMapProps) => {
           displayPos.set(m.id, { lat: ll.lat, lng: ll.lng })
         }
       }
+    }
+
+    for (const id of [...mem.keys()]) {
+      if (!seenPortraits.has(id)) mem.delete(id)
     }
 
     return { placedMarkers: placed, displayPosById: displayPos, hubsByKey: hubs }
@@ -481,6 +519,7 @@ const GeographicMap = (props: GeographicMapProps) => {
     if (!map) return
 
     if (props.initialCamera) {
+      // Programmatic: do not echo commit back into React/URL (that caused pan↔jump loops).
       skipNextMoveEnd.current = true
       map.jumpTo({
         center: [props.initialCamera.longitude, props.initialCamera.latitude],
@@ -504,7 +543,8 @@ const GeographicMap = (props: GeographicMapProps) => {
       })),
     )
 
-    skipNextMoveEnd.current = true
+    // Collection fit: allow moveend to commit the resulting camera into the URL.
+    skipNextMoveEnd.current = false
     if (!bounds || !props.displayAuthors) {
       map.jumpTo({
         center: [EUROPE_FALLBACK.longitude, EUROPE_FALLBACK.latitude],
@@ -523,6 +563,14 @@ const GeographicMap = (props: GeographicMapProps) => {
     props.initialCamera,
   ])
 
+  const bumpLayout = React.useCallback(() => {
+    if (layoutRafRef.current) return
+    layoutRafRef.current = requestAnimationFrame(() => {
+      layoutRafRef.current = 0
+      setLayoutTick(t => t + 1)
+    })
+  }, [])
+
   React.useEffect(() => {
     if (props.initialCamera) {
       fittedForKey.current = fitKey
@@ -532,13 +580,23 @@ const GeographicMap = (props: GeographicMapProps) => {
     applyFitOrInitial()
   }, [applyFitOrInitial, fitKey, props.initialCamera])
 
-  const bumpLayout = React.useCallback(() => {
-    if (layoutRafRef.current) return
-    layoutRafRef.current = requestAnimationFrame(() => {
-      layoutRafRef.current = 0
-      setLayoutTick(t => t + 1)
+  // External focus only (location button / history navigation) — never follow pan commits.
+  const initialCameraRef = React.useRef(props.initialCamera)
+  initialCameraRef.current = props.initialCamera
+  const cameraFocusToken = props.cameraFocusToken
+  React.useEffect(() => {
+    if (cameraFocusToken == null || cameraFocusToken <= 0) return
+    const cam = initialCameraRef.current
+    if (!cam) return
+    const map = mapRef.current?.getMap()
+    if (!map) return
+    skipNextMoveEnd.current = true
+    map.jumpTo({
+      center: [cam.longitude, cam.latitude],
+      zoom: cam.zoom,
     })
-  }, [])
+    bumpLayout()
+  }, [cameraFocusToken, bumpLayout])
 
   const onMoveEnd = () => {
     // Camera settled — drop click-forced spiderfies so layout is source of truth again.
@@ -546,11 +604,6 @@ const GeographicMap = (props: GeographicMapProps) => {
     bumpLayout()
     if (skipNextMoveEnd.current) {
       skipNextMoveEnd.current = false
-      const map = mapRef.current?.getMap()
-      if (map) {
-        const c = map.getCenter()
-        props.onCameraCommit({ latitude: c.lat, longitude: c.lng, zoom: map.getZoom() })
-      }
       return
     }
     const map = mapRef.current?.getMap()
@@ -573,13 +626,50 @@ const GeographicMap = (props: GeographicMapProps) => {
     setSelectedPersonId(personId)
   }, [])
 
+  const crowdedStickyRef = React.useRef(new Set<string>())
+  const crowdedPortraitIdSet = React.useMemo(() => {
+    void layoutTick
+    const map = mapRef.current?.getMap()
+    if (!map) {
+      crowdedStickyRef.current = new Set()
+      return new Set<string>()
+    }
+    const portraits: { id: string; x: number; y: number; diameterPx: number }[] = []
+    for (const marker of placedMarkers) {
+      if (marker.kind !== 'individual' || marker.item.kind !== 'portrait') continue
+      const p = map.project([marker.lng, marker.lat])
+      portraits.push({
+        id: marker.item.id,
+        x: p.x,
+        y: p.y,
+        diameterPx: marker.item.radius,
+      })
+    }
+    const raw = crowdedPortraitIds(portraits)
+    // Hysteresis: leave crowd only when clearly sparse, so hop/pulse does not flicker.
+    const prev = crowdedStickyRef.current
+    const next = new Set<string>()
+    for (const p of portraits) {
+      let n = 0
+      const r = (p.diameterPx / 2) * 1.25 * 2
+      for (const q of portraits) {
+        if (q.id === p.id) continue
+        const dx = p.x - q.x
+        const dy = p.y - q.y
+        if (dx * dx + dy * dy <= r * r) n += 1
+      }
+      if (prev.has(p.id) ? n >= 2 : raw.has(p.id)) next.add(p.id)
+    }
+    crowdedStickyRef.current = next
+    return next
+  }, [layoutTick, placedMarkers])
+
   const overlayBubbles: OverlayBubble[] = React.useMemo(() => {
     const out: OverlayBubble[] = []
     for (const marker of placedMarkers) {
       if (marker.kind === 'hub') {
         const accent = marker.members[0]?.accent ?? '#5b8def'
         const baseOpacity = Math.max(...marker.members.map(m => m.opacity))
-        const clusterSelected = marker.members.some(m => m.personId === activePersonId)
         const clusterSearchMatch = marker.members.some(m => bubbleSearchMatch(m))
         out.push({
           id: `hub:${marker.key}`,
@@ -592,26 +682,25 @@ const GeographicMap = (props: GeographicMapProps) => {
           opacity: composedOpacity(baseOpacity, {
             searchActive,
             searchMatch: clusterSearchMatch,
-            selectionActive: highlightsOn,
-            selected: clusterSelected,
           }),
           label: String(marker.members.length),
           personId: marker.members[0]?.personId ?? '',
+          memberPersonIds: marker.members.map(m => m.personId),
           count: marker.members.length,
         })
         continue
       }
       const { item, lat, lng } = marker
-      const highlighted = activePersonId === item.personId
       const opacity = composedOpacity(item.opacity, {
         searchActive,
         searchMatch: bubbleSearchMatch(item),
-        selectionActive: highlightsOn,
-        selected: highlighted,
       })
+      const isPortrait = item.kind === 'portrait'
+      const crowded = isPortrait && crowdedPortraitIdSet.has(item.id)
+      const motion = props.playing === true
       out.push({
         id: item.id,
-        kind: item.kind === 'portrait' ? 'portrait' : 'event',
+        kind: isPortrait ? 'portrait' : 'event',
         lat,
         lng,
         diameter: item.radius,
@@ -621,16 +710,17 @@ const GeographicMap = (props: GeographicMapProps) => {
         label: item.personName || item.label,
         personId: item.personId,
         thumbnail: item.thumbnail ? `${APP_BASE}/assets/person/${item.thumbnail}` : null,
-        highlighted,
+        pulse: motion && crowded,
+        hop: motion && isPortrait && !crowded,
       })
     }
     return out
   }, [
-    activePersonId,
     border,
     bubbleSearchMatch,
-    highlightsOn,
+    crowdedPortraitIdSet,
     placedMarkers,
+    props.playing,
     searchActive,
   ])
 
@@ -722,6 +812,12 @@ const GeographicMap = (props: GeographicMapProps) => {
     overlay.attachMap(map)
     overlay.setBubbles(overlayBubbles)
     overlay.setPaths(props.displayAuthorsTimeline ? overlayPathSegs : [])
+  }, [overlayBubbles, overlayPathSegs, props.displayAuthorsTimeline])
+
+  React.useEffect(() => {
+    const overlay = overlayRef.current
+    if (!overlay) return
+    overlay.setHighlightedPersonId(activePersonId)
     overlay.setHighlight(
       props.displayAuthorsTimeline && highlightCoords && activePersonId
         ? {
@@ -735,8 +831,6 @@ const GeographicMap = (props: GeographicMapProps) => {
   }, [
     activePersonId,
     highlightCoords,
-    overlayBubbles,
-    overlayPathSegs,
     personNameMatches,
     props.displayAuthorsTimeline,
     searchActive,

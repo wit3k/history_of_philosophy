@@ -16,6 +16,8 @@ class LocationDetailsProps {
     public publicationCallback: (id: string) => void,
     public authorCallback: (id: string) => void,
     public darkMode: boolean = true,
+    /** Open in-app map centered on this location (replaces external OSM link). */
+    public onShowOnMap?: (location: Location) => void,
   ) {}
 }
 
@@ -54,18 +56,12 @@ const LocationDetails = (props: LocationDetailsProps) => {
     <Modal darkMode={props.darkMode} displayModal={props.displayModal} setDisplayModal={props.setDisplayModal}>
       <div>
         <div className={`text-3xl p-5 ${tone.title}`}>
-          <a
-            className="relative z-10 grid h-8 w-8 place-items-center rounded-md text-slate-900 hover:text-white float-left"
-            href={
-              'https://www.openstreetmap.org/#map=12/' +
-              props.currentLocation.coordinates.x +
-              '/' +
-              props.currentLocation.coordinates.y +
-              '&layers=V'
-            }
-            rel="noopener noreferrer"
+          <button
+            className="relative z-10 grid h-8 w-8 place-items-center rounded-md text-slate-900 hover:text-white float-left cursor-pointer"
+            onClick={() => props.onShowOnMap?.(props.currentLocation)}
             style={{ background: 'linear-gradient(90deg, #ff4f7e, #fe27be)' }}
-            target="_blank"
+            title="Pokaż na mapie"
+            type="button"
           >
             <svg
               className="size-6"
@@ -75,14 +71,14 @@ const LocationDetails = (props: LocationDetailsProps) => {
               viewBox="0 0 24 24"
               xmlns="http://www.w3.org/2000/svg"
             >
-              <title>Location icon</title>
+              <title>Pokaż na mapie</title>
               <path
                 d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0Z"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
             </svg>
-          </a>
+          </button>
           <span className="pl-5">{props.currentLocation.name} </span>
         </div>
         <div className="p-5 pt-0 italic">

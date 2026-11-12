@@ -50,6 +50,11 @@ export type AvatarPosition = {
   opacity: number
 }
 
+export type PositionAtYearOpts = {
+  /** When false, skip geographic hop/sway (crowded portraits). Default true. */
+  hop?: boolean
+}
+
 function locCoords(locationsById: Map<string, Location>, id: string | number | null | undefined) {
   if (id == null || id === '') return null
   const loc = locationsById.get(String(id))
@@ -185,7 +190,9 @@ export function positionAtYear(
   track: PersonAvatarTrack,
   year: number,
   hopClockMs: number = typeof performance !== 'undefined' ? performance.now() : 0,
+  opts: PositionAtYearOpts = {},
 ): { lat: number; lng: number } | null {
+  const allowHop = opts.hop !== false
   const wps = track.waypoints
   if (wps.length === 0) return null
   if (year <= wps[0].year) return { lat: wps[0].lat, lng: wps[0].lng }
@@ -203,6 +210,7 @@ export function positionAtYear(
     const len = Math.hypot(dLat, dLng) || 1
     const baseLat = a.lat + dLat * t
     const baseLng = a.lng + dLng * t
+    if (!allowHop) return { lat: baseLat, lng: baseLng }
     // Phase from wall clock; personId salts so neighbors don't hop in sync.
     let salt = 0
     for (let c = 0; c < track.personId.length; c++) salt = (salt * 31 + track.personId.charCodeAt(c)) | 0
@@ -228,13 +236,22 @@ export function portraitContentYear(track: PersonAvatarTrack, playheadYear: numb
   return track.died
 }
 
-export function avatarPositionAt(track: PersonAvatarTrack, state: TemporalState): AvatarPosition | null {
+export function avatarPositionAt(
+  track: PersonAvatarTrack,
+  state: TemporalState,
+  opts: PositionAtYearOpts = {},
+): AvatarPosition | null {
   const lifeEnd = track.stillAlive ? Number.POSITIVE_INFINITY : track.died
   if (lifeEnd < state.yearFrom - ECHO_YEARS || track.born > state.yearTo) return null
 
   if (state.mode === 'range') {
     const parkYear = Math.min(state.yearTo, track.stillAlive ? state.yearTo : track.died)
-    const pos = positionAtYear(track, clampYearToRange(parkYear, track.born, track.stillAlive ? parkYear : track.died))
+    const pos = positionAtYear(
+      track,
+      clampYearToRange(parkYear, track.born, track.stillAlive ? parkYear : track.died),
+      undefined,
+      opts,
+    )
     if (!pos) return null
     const overlapsRange = lifeEnd >= state.yearFrom && track.born <= state.yearTo
     return { ...pos, opacity: overlapsRange ? 1 : ECHO_OPACITY }
@@ -245,9 +262,40 @@ export function avatarPositionAt(track: PersonAvatarTrack, state: TemporalState)
   const opacity = temporalOpacity(contentY, state)
   if (opacity <= 0) return null
   const travelEnd = track.stillAlive ? state.year : Math.min(state.year, track.died)
-  const pos = positionAtYear(track, clampYearToRange(travelEnd, track.born, track.stillAlive ? travelEnd : track.died))
+  const pos = positionAtYear(
+    track,
+    clampYearToRange(travelEnd, track.born, track.stillAlive ? travelEnd : track.died),
+    undefined,
+    opts,
+  )
   if (!pos) return null
   return { ...pos, opacity }
+}
+
+/** Screen-space crowd: ≥ this many other portraits within radius → no hop, pulse border. */
+export const PORTRAIT_CROWD_NEIGHBORS = 3
+export const PORTRAIT_CROWD_RADIUS_FACTOR = 1.25
+
+export function crowdedPortraitIds(
+  portraits: { id: string; x: number; y: number; diameterPx: number }[],
+  neighborMin = PORTRAIT_CROWD_NEIGHBORS,
+  radiusFactor = PORTRAIT_CROWD_RADIUS_FACTOR,
+): Set<string> {
+  const crowded = new Set<string>()
+  for (let i = 0; i < portraits.length; i++) {
+    const a = portraits[i]
+    let n = 0
+    const r = (a.diameterPx / 2) * radiusFactor * 2
+    for (let j = 0; j < portraits.length; j++) {
+      if (i === j) continue
+      const b = portraits[j]
+      const dx = a.x - b.x
+      const dy = a.y - b.y
+      if (dx * dx + dy * dy <= r * r) n += 1
+    }
+    if (n >= neighborMin) crowded.add(a.id)
+  }
+  return crowded
 }
 
 export function contentYearsFromPaths(
@@ -279,9 +327,38 @@ export function contentYearsFromPaths(
   return [...years].sort((a, b) => a - b)
 }
 
+/** Sliding window (years) for local content density. Provisional — tune after playtest. */
+export const DENSITY_WINDOW_YEARS = 10
+/** Baseline years/s at 1× when the density window is empty/sparse. */
+export const SPARSE_YEARS_PER_SECOND = DENSE_YEARS_PER_SECOND
+/** Years/s at 1× when every year in the window has content (~3× slower). Provisional. */
+export const FULL_DENSE_YEARS_PER_SECOND = 5
+
+function smoothstep01(t: number): number {
+  const x = Math.min(1, Math.max(0, t))
+  return x * x * (3 - 2 * x)
+}
+
+/** Fraction of years in a 10-year window around `fromYear` that have any content. */
+export function contentDensityInWindow(
+  fromYear: number,
+  contentYears: number[],
+  windowYears: number = DENSITY_WINDOW_YEARS,
+): number {
+  if (windowYears <= 0) return 0
+  const y0 = Math.floor(fromYear) - Math.floor((windowYears - 1) / 2)
+  const y1 = y0 + windowYears - 1
+  let hits = 0
+  for (const y of contentYears) {
+    if (y >= y0 && y <= y1) hits += 1
+  }
+  return Math.min(1, hits / windowYears)
+}
+
 /**
- * Years/second for advancing from `fromYear` toward `toYear` over the next step,
- * compressing empty spans so a whole empty run lasts at most EMPTY_SPAN_MAX_SECONDS.
+ * Years/second for advancing from `fromYear` toward `toYear` over the next step.
+ * Sparse decades ≈ SPARSE_YEARS_PER_SECOND; fully dense ≈ FULL_DENSE_YEARS_PER_SECOND;
+ * empty spans still compress to ≤ EMPTY_SPAN_MAX_SECONDS.
  */
 export function playbackYearsPerSecond(
   fromYear: number,
@@ -290,17 +367,21 @@ export function playbackYearsPerSecond(
   speedMultiplier: number = 1,
 ): number {
   const mult = Number.isFinite(speedMultiplier) && speedMultiplier > 0 ? speedMultiplier : 1
-  const dense = DENSE_YEARS_PER_SECOND * mult
-  if (toYear <= fromYear) return dense
+  if (toYear <= fromYear) return SPARSE_YEARS_PER_SECOND * mult
+
   const nextContent = contentYears.find(y => y > fromYear)
   const emptyUntil = nextContent == null ? toYear : Math.min(nextContent, toYear)
   const emptySpan = emptyUntil - fromYear
-  // Near content (within 1 year) or overlapping a content year → dense pace.
-  const nearby = contentYears.some(y => Math.abs(y - fromYear) <= 1)
-  if (nearby || emptySpan <= 1) return dense
-  // Entire remaining empty run should finish in <= EMPTY_SPAN_MAX_SECONDS / mult.
-  const emptyBudget = EMPTY_SPAN_MAX_SECONDS / mult
-  return Math.max(dense, emptySpan / Math.max(emptyBudget, 0.05))
+  const density = contentDensityInWindow(fromYear, contentYears)
+  // Empty window ahead → compress the gap.
+  if (density <= 0 && emptySpan > 1) {
+    const emptyBudget = EMPTY_SPAN_MAX_SECONDS / mult
+    return Math.max(SPARSE_YEARS_PER_SECOND * mult, emptySpan / Math.max(emptyBudget, 0.05))
+  }
+  const t = smoothstep01(density)
+  const base =
+    SPARSE_YEARS_PER_SECOND * (1 - t) + FULL_DENSE_YEARS_PER_SECOND * t
+  return base * mult
 }
 
 export function segmentOpacity(a: LifePoint, b: LifePoint, state: TemporalState): number {

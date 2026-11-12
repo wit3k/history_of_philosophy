@@ -429,19 +429,6 @@ function hashStr(s: string): number {
   return Math.abs(h)
 }
 
-function clampToOrigin(
-  placed: ScreenBubble,
-  origin: ScreenBubble,
-  maxOffsetPx: number,
-): ScreenBubble {
-  const dx = placed.x - origin.x
-  const dy = placed.y - origin.y
-  const dist = Math.hypot(dx, dy)
-  if (dist <= maxOffsetPx || dist < 1e-6) return placed
-  const s = maxOffsetPx / dist
-  return { ...placed, x: origin.x + dx * s, y: origin.y + dy * s }
-}
-
 function layoutGroupableBubbles(
   points: ScreenBubble[],
   opts: {
@@ -494,9 +481,52 @@ function layoutGroupableBubbles(
 }
 
 /**
+ * Pack overlapping person portraits with id-stable angles + greedy radius so city
+ * piles do not reshuffle every playhead tick (iterative push-apart did).
+ */
+function packPersonPortraits(people: ScreenBubble[]): ScreenBubble[] {
+  if (people.length === 0) return []
+  const byId = new Map(people.map(p => [p.id, { ...p }]))
+  const components = collideComponents(people)
+  const out: ScreenBubble[] = []
+
+  for (const memberIds of components) {
+    const members = [...memberIds]
+      .map(id => byId.get(id)!)
+      .sort((a, b) => a.id.localeCompare(b.id))
+    if (members.length === 1) {
+      out.push(members[0])
+      continue
+    }
+    const origin = centroidOf(members)
+    const diam = Math.max(...members.map(m => m.diameterPx))
+    const minDist = bubbleTouchRadiusPx(diam) * 2 + 1
+    const placed: ScreenBubble[] = []
+    for (const m of members) {
+      const angle = (hashStr(m.id) % 360) * (Math.PI / 180)
+      let r = 0
+      let x = origin.x
+      let y = origin.y
+      for (let attempt = 0; attempt < 64; attempt++) {
+        x = origin.x + Math.cos(angle) * r
+        y = origin.y + Math.sin(angle) * r
+        const clear = placed.every(
+          p => Math.hypot(p.x - x, p.y - y) >= minDist - 0.05,
+        )
+        if (clear) break
+        r += minDist * 0.85
+      }
+      placed.push({ ...m, x, y })
+    }
+    out.push(...placed)
+  }
+  return out
+}
+
+/**
  * Screen-space layout:
- * - People (`groupable: false`): never hubbed; stay near true projection; only a
- *   short push-apart so portraits may touch but not overlap (not flung across map).
+ * - People (`groupable: false`): never hubbed; coincident piles use a stable id-sorted
+ *   ring around the geographic centroid (no iterative push thrash in dense cities).
  * - Events/pubs: spiderfy coincident / colliding piles; no auto count hub while
  *   packing can spread individuals (click-forced collapse still possible via keys).
  */
@@ -517,21 +547,7 @@ export function layoutScreenBubbles(
   const people = points.filter(p => p.groupable === false)
   const groupable = points.filter(p => p.groupable !== false)
 
-  // People first, anchored near geographic projection.
-  const personIds = new Set(people.map(p => p.id))
-  const origins = new Map(people.map(p => [p.id, { ...p }]))
-  let personDisks = separateTouchingDisks(
-    people.map(p => ({ ...p })),
-    personIds,
-  )
-  const maxPersonDrift = Math.max(
-    28,
-    ...people.map(p => bubbleTouchRadiusPx(p.diameterPx) * 2.5),
-  )
-  personDisks = personDisks.map(p => {
-    const origin = origins.get(p.id) ?? p
-    return clampToOrigin(p, origin, maxPersonDrift)
-  })
+  const personDisks = packPersonPortraits(people.map(p => ({ ...p })))
 
   // Local hole for spiderfy under a portrait (not a global people bounding circle —
   // that blew rings up and cost when people are scattered across the map).
@@ -543,8 +559,6 @@ export function layoutScreenBubbles(
     forceExpandKeys: opts.forceExpandKeys,
   })
 
-  // People stay put after local separation; ring clearance already keeps event
-  // spiderfy outside the portrait footprint (no O(events×people) resolve pass).
   const personNodes: ScreenLayoutNode[] = personDisks.map(p => ({
     kind: 'individual' as const,
     id: p.id,
