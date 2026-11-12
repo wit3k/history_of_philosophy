@@ -163,6 +163,8 @@ export function lifePathsToGeoJson(
     const layerPoints = path.points.filter(p => {
       if (p.kind === 'publication') return opts.showPublications
       if (p.kind === 'personal') return opts.showPersonal
+      // Birth/death markers belong to the lifeline layer (Życiorysy).
+      if (p.kind === 'birth' || p.kind === 'death') return opts.showLifelines
       return true
     })
     if (layerPoints.length === 0) continue

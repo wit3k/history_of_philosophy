@@ -11,6 +11,15 @@ const monthLengths = (leap: boolean) =>
 
 const isLeapYear = (year: number) => year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0)
 
+/** Snap a fractional playhead to the start of its calendar day (leap-aware). */
+export const quantizeToDay = (year: number): number => {
+  if (!Number.isFinite(year)) return year
+  const base = Math.floor(year)
+  const length = isLeapYear(base) ? 366 : 365
+  const dayIndex = Math.min(length - 1, Math.max(0, Math.floor((year - base) * length + 1e-9)))
+  return base + dayIndex / length
+}
+
 /** Playhead label. Fractional years are a day within that year, not "1677.0833". */
 export const formatPlayhead = (year: number): string => {
   if (!Number.isFinite(year)) return ''

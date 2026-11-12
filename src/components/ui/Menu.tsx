@@ -306,7 +306,7 @@ const Menu = (props: MenuProps) => {
         >
           <div
             aria-label="Warstwy i ustawienia"
-            className={'flex flex-wrap items-center gap-0.5 p-1 ' + shellClass}
+            className={'relative z-20 flex flex-wrap items-center gap-0.5 p-1 ' + shellClass}
             role="toolbar"
           >
             {!filtersVisible && (
@@ -359,7 +359,7 @@ const Menu = (props: MenuProps) => {
 
           <div
             aria-label="Przełącz widok"
-            className={'flex w-full gap-0.5 p-0.5 ' + shellClass}
+            className={'relative z-10 flex w-full gap-0.5 p-0.5 ' + shellClass}
             role="tablist"
           >
             <button

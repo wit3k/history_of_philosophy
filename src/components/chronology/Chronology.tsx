@@ -49,6 +49,7 @@ import {
   type PlaybackSpeed,
   type TemporalMode,
 } from '../../utils/mapTemporal'
+import { quantizeToDay } from '../../utils/years'
 
 class ChronologyProperies {
   constructor(
@@ -193,7 +194,13 @@ const Chronology = () => {
   const playbackSpeedRef = React.useRef<PlaybackSpeed>(1)
   playbackSpeedRef.current = playbackSpeed
   const mapTemporalRef = React.useRef({ year: mapYear, yearFrom: mapYearFrom, yearTo: mapYearTo })
-  mapTemporalRef.current = { year: mapYear, yearFrom: mapYearFrom, yearTo: mapYearTo }
+  // While playing, the rAF loop owns `year` (including sub-year fractions). Syncing from
+  // React state every render would snap it back and kill day-level smoothness.
+  mapTemporalRef.current = {
+    year: mapPlaying ? mapTemporalRef.current.year : mapYear,
+    yearFrom: mapYearFrom,
+    yearTo: mapYearTo,
+  }
   const playRafRef = React.useRef<number | null>(null)
   /** Limit React map commits while playing — ref still advances every frame. */
   const lastPlayCommitMsRef = React.useRef(0)
@@ -672,22 +679,25 @@ const Chronology = () => {
         stopPlayback()
         return
       }
+      const speedMult = playbackSpeedRef.current
       const speed = playbackYearsPerSecond(
         current.year,
         current.yearTo,
         contentYears,
-        playbackSpeedRef.current,
+        speedMult,
       )
       const next = Math.min(current.yearTo, current.year + speed * dt)
       mapTemporalRef.current = { ...current, year: next }
       persistMapTemporalThrottled(next, current.yearFrom, current.yearTo)
-      // Avoid rebuilding the dense map every rAF — commit on whole-year change or ~5 Hz.
-      const nextInt = Math.round(next)
-      const due = ts - lastPlayCommitMsRef.current >= 180
-      if (due || nextInt !== lastPlayCommitYearRef.current) {
+      // Below 1×: commit day steps so portraits/paths animate smoothly.
+      // At 1× and above: keep whole-year commits (throttled) to avoid dense rebuilds.
+      const commitYear = speedMult < 1 ? quantizeToDay(next) : Math.round(next)
+      const dayChanged = commitYear !== lastPlayCommitYearRef.current
+      const due = speedMult < 1 ? dayChanged : dayChanged || ts - lastPlayCommitMsRef.current >= 180
+      if (due) {
         lastPlayCommitMsRef.current = ts
-        lastPlayCommitYearRef.current = nextInt
-        setMapYear(nextInt)
+        lastPlayCommitYearRef.current = commitYear
+        setMapYear(commitYear)
       }
       playRafRef.current = requestAnimationFrame(tick)
     }
