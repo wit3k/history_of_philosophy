@@ -147,8 +147,19 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
   })
   /** After a real pan, ignore the pointertap that lands on people/pubs under the cursor. */
   const suppressItemClickRef = useRef(false)
-  const pinchRef = useRef(0)
+  /** First finger that started the gesture — pinch/zoom stays glued to it. */
   const primaryTouchIdRef = useRef<number | null>(null)
+  /**
+   * Two-finger pinch: world year/row under the primary finger stay pinned to that finger’s
+   * screen position; scale comes from the absolute finger-distance ratio since pinch began.
+   */
+  const pinchRef = useRef<{
+    startDist: number
+    startZoom: number
+    pinnedYear: number
+    startPrimaryPageY: number
+    startViewY: number
+  } | null>(null)
   const pointerClientXRef = useRef<number | null>(null)
   const personBox = 35
   const clampRef = useRef({
@@ -767,76 +778,150 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
     const el = hostRef.current
     if (!el || suspended) return
 
-    const onPointerDown = (e: PointerEvent) => {
-      if (e.button === 0) startPageDrag(0, e.pageX, e.pageY)
-    }
-    const onPointerMove = (e: PointerEvent) => {
-      pointerClientXRef.current = e.clientX
-      executePageDrag(e.pageX, e.pageY)
-    }
-    const onPointerUp = () => stopPageDrag()
     const anchorPxFromClientX = (clientX: number) => clientX - el.getBoundingClientRect().left
     const keyboardAnchorPx = () => {
       const rect = el.getBoundingClientRect()
       return anchorPxFromClientX(pointerClientXRef.current ?? rect.left + rect.width / 2)
+    }
+
+    // Touch devices fire both touch* and pointer* — only mouse/pen use pointer handlers.
+    const onPointerDown = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') return
+      if (e.button === 0) startPageDrag(0, e.pageX, e.pageY)
+    }
+    const onPointerMove = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') return
+      pointerClientXRef.current = e.clientX
+      executePageDrag(e.pageX, e.pageY)
+    }
+    const onPointerUp = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') return
+      stopPageDrag()
     }
     const onWheel = (e: WheelEvent) => {
       e.preventDefault()
       applyZoomDelta(e.deltaY, anchorPxFromClientX(e.clientX))
     }
 
-    const rememberPrimaryTouch = (e: TouchEvent) => {
-      if (primaryTouchIdRef.current == null && e.touches.length > 0) {
-        primaryTouchIdRef.current = e.touches[0].identifier
+    const touchById = (e: TouchEvent, id: number | null) => {
+      if (id == null) return null
+      for (let i = 0; i < e.touches.length; i++) {
+        if (e.touches[i].identifier === id) return e.touches[i]
+      }
+      return null
+    }
+
+    const beginPinch = (e: TouchEvent) => {
+      if (e.touches.length < 2) return
+      stopPageDrag(false)
+      const primary =
+        touchById(e, primaryTouchIdRef.current) ?? e.touches[0]
+      if (primaryTouchIdRef.current == null) {
+        primaryTouchIdRef.current = primary.identifier
+      }
+      const live = liveCameraRef.current
+      const zoom = Math.max(live.zoom, 0.0001)
+      const dist = calculateDelta(
+        e.touches[0].pageX,
+        e.touches[0].pageY,
+        e.touches[1].pageX,
+        e.touches[1].pageY,
+      )
+      if (dist < 8) return
+      pinchRef.current = {
+        startDist: dist,
+        startZoom: zoom,
+        pinnedYear: live.x + anchorPxFromClientX(primary.clientX) / zoom,
+        startPrimaryPageY: primary.pageY,
+        startViewY: live.y,
       }
     }
-    const primaryTouchX = (e: TouchEvent) => {
-      const id = primaryTouchIdRef.current
-      for (let i = 0; i < e.touches.length; i++) {
-        if (e.touches[i].identifier === id) return e.touches[i].clientX
-      }
-      return e.touches.length > 0 ? e.touches[0].clientX : null
+
+    const applyPinch = (e: TouchEvent) => {
+      const pinch = pinchRef.current
+      if (!pinch || e.touches.length < 2) return
+      const primary = touchById(e, primaryTouchIdRef.current) ?? e.touches[0]
+      const dist = calculateDelta(
+        e.touches[0].pageX,
+        e.touches[0].pageY,
+        e.touches[1].pageX,
+        e.touches[1].pageY,
+      )
+      if (dist < 8) return
+      const nextZoom = Math.max(1, pinch.startZoom * (dist / pinch.startDist))
+      const anchorPx = anchorPxFromClientX(primary.clientX)
+      stopInertia()
+      setLiveCamera({
+        // Year under the primary finger stays put unless that finger moves horizontally.
+        x: pinch.pinnedYear - anchorPx / nextZoom,
+        // Rows under the primary finger stay put unless that finger moves vertically.
+        y: pinch.startViewY + (primary.pageY - pinch.startPrimaryPageY),
+        zoom: nextZoom,
+      })
+      scheduleCameraSync()
+      scheduleLayoutCommit()
     }
-    const releasePrimaryTouch = (e: TouchEvent) => {
-      const id = primaryTouchIdRef.current
-      if (id == null) return
-      for (let i = 0; i < e.touches.length; i++) {
-        if (e.touches[i].identifier === id) return
+
+    const endPinchResumeOneFinger = (e: TouchEvent) => {
+      pinchRef.current = null
+      if (e.touches.length !== 1) {
+        if (e.touches.length === 0) primaryTouchIdRef.current = null
+        return
       }
-      primaryTouchIdRef.current = e.touches.length > 0 ? e.touches[0].identifier : null
+      const t = e.touches[0]
+      primaryTouchIdRef.current = t.identifier
+      startPageDrag(0, t.pageX, t.pageY)
     }
 
     const onTouchStart = (e: TouchEvent) => {
-      rememberPrimaryTouch(e)
-      if (e.touches.length === 1) {
+      if (e.touches.length === 1 && primaryTouchIdRef.current == null) {
+        primaryTouchIdRef.current = e.touches[0].identifier
         startPageDrag(0, e.touches[0].pageX, e.touches[0].pageY)
-      } else if (e.touches.length === 2) {
-        startPageDrag(0, e.touches[0].pageX, e.touches[0].pageY)
-        pinchRef.current = calculateDelta(
-          e.touches[0].pageX,
-          e.touches[0].pageY,
-          e.touches[1].pageX,
-          e.touches[1].pageY,
-        )
+        return
+      }
+      if (e.touches.length >= 2) {
+        if (primaryTouchIdRef.current == null) {
+          primaryTouchIdRef.current = e.touches[0].identifier
+        }
+        beginPinch(e)
       }
     }
     const onTouchMove = (e: TouchEvent) => {
       e.preventDefault()
-      if (e.touches.length === 1) {
-        executePageDrag(e.touches[0].pageX, e.touches[0].pageY)
-      } else if (e.touches.length === 2) {
-        const pinchSize = calculateDelta(e.touches[0].pageX, e.touches[0].pageY, e.touches[1].pageX, e.touches[1].pageY)
-        const zoom = liveCameraRef.current.zoom
-        const nextZoom = Math.max(1, zoom - (pinchRef.current - pinchSize) / 100)
-        pinchRef.current = pinchSize
-        stopPageDrag(false)
-        const clientX = primaryTouchX(e)
-        if (clientX != null) zoomTo(nextZoom, anchorPxFromClientX(clientX))
+      if (e.touches.length >= 2) {
+        if (!pinchRef.current) beginPinch(e)
+        applyPinch(e)
+        return
+      }
+      if (e.touches.length === 1 && !pinchRef.current) {
+        const t = touchById(e, primaryTouchIdRef.current) ?? e.touches[0]
+        executePageDrag(t.pageX, t.pageY)
       }
     }
     const onTouchEnd = (e: TouchEvent) => {
-      releasePrimaryTouch(e)
-      stopPageDrag()
+      const primaryStillDown = touchById(e, primaryTouchIdRef.current) != null
+      if (e.touches.length >= 2) {
+        if (!primaryStillDown) {
+          // Primary lifted mid-pinch — retarget to remaining finger without jumping.
+          primaryTouchIdRef.current = e.touches[0].identifier
+          beginPinch(e)
+        }
+        return
+      }
+      if (pinchRef.current) {
+        endPinchResumeOneFinger(e)
+        if (e.touches.length === 0) stopPageDrag()
+        return
+      }
+      if (!primaryStillDown) {
+        primaryTouchIdRef.current = e.touches.length > 0 ? e.touches[0].identifier : null
+      }
+      if (e.touches.length === 0) stopPageDrag()
+      else if (e.touches.length === 1) {
+        const t = e.touches[0]
+        primaryTouchIdRef.current = t.identifier
+        startPageDrag(0, t.pageX, t.pageY)
+      }
     }
 
     const isTypingTarget = (target: EventTarget | null) => {
@@ -921,7 +1006,16 @@ const TimelineDiagram = (props: TimelineDiagramProps) => {
       window.removeEventListener('keydown', onKeyDown)
       stopInertia()
     }
-  }, [applyPan, applyZoomDelta, startInertia, stopInertia, suspended, zoomTo])
+  }, [
+    applyPan,
+    applyZoomDelta,
+    scheduleCameraSync,
+    scheduleLayoutCommit,
+    setLiveCamera,
+    startInertia,
+    stopInertia,
+    suspended,
+  ])
 
   return (
     <div

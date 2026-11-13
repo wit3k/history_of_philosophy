@@ -253,8 +253,15 @@ export function HistoryEventsLayer({
   )
 }
 
+/** Match top toolbar `rounded-md` / shell `rounded-lg` (~6–8px). */
+const BAR_RADIUS = 7
+const PUB_PILL_RADIUS = 5
+const EVENT_PILL_RADIUS = 6
+
 function PersonThumb({ url, x, y, size }: { url: string; x: number; y: number; size: number }) {
   const [texture, setTexture] = useState<Texture | null>(null)
+  const hostRef = useRef<{ mask?: PixiGraphics | null } | null>(null)
+  const maskRef = useRef<PixiGraphics | null>(null)
   useEffect(() => {
     let cancelled = false
     Assets.load(url)
@@ -266,8 +273,37 @@ function PersonThumb({ url, x, y, size }: { url: string; x: number; y: number; s
       cancelled = true
     }
   }, [url])
+  useEffect(() => {
+    const host = hostRef.current
+    const mask = maskRef.current
+    if (!host || !mask) return
+    host.mask = mask
+    return () => {
+      host.mask = null
+    }
+  }, [texture, size])
   if (!texture) return null
-  return <pixiSprite eventMode="none" height={size} texture={texture} width={size} x={x} y={y} />
+  const inset = 2
+  const thumb = size - inset * 2
+  const r = Math.max(3, BAR_RADIUS - 2)
+  return (
+    <pixiContainer
+      eventMode="none"
+      ref={hostRef as never}
+      x={x + inset}
+      y={y + inset}
+    >
+      <pixiGraphics
+        draw={g => {
+          g.clear()
+          g.roundRect(0, 0, thumb, thumb, r)
+          g.fill({ color: 0xffffff })
+        }}
+        ref={maskRef as never}
+      />
+      <pixiSprite eventMode="none" height={thumb} texture={texture} width={thumb} x={0} y={0} />
+    </pixiContainer>
+  )
 }
 
 export function PeopleLayer({ people, shared }: { people: Person[]; shared: SharedTimelineProps }) {
@@ -320,22 +356,26 @@ export function PeopleLayer({ people, shared }: { people: Person[]; shared: Shar
                 <pixiGraphics
                   draw={g => {
                     g.clear()
-                    g.rect(x0, y, x1 - x0, personBox)
-                    g.fill({ color: pale, alpha: approximate ? 0.55 : 1 })
+                    const w = Math.max(x1 - x0, personBox)
+                    g.roundRect(x0, y, w, personBox, BAR_RADIUS)
+                    g.fill({ color: approximate ? ColorsService.convertToGray(pale) : pale })
                     g.stroke({
-                      cap: 'butt',
+                      cap: 'round',
                       color: accent,
-                      join: 'miter',
-                      width: highlighted ? 3 : 1,
-                      alpha: approximate ? 0.75 : 1,
+                      join: 'round',
+                      width: highlighted ? 1.5 : 1,
                     })
                   }}
                 />
               )}
               {thumbUrl && <PersonThumb size={personBox} url={thumbUrl} x={x0} y={y} />}
               <pixiText
-                alpha={highlighted ? 1 : approximate ? 0.65 : 0.8}
-                style={{ fill: dark, fontFamily: MONO, fontSize: 14 }}
+                style={{
+                  fill: approximate ? ColorsService.convertToGray(dark) : dark,
+                  fontFamily: MONO,
+                  fontSize: 14,
+                  fontWeight: highlighted ? '700' : '500',
+                }}
                 text={label}
                 x={x0 + personBox + 8}
                 y={y + 12}
@@ -531,6 +571,12 @@ export function PublicationsLayer({
           const dimmed = searchActive && !searchMatch
           const { slices, truncated } = wrapTitleWords(publication.title, publicationMaxCols, publicationMaxRows)
           const lines = slices.map((s, i) => (i === slices.length - 1 && truncated ? `${s}...` : s))
+          const fill = searchMatch ? '#fe27be' : color
+          const border = searchMatch ? '#c01090' : ColorsService.convertToDark(color)
+          const pillW = searchMatch ? 10 : 8
+          const pillH = publicationBox - 8
+          const pillX = x - pillW / 2
+          const pillY = y + 4
           return (
             <pixiGraphics
               key={`pub-${publication.id}-${publication.authorId}`}
@@ -538,13 +584,13 @@ export function PublicationsLayer({
               cursor="pointer"
               draw={g => {
                 g.clear()
-                g.moveTo(x, y)
-                g.lineTo(x, y + publicationBox)
+                g.roundRect(pillX, pillY, pillW, pillH, PUB_PILL_RADIUS)
+                g.fill({ color: fill })
                 g.stroke({
-                  cap: 'butt',
-                  color: searchMatch ? '#fe27be' : color,
-                  join: 'miter',
-                  width: searchMatch ? 14 : 10,
+                  cap: 'round',
+                  color: border,
+                  join: 'round',
+                  width: searchMatch ? 1.25 : 1,
                 })
               }}
               eventMode="static"
@@ -712,15 +758,22 @@ export function PersonHistoryEventsLayer({
           }
 
           if (instant) {
+            const pillW = Math.max(personHistoryDot * 2.4, 12)
+            const pillH = Math.max(personHistoryBar + 2, 12)
             return (
               <pixiGraphics
                 key={`phe-${event.id}`}
                 cursor="pointer"
                 draw={g => {
                   g.clear()
-                  g.circle(x0, centerY, personHistoryDot)
+                  g.roundRect(x0 - pillW / 2, centerY - pillH / 2, pillW, pillH, EVENT_PILL_RADIUS)
                   g.fill({ color: fixed })
-                  g.stroke({ cap: 'butt', color: tamed, join: 'miter', width: 2 })
+                  g.stroke({
+                    cap: 'round',
+                    color: tamed,
+                    join: 'round',
+                    width: 1,
+                  })
                 }}
                 eventMode="static"
                 onPointerDown={(e: FederatedPointerEvent) => e.stopPropagation()}
@@ -743,9 +796,16 @@ export function PersonHistoryEventsLayer({
               cursor="pointer"
               draw={g => {
                 g.clear()
-                g.roundRect(x0, barY, Math.max(x1 - x0, 4), personHistoryBar, 3)
-                g.fill({ alpha: 0.85, color: fixed })
-                g.stroke({ cap: 'butt', color: tamed, join: 'miter', width: 1 })
+                const w = Math.max(x1 - x0, 10)
+                const h = Math.max(personHistoryBar, 10)
+                g.roundRect(x0, barY - 1, w, h, EVENT_PILL_RADIUS)
+                g.fill({ color: fixed })
+                g.stroke({
+                  cap: 'round',
+                  color: tamed,
+                  join: 'round',
+                  width: 1,
+                })
               }}
               eventMode="static"
               onPointerDown={(e: FederatedPointerEvent) => e.stopPropagation()}
