@@ -15,7 +15,9 @@ import { flattenPathDataCached, strokePathData } from './pathBridge'
 import { attitudeColor, buildPersonReferencePath, buildPublicationReferencePath, wrapTitleWords } from './relationPaths'
 import type { TimelineTooltipState } from './TimelineTooltip'
 
-const MONO = 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace'
+/** Same stack as the top toolbar / `html` UI (`sans-serif` / Tailwind `font-sans`). */
+const UI_SANS =
+  'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
 
 const APP_BASE = '/history_of_philosophy'
 
@@ -146,7 +148,7 @@ export function YearLabelsLayer({
               anchor={{ x: 0.5, y: 0 }}
               style={{
                 fill: century ? '#000000' : '#ffffff',
-                fontFamily: MONO,
+                fontFamily: UI_SANS,
                 fontSize: 15,
               }}
               text={`${year}`}
@@ -241,7 +243,7 @@ export function HistoryEventsLayer({
                 // the timeline strip), not at the top end.
                 anchor={{ x: 0, y: 0.5 }}
                 rotation={-Math.PI / 2}
-                style={{ fill: '#000000', fontFamily: MONO, fontSize: 14 }}
+                style={{ fill: '#000000', fontFamily: UI_SANS, fontSize: 14 }}
                 text={event.name}
                 x={x0 + 10}
                 y={row - 4}
@@ -372,7 +374,7 @@ export function PeopleLayer({ people, shared }: { people: Person[]; shared: Shar
               <pixiText
                 style={{
                   fill: approximate ? ColorsService.convertToGray(dark) : dark,
-                  fontFamily: MONO,
+                  fontFamily: UI_SANS,
                   fontSize: 14,
                   fontWeight: highlighted ? '700' : '500',
                 }}

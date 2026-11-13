@@ -19,7 +19,8 @@ export type TimelineTooltipState =
       colorSeed: number
     }
 
-const MONO = 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace'
+const UI_SANS =
+  'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
 
 const TimelineTooltip = ({ tooltip }: { tooltip: TimelineTooltipState | null }) => {
   if (!tooltip) return null
@@ -38,7 +39,7 @@ const TimelineTooltip = ({ tooltip }: { tooltip: TimelineTooltipState | null }) 
     border: `2px solid ${fixed}`,
     borderRadius: 3,
     padding: '8px 10px',
-    fontFamily: MONO,
+    fontFamily: UI_SANS,
     fontWeight: 700,
     color: fixed,
     maxWidth: tooltip.kind === 'publication' ? 220 : 230,
